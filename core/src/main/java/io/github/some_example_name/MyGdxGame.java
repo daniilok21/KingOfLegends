@@ -13,28 +13,28 @@ import io.github.some_example_name.net.Server;
 public class MyGdxGame extends ApplicationAdapter {
     SpriteBatch batch;
     ShapeRenderer shapeRenderer;
-    BitmapFont font;
-    boolean isHost = true; // ← true на хосте, false на клиенте
-    String hostIp = "192.168.0.15"; // ← ЗАМЕНИТЕ НА IP ХОСТА!
+    boolean isHost = true;
+    String hostIp = "192.168.0.15";
 
     Server server;
     Client client;
     GameState localState;
 
+
     @Override
     public void create() {
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
-        font = new BitmapFont();
 
         if (isHost) {
             server = new Server();
             server.start(9090);
             localState = server.getLocalState();
-        } else {
+        }
+        else {
             client = new Client();
             if (!client.connect(hostIp, 9090)) {
-                Gdx.app.exit(); // не удалось подключиться
+                Gdx.app.exit();
             }
             localState = new GameState();
         }
@@ -42,36 +42,51 @@ public class MyGdxGame extends ApplicationAdapter {
 
     @Override
     public void render() {
+        // Обновление состояния
+        if (!isHost) {
+            localState = client.getState();
+        } else {
+            localState = server.getLocalState();
+        }
+
         // Обработка ввода
         if (Gdx.input.isTouched()) {
             if (isHost) {
-                localState.cubeX += 5;
-                if (localState.cubeX > 800) localState.cubeX = 0;
-            } else {
+                server.moveServerCubeRight();
+            }
+            else {
                 PlayerInput input = new PlayerInput();
                 input.moveRight = true;
                 client.sendInput(input);
             }
         }
 
-        // Получение состояния (клиент)
-        if (!isHost) {
-            localState = client.getState();
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+            if (isHost) {
+                server.moveServerCubeLeft();
+            }
+            else {
+                PlayerInput input = new PlayerInput();
+                input.moveLeft = true;
+                client.sendInput(input);
+            }
         }
 
-        // Рендеринг
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(Color.WHITE);
-        shapeRenderer.rect(localState.cubeX, localState.cubeY, 50, 50);
+
+        // хост
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.rect(localState.serverCubeX, localState.serverCubeY, 50, 50);
+
+        // клиент
+        shapeRenderer.setColor(Color.BLUE);
+        shapeRenderer.rect(localState.clientCubeX, localState.clientCubeY, 50, 50);
+
         shapeRenderer.end();
 
-        batch.begin();
-        batch.setColor(Color.WHITE);
-        font.draw(batch, isHost ? "HOST" : "CLIENT", 10, Gdx.graphics.getHeight() - 10);
-        batch.end();
     }
 
     @Override
