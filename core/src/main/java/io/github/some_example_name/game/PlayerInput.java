@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 public class PlayerInput implements Serializable {
     private static final long serialVersionUID = 1L;
-
     public boolean moveRight = false;
+    public boolean moveLeft = false;
+    // Можно добавить другие команды
 }

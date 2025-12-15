@@ -14,12 +14,13 @@ public class MyGdxGame extends ApplicationAdapter {
     SpriteBatch batch;
     ShapeRenderer shapeRenderer;
     BitmapFont font;
-    boolean isHost = true; // ← true на хосте, false на клиенте
-    String hostIp = "192.168.0.15"; // ← ЗАМЕНИТЕ НА IP ХОСТА!
+    boolean isHost = false;
+    String hostIp = "192.168.0.15";
 
     Server server;
     Client client;
     GameState localState;
+
 
     @Override
     public void create() {
@@ -42,21 +43,36 @@ public class MyGdxGame extends ApplicationAdapter {
 
     @Override
     public void render() {
+
+        // Обновление состояния
+        if (!isHost) {
+            localState = client.getState();
+        } else {
+            localState = server.getLocalState();
+        }
+
         // Обработка ввода
         if (Gdx.input.isTouched()) {
             if (isHost) {
-                localState.cubeX += 5;
-                if (localState.cubeX > 800) localState.cubeX = 0;
+                // Хост управляет серверным кубиком (красным)
+                server.moveServerCubeRight();
             } else {
+                // Клиент управляет клиентским кубиком (синим)
                 PlayerInput input = new PlayerInput();
                 input.moveRight = true;
                 client.sendInput(input);
             }
         }
 
-        // Получение состояния (клиент)
-        if (!isHost) {
-            localState = client.getState();
+        // Также обрабатываем другие клавиши для движения влево
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+            if (isHost) {
+                server.moveServerCubeLeft();
+            } else {
+                PlayerInput input = new PlayerInput();
+                input.moveLeft = true;
+                client.sendInput(input);
+            }
         }
 
         // Рендеринг
@@ -64,14 +80,16 @@ public class MyGdxGame extends ApplicationAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(Color.WHITE);
-        shapeRenderer.rect(localState.cubeX, localState.cubeY, 50, 50);
-        shapeRenderer.end();
 
-        batch.begin();
-        batch.setColor(Color.WHITE);
-        font.draw(batch, isHost ? "HOST" : "CLIENT", 10, Gdx.graphics.getHeight() - 10);
-        batch.end();
+        // Серверный кубик (красный) - управляется хостом
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.rect(localState.serverCubeX, localState.serverCubeY, 50, 50);
+
+        // Клиентский кубик (синий) - управляется клиентом
+        shapeRenderer.setColor(Color.BLUE);
+        shapeRenderer.rect(localState.clientCubeX, localState.clientCubeY, 50, 50);
+
+        shapeRenderer.end();
     }
 
     @Override
@@ -80,5 +98,6 @@ public class MyGdxGame extends ApplicationAdapter {
         if (client != null) client.disconnect();
         batch.dispose();
         shapeRenderer.dispose();
+        font.dispose();
     }
 }

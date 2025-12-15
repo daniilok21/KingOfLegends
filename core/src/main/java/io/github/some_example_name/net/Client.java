@@ -19,17 +19,19 @@ public class Client {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
-            // Поток приёма состояния
+            // Поток приёма состояния от сервера
             new Thread(() -> {
                 try {
                     while (running) {
                         GameState state = (GameState) in.readObject();
                         if (state != null) {
-                            latestState = state;
+                            synchronized (this) {
+                                latestState = state;
+                            }
                         }
                     }
                 } catch (Exception e) {
-                    // disconnected
+                    System.out.println("Client disconnected: " + e.getMessage());
                 }
             }).start();
 
@@ -44,13 +46,16 @@ public class Client {
         try {
             out.writeObject(input);
             out.flush();
+            out.reset();
         } catch (IOException e) {
-            // ignore
+            System.out.println("Failed to send input: " + e.getMessage());
         }
     }
 
     public GameState getState() {
-        return latestState;
+        synchronized (this) {
+            return latestState;
+        }
     }
 
     public void disconnect() {
