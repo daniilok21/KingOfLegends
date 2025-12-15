@@ -5,16 +5,16 @@ import java.io.Serializable;
 public class GameState implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    // Серверный кубик (красный)
+    // Серверное
     public int serverCubeX = 100;
     public int serverCubeY = 300;
 
-    // Клиентский кубик (синий)
+    // Клиентское
     public int clientCubeX = 100;
     public int clientCubeY = 200;
 
     public void update() {
-        // Любая дополнительная логика игры
+
     }
 
     public GameState clone() {

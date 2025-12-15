@@ -19,7 +19,7 @@ public class Client {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
-            // Поток приёма состояния от сервера
+            // приём состояния от сервера
             new Thread(() -> {
                 try {
                     while (running) {
@@ -30,13 +30,15 @@ public class Client {
                             }
                         }
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     System.out.println("Client disconnected: " + e.getMessage());
                 }
             }).start();
 
             return true;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
             return false;
         }
@@ -47,7 +49,8 @@ public class Client {
             out.writeObject(input);
             out.flush();
             out.reset();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             System.out.println("Failed to send input: " + e.getMessage());
         }
     }
@@ -62,6 +65,7 @@ public class Client {
         running = false;
         try {
             if (socket != null) socket.close();
-        } catch (IOException e) {}
+        }
+        catch (IOException e) {}
     }
 }

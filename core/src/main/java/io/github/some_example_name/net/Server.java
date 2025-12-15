@@ -16,14 +16,14 @@ public class Server {
     public void start(int port) {
         new Thread(() -> {
             try (ServerSocket server = new ServerSocket(port)) {
-                System.out.println("Server started on port " + port);
+                System.out.println("Server started");
                 Socket client = server.accept();
                 System.out.println("Client connected: " + client.getInetAddress());
 
                 ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
                 ObjectInputStream in = new ObjectInputStream(client.getInputStream());
 
-                // Поток для приема ввода от клиента
+                // прием ввода от клиента
                 Thread inputThread = new Thread(() -> {
                     try {
                         while (running) {
@@ -33,14 +33,14 @@ public class Server {
                             }
                         }
                     } catch (Exception e) {
-                        System.out.println("Input thread stopped: " + e.getMessage());
+                        System.out.println("Input stopped: " + e.getMessage());
                     }
                 });
                 inputThread.start();
 
-                // Основной игровой цикл
+                // игровой цикл
                 while (running) {
-                    // Обработать ввод от клиента (управление клиентским кубиком)
+                    // Обработать ввод от клиента
                     PlayerInput clientInput = inputQueue.poll();
                     if (clientInput != null) {
                         if (clientInput.moveRight) {
@@ -52,21 +52,19 @@ public class Server {
                             if (world.clientCubeX < 0) world.clientCubeX = 800;
                         }
                     }
-
-                    // Обновить логику игры
                     world.update();
 
-                    // Отправить состояние клиенту
                     out.writeObject(world);
                     out.flush();
                     out.reset();
 
-                    Thread.sleep(16); // ~60 FPS
+                    Thread.sleep(16);
                 }
 
                 inputThread.interrupt();
                 client.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();
@@ -80,7 +78,7 @@ public class Server {
         return world;
     }
 
-    // Метод для управления серверным кубиком с хоста
+    // управление серверным кубиком
     public void moveServerCubeRight() {
         world.serverCubeX += 5;
         if (world.serverCubeX > 800) world.serverCubeX = 0;
