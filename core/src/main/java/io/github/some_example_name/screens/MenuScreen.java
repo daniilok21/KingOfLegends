@@ -3,6 +3,7 @@ package io.github.some_example_name.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -13,7 +14,7 @@ import io.github.some_example_name.MyGdxGame;
 
 import static io.github.some_example_name.GameSettings.*;
 
-public class MenuScreen implements Screen {
+public class MenuScreen extends ScreenAdapter {
 
     private final MyGdxGame game;
     private SpriteBatch batch;
@@ -24,7 +25,7 @@ public class MenuScreen implements Screen {
     private int selectedItem = 0;
 
     private boolean enteringIp = false;
-    private String ipAddress = "192.168.0.15";
+    private String ipAddress = "192.168.1.49";
 
     public MenuScreen(MyGdxGame game) {
         this.game = game;
@@ -100,7 +101,6 @@ public class MenuScreen implements Screen {
                         break;
                     case 1: // Join Game
                         enteringIp = true;
-                        ipAddress = "192.168.0.15";
                         break;
                     case 2: // Exit
                         Gdx.app.exit();

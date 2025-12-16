@@ -26,7 +26,7 @@ public class MyGdxGame extends Game {
 
 
     public boolean isHost = true;
-    public String hostIp = "192.168.0.15";
+    public String hostIp = "192.168.1.49";
     public int port = 9090;
 
     @Override
