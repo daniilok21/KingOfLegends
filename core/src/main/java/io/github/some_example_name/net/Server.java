@@ -1,5 +1,8 @@
 package io.github.some_example_name.net;
 
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+
 import io.github.some_example_name.game.GameState;
 import io.github.some_example_name.game.PlayerInput;
 
@@ -8,10 +11,22 @@ import java.net.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import static io.github.some_example_name.GameSettings.*;
+
 public class Server {
     private GameState world = new GameState();
     private volatile boolean running = true;
     private BlockingQueue<PlayerInput> inputQueue = new ArrayBlockingQueue<>(10);
+
+    private Body serverBody;
+    private Body clientBody;
+
+    public void setPhysicsBodies(Body serverBody, Body clientBody) {
+        this.serverBody = serverBody;
+        this.clientBody = clientBody;
+        world.serverBody = serverBody;
+        world.clientBody = clientBody;
+    }
 
     public void start(int port) {
         new Thread(() -> {
@@ -23,7 +38,6 @@ public class Server {
                 ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
                 ObjectInputStream in = new ObjectInputStream(client.getInputStream());
 
-                // прием ввода от клиента
                 Thread inputThread = new Thread(() -> {
                     try {
                         while (running) {
@@ -38,27 +52,35 @@ public class Server {
                 });
                 inputThread.start();
 
-                // игровой цикл
                 while (running) {
-                    // Обработать ввод от клиента
                     PlayerInput clientInput = inputQueue.poll();
-                    if (clientInput != null) {
-                        if (clientInput.moveRight) {
-                            world.clientCubeX += 5;
-                            if (world.clientCubeX > 800) world.clientCubeX = 0;
+                    if (clientInput != null && clientBody != null) {
+                        Vector2 force = new Vector2(0, 0);
+                        if (clientInput.moveRight) force.x = MOVE_FORCE;
+                        if (clientInput.moveLeft) force.x = -MOVE_FORCE;
+                        if (clientInput.jump) {
+                            if (Math.abs(clientBody.getLinearVelocity().y) < 0.1f) {
+                                clientBody.applyLinearImpulse(
+                                    new Vector2(0, JUMP_FORCE),
+                                    clientBody.getWorldCenter(),
+                                    true
+                                );
+                            }
                         }
-                        if (clientInput.moveLeft) {
-                            world.clientCubeX -= 5;
-                            if (world.clientCubeX < 0) world.clientCubeX = 800;
-                        }
-                    }
-                    world.update();
+                        clientBody.applyForceToCenter(force, true);
 
-                    out.writeObject(world);
+                        Vector2 vel = clientBody.getLinearVelocity();
+                        vel.x = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, vel.x));
+                        clientBody.setLinearVelocity(vel);
+                    }
+
+                    world.updateFromPhysics();
+
+                    out.writeObject(world.clone());
                     out.flush();
                     out.reset();
 
-                    Thread.sleep(16);
+                    Thread.sleep(FRAME_DELAY_MS);
                 }
 
                 inputThread.interrupt();
@@ -75,17 +97,29 @@ public class Server {
     }
 
     public GameState getLocalState() {
+        world.updateFromPhysics();
         return world;
     }
 
-    // управление серверным кубиком
     public void moveServerCubeRight() {
-        world.serverCubeX += 5;
-        if (world.serverCubeX > 800) world.serverCubeX = 0;
+        if (serverBody != null) {
+            serverBody.applyForceToCenter(new Vector2(MOVE_FORCE, 0), true);
+        }
     }
 
     public void moveServerCubeLeft() {
-        world.serverCubeX -= 5;
-        if (world.serverCubeX < 0) world.serverCubeX = 800;
+        if (serverBody != null) {
+            serverBody.applyForceToCenter(new Vector2(-MOVE_FORCE, 0), true);
+        }
+    }
+
+    public void serverJump() {
+        if (serverBody != null && Math.abs(serverBody.getLinearVelocity().y) < 0.1f) {
+            serverBody.applyLinearImpulse(
+                new Vector2(0, JUMP_FORCE),
+                serverBody.getWorldCenter(),
+                true
+            );
+        }
     }
 }

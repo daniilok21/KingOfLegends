@@ -17,7 +17,7 @@ import io.github.some_example_name.screens.MenuScreen;
 import static io.github.some_example_name.GameSettings.*;
 
 public class MyGdxGame extends Game {
-    World world;
+    public World world;
     public SpriteBatch batch;
     public OrthographicCamera camera;
     public BitmapFont font;
