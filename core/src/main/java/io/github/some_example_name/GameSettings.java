@@ -6,7 +6,9 @@ public class GameSettings {
 
     // Игровые константы
     public static final int CUBE_SIZE = 50;
-    public static final int MOVE_SPEED = 5;
+    public static final float MOVE_FORCE = 8f;
+    public static final float JUMP_FORCE = 15f;
+    public static final float MAX_VELOCITY = 20f;
 
     // Сетевые настройки
     public static final int PORT = 9090;
@@ -15,7 +17,16 @@ public class GameSettings {
 
     // физика
     public static final float STEP_TIME = 1f / 60f;
-    public static final int VELOCITY_ITERATIONS = 6;
-    public static final int POSITION_ITERATIONS = 6;
+    public static final int VELOCITY_ITERATIONS = 8;
+    public static final int POSITION_ITERATIONS = 3;
     public static final float SCALE = 0.05f;
+
+    // Платформы
+    public static final int PLATFORM_WIDTH = 200;
+    public static final int PLATFORM_HEIGHT = 30;
+
+    // UI для Android
+    public static final int BUTTON_WIDTH = 150;
+    public static final int BUTTON_HEIGHT = 150;
+    public static final float BUTTON_ALPHA = 0.7f;
 }
