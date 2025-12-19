@@ -76,6 +76,8 @@ public class PlatformObject {
     }
 
     public void dispose() {
-        texture.dispose();
+        if (texture != null) {
+            texture.dispose();
+        }
     }
 }
