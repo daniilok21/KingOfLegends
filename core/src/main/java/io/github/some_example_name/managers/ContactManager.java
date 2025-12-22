@@ -19,20 +19,18 @@ public class ContactManager {
                 Fixture fixA = contact.getFixtureA();
                 Fixture fixB = contact.getFixtureB();
 
-                contact.setEnabled(false);
+                contact.setEnabled(true);
 
                 int cDef = fixA.getFilterData().categoryBits;
                 int cDef2 = fixB.getFilterData().categoryBits;
 
-//                if (cDef == GameSettings.TRASH_BIT && cDef2 == GameSettings.BULLET_BIT
-//                    || cDef2 == GameSettings.TRASH_BIT && cDef == GameSettings.BULLET_BIT
-//                    || cDef == GameSettings.TRASH_BIT && cDef2 == GameSettings.SHIP_BIT
-//                    || cDef2 == GameSettings.TRASH_BIT && cDef == GameSettings.SHIP_BIT) {
-//
-//                    ((GameObject) fixA.getUserData()).hit();
-//                    ((GameObject) fixB.getUserData()).hit();
-//
-//                }
+                if (cDef == GameSettings.PLATFORM_BIT && cDef2 == GameSettings.PLAYER_BIT
+                    || cDef2 == GameSettings.PLATFORM_BIT && cDef == GameSettings.PLAYER_BIT) {
+                    System.out.println(122121);
+                    ((GameObject) fixA.getUserData()).hit();
+                    ((GameObject) fixB.getUserData()).hit();
+
+                }
             }
 
             @Override
@@ -41,7 +39,6 @@ public class ContactManager {
 
             @Override
             public void preSolve(Contact contact, Manifold oldManifold) {
-                contact.setEnabled(false);
             }
 
             @Override

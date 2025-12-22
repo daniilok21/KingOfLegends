@@ -17,6 +17,7 @@ public class ButtonView extends View {
     float textY;
 
     private boolean isEnabled;
+    private boolean isPressed = false;
 
     public ButtonView(float x, float y, float width, float height, BitmapFont font, String texturePath, String text) {
         super(x, y, width, height);
@@ -48,6 +49,9 @@ public class ButtonView extends View {
         if (!isEnabled) {
             batch.setColor(0.6f, 0.6f, 0.6f, 1f);
         }
+        else if (isPressed) {
+            batch.setColor(0.7f, 0.7f, 0.7f, 1f);
+        }
         batch.draw(texture, x, y, width, height);
         batch.setColor(originalColor);
 
@@ -63,6 +67,7 @@ public class ButtonView extends View {
     public void setEnabled(boolean enabled) {
         this.isEnabled = enabled;
     }
+    public void setPressed(boolean pressed) {this.isPressed = pressed;}
 
     public boolean isEnabled() {
         return isEnabled;
