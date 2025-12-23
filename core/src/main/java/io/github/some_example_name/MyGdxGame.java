@@ -29,7 +29,7 @@ public class MyGdxGame extends Game {
     public GameScreen gameScreen;
 
 
-    public boolean isHost = true;
+    public boolean isHost = false;
     public String hostIp = "192.168.1.49";
     public int port = 9090;
 
@@ -38,7 +38,7 @@ public class MyGdxGame extends Game {
     @Override
     public void create() {
         Box2D.init();
-        world = new World(new Vector2(0, -10), true);
+        world = new World(new Vector2(0, -20), true);
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
         camera.setToOrtho(false, SCREEN_WIDTH, SCREEN_HEIGHT);

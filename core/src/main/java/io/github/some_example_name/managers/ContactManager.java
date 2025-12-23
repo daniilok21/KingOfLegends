@@ -26,7 +26,6 @@ public class ContactManager {
 
                 if (cDef == GameSettings.PLATFORM_BIT && cDef2 == GameSettings.PLAYER_BIT
                     || cDef2 == GameSettings.PLATFORM_BIT && cDef == GameSettings.PLAYER_BIT) {
-                    System.out.println(122121);
                     ((GameObject) fixA.getUserData()).hit();
                     ((GameObject) fixB.getUserData()).hit();
 

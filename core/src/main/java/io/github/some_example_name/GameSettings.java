@@ -7,7 +7,7 @@ public class GameSettings {
     // Игровые константы
     public static final int CUBE_SIZE = 50;
     public static final float MOVE_FORCE = 300f;
-    public static final float JUMP_FORCE = 15f;
+    public static final float JUMP_FORCE = 70f;
     public static final float MAX_VELOCITY = 20f;
 
     // Сетевые настройки

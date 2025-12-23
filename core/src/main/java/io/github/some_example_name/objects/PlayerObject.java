@@ -9,5 +9,6 @@ public class PlayerObject extends GameObject {
                         short cBits, World world, boolean isRedPlayer) {
         super(texturePath, x, y, width, height, cBits, world, true, BodyDef.BodyType.DynamicBody);
 
+
     }
 }

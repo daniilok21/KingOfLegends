@@ -68,8 +68,8 @@ public class GameScreen extends ScreenAdapter {
         platforms = new ArrayList<>();
 
         platforms.add(new PlatformObject(
-            100, 200,
-            1000,
+            0, 200,
+            1500,
             100,
             GameResources.PLATFORM,
             myGdxGame.world
@@ -205,7 +205,6 @@ public class GameScreen extends ScreenAdapter {
         handleInput();
         update(delta);
         draw();
-        System.out.println(serverBody.getPosition());
         myGdxGame.stepWorld();
     }
 
@@ -249,6 +248,7 @@ public class GameScreen extends ScreenAdapter {
         if (myGdxGame.isHost) {
             currentState.updateFromPhysics();
         }
+
     }
 
     private void draw() {
@@ -271,11 +271,19 @@ public class GameScreen extends ScreenAdapter {
 
         Vector2 serverPos = serverBody.getPosition();
         shapeRenderer.setColor(Color.RED);
-        shapeRenderer.rect(serverPos.x / SCALE - CUBE_SIZE / 2, serverPos.y / SCALE - CUBE_SIZE / 2, CUBE_SIZE, CUBE_SIZE);
+        shapeRenderer.rect(
+            currentState.serverCubeX - CUBE_SIZE / 2,
+            currentState.serverCubeY - CUBE_SIZE / 2,
+            CUBE_SIZE, CUBE_SIZE
+        );
 
         Vector2 clientPos = clientBody.getPosition();
         shapeRenderer.setColor(Color.BLUE);
-        shapeRenderer.rect(clientPos.x / SCALE - CUBE_SIZE / 2, clientPos.y / SCALE - CUBE_SIZE / 2, CUBE_SIZE, CUBE_SIZE);
+        shapeRenderer.rect(
+            currentState.clientCubeX - CUBE_SIZE / 2,
+            currentState.clientCubeY - CUBE_SIZE / 2,
+            CUBE_SIZE, CUBE_SIZE
+        );
 
         shapeRenderer.end();
 

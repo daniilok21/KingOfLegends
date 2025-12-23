@@ -32,6 +32,7 @@ public class MenuScreen extends ScreenAdapter {
         this.batch = game.batch;
         this.font = game.font;
         this.shapeRenderer = new ShapeRenderer();
+        this.ipAddress = game.hostIp;
     }
 
     @Override
@@ -118,7 +119,6 @@ public class MenuScreen extends ScreenAdapter {
 
     @Override
     public void resize(int width, int height) {
-        // Обновляем камеру при изменении размера
         game.camera.setToOrtho(false, width, height);
         game.camera.update();
         batch.setProjectionMatrix(game.camera.combined);
