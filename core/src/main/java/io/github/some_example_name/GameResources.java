@@ -9,4 +9,7 @@ public class GameResources {
 
     public static final String FONT_PATH = "fonts/Montserrat-Bold.ttf";
 
+    public static final String RED_PLAYER_SPRITE_SHEET = "textures/red_player.png";
+    public static final String BLUE_PLAYER_SPRITE_SHEET = "textures/blue_player.png";
+
 }

@@ -28,4 +28,11 @@ public class GameSettings {
 
     public static final short PLAYER_BIT = 2;
     public static final short PLATFORM_BIT = 4;
+
+    public static final int PLAYER_WIDTH = 80;
+    public static final int PLAYER_HEIGHT = 120;
+
+    public static final float PLAYER_MOVE_FORCE = 400f;
+    public static final float PLAYER_JUMP_FORCE = 18f;
+    public static final float PLAYER_MAX_VELOCITY = 25f;
 }
