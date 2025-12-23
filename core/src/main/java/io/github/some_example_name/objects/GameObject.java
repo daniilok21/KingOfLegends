@@ -160,7 +160,6 @@ public class GameObject {
 
     public void setBodyType(BodyDef.BodyType newType) {
         this.bodyType = newType;
-        // Можно добавить логику изменения типа тела
     }
 
     public void dispose() {
