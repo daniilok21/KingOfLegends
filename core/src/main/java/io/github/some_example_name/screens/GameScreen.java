@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 
 import io.github.some_example_name.GameResources;
@@ -59,7 +60,6 @@ public class GameScreen extends ScreenAdapter {
         setupPlatforms();
         setupPhysicsBodies();
         setupUI();
-        setupInput();
     }
 
     private void setupPlatforms() {
@@ -113,53 +113,7 @@ public class GameScreen extends ScreenAdapter {
         );
     }
 
-    private void setupInput() {
-        Gdx.input.setInputProcessor(new InputAdapter() {
-            @Override
-            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                int y = SCREEN_HEIGHT - screenY;
 
-                if (leftButton.isHit(screenX, y)) {
-                    leftPressed = true;
-                    leftButton.setPressed(true);
-                    return true;
-                }
-                if (rightButton.isHit(screenX, y)) {
-                    rightPressed = true;
-                    rightButton.setPressed(true);
-                    return true;
-                }
-                if (jumpButton.isHit(screenX, y)) {
-                    jumpPressed = true;
-                    jumpButton.setPressed(true);
-                    return true;
-                }
-                return false;
-            }
-
-            @Override
-            public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-                int y = SCREEN_HEIGHT - screenY;
-
-                if (leftButton.isHit(screenX, y)) {
-                    leftPressed = false;
-                    leftButton.setPressed(false);
-                    return true;
-                }
-                if (rightButton.isHit(screenX, y)) {
-                    rightPressed = false;
-                    rightButton.setPressed(false);
-                    return true;
-                }
-                if (jumpButton.isHit(screenX, y)) {
-                    jumpPressed = false;
-                    jumpButton.setPressed(false);
-                    return true;
-                }
-                return false;
-            }
-        });
-    }
 
     public void initializeNetwork() {
         if (myGdxGame.isHost) {
@@ -193,6 +147,22 @@ public class GameScreen extends ScreenAdapter {
 
     private void handleInput() {
         if (!connected) return;
+        Vector3 touch = myGdxGame.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+        if (Gdx.input.isTouched()) {
+            if (leftButton.isHit(touch.x, touch.y)) {
+                leftPressed = true;
+                leftButton.setPressed(true);
+            }
+            if (rightButton.isHit(touch.x, touch.y)) {
+                System.out.println(touch.x + "      " + touch.y);
+                rightPressed = true;
+                rightButton.setPressed(true);
+            }
+            if (jumpButton.isHit(touch.x, touch.y)) {
+                jumpPressed = true;
+                jumpButton.setPressed(true);
+            }
+        }
 
         if (myGdxGame.isHost) {
             Vector2 force = new Vector2(0, 0);
@@ -229,6 +199,14 @@ public class GameScreen extends ScreenAdapter {
                 currentState = serverState;
                 currentState.applyToPhysics();
             }
+        }
+        if (!Gdx.input.isTouched()) {
+            leftPressed = false;
+            rightPressed = false;
+            jumpPressed = false;
+            leftButton.setPressed(false);
+            rightButton.setPressed(false);
+            jumpButton.setPressed(false);
         }
     }
 

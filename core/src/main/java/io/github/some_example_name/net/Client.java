@@ -27,6 +27,7 @@ public class Client {
                         if (state != null) {
                             synchronized (this) {
                                 latestState = state;
+                                System.out.println(state.clientCubeX);
                             }
                         }
                     }
