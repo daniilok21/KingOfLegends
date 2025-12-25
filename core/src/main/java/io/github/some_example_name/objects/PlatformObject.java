@@ -19,14 +19,4 @@ public class PlatformObject extends GameObject {
             true,
             BodyDef.BodyType.StaticBody);
     }
-
-    @Override
-    public int getX() {
-        return (int)(body.getPosition().x / GameSettings.SCALE - width / 2);
-    }
-
-    @Override
-    public int getY() {
-        return (int)(body.getPosition().y / GameSettings.SCALE - height / 2);
-    }
 }

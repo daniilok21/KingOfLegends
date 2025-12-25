@@ -13,6 +13,8 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 
+import io.github.some_example_name.GameSettings;
+
 public class GameObject {
 
     public short cBits;
@@ -104,11 +106,11 @@ public class GameObject {
     }
 
     public int getX() {
-        return (int) (body.getPosition().x / SCALE);
+        return (int)(body.getPosition().x / GameSettings.SCALE - width / 2);
     }
 
     public int getY() {
-        return (int) (body.getPosition().y / SCALE);
+        return (int)(body.getPosition().y / GameSettings.SCALE - height / 2);
     }
 
     public void setX(int x) {

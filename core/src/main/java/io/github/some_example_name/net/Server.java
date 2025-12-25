@@ -56,12 +56,12 @@ public class Server {
                     PlayerInput clientInput = inputQueue.poll();
                     if (clientInput != null && clientBody != null) {
                         Vector2 force = new Vector2(0, 0);
-                        if (clientInput.moveRight) force.x = MOVE_FORCE;
-                        if (clientInput.moveLeft) force.x = -MOVE_FORCE;
+                        if (clientInput.moveRight) force.x = PLAYER_MOVE_FORCE;
+                        if (clientInput.moveLeft) force.x = -PLAYER_MOVE_FORCE;
                         if (clientInput.jump) {
                             if (Math.abs(clientBody.getLinearVelocity().y) < 0.1f) {
                                 clientBody.applyLinearImpulse(
-                                    new Vector2(0, JUMP_FORCE),
+                                    new Vector2(0, PLAYER_JUMP_FORCE),
                                     clientBody.getWorldCenter(),
                                     true
                                 );
@@ -70,7 +70,7 @@ public class Server {
                         clientBody.applyForceToCenter(force, true);
 
                         Vector2 vel = clientBody.getLinearVelocity();
-                        vel.x = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, vel.x));
+                        vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
                         clientBody.setLinearVelocity(vel);
                     }
 
@@ -103,20 +103,20 @@ public class Server {
 
     public void moveServerCubeRight() {
         if (serverBody != null) {
-            serverBody.applyForceToCenter(new Vector2(MOVE_FORCE, 0), true);
+            serverBody.applyForceToCenter(new Vector2(PLAYER_MOVE_FORCE, 0), true);
         }
     }
 
     public void moveServerCubeLeft() {
         if (serverBody != null) {
-            serverBody.applyForceToCenter(new Vector2(-MOVE_FORCE, 0), true);
+            serverBody.applyForceToCenter(new Vector2(-PLAYER_MOVE_FORCE, 0), true);
         }
     }
 
     public void serverJump() {
         if (serverBody != null && Math.abs(serverBody.getLinearVelocity().y) < 0.1f) {
             serverBody.applyLinearImpulse(
-                new Vector2(0, JUMP_FORCE),
+                new Vector2(0, PLAYER_JUMP_FORCE),
                 serverBody.getWorldCenter(),
                 true
             );

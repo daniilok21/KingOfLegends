@@ -9,9 +9,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
 
 import io.github.some_example_name.GameResources;
 import io.github.some_example_name.MyGdxGame;
@@ -21,6 +18,7 @@ import io.github.some_example_name.game.PlayerInput;
 import io.github.some_example_name.net.Client;
 import io.github.some_example_name.net.Server;
 import io.github.some_example_name.objects.PlatformObject;
+import io.github.some_example_name.objects.PlayerObject;
 
 import java.util.ArrayList;
 
@@ -37,8 +35,8 @@ public class GameScreen extends ScreenAdapter {
     private Client client;
     private GameState currentState;
 
-    private Body serverBody;
-    private Body clientBody;
+    private PlayerObject serverPlayer;
+    private PlayerObject clientPlayer;
 
     private ArrayList<PlatformObject> platforms;
 
@@ -77,43 +75,28 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void setupPhysicsBodies() {
-        serverBody = createPlayerBody(100, 400);
-        clientBody = createPlayerBody(SCREEN_WIDTH - 150, 400);
+        serverPlayer = new PlayerObject(
+            100, 400,
+            PLAYER_WIDTH, PLAYER_HEIGHT,
+            GameResources.RED_PLAYER_SPRITE_SHEET,
+            myGdxGame.world
+        );
 
-        currentState.serverBody = serverBody;
-        currentState.clientBody = clientBody;
-    }
+        clientPlayer = new PlayerObject(
+            SCREEN_WIDTH - 150, 400,
+            PLAYER_WIDTH, PLAYER_HEIGHT,
+            GameResources.BLUE_PLAYER_SPRITE_SHEET,
+            myGdxGame.world
+        );
 
-    private Body createPlayerBody(float x, float y) {
-        BodyDef bodyDef = new BodyDef();
-        bodyDef.type = BodyDef.BodyType.DynamicBody;
-        bodyDef.fixedRotation = true;
-        bodyDef.position.set(x * SCALE, y * SCALE);
-
-        Body body = myGdxGame.world.createBody(bodyDef);
-
-        PolygonShape shape = new PolygonShape();
-        shape.setAsBox((CUBE_SIZE / 2) * SCALE, (CUBE_SIZE / 2) * SCALE);
-
-        FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.shape = shape;
-        fixtureDef.density = 1.0f;
-        fixtureDef.friction = 0.3f;
-        fixtureDef.restitution = 0.1f;
-
-        fixtureDef.filter.categoryBits = PLAYER_BIT;
-
-        body.createFixture(fixtureDef);
-        shape.dispose();
-
-        return body;
+        currentState.serverBody = serverPlayer.getBody();
+        currentState.clientBody = clientPlayer.getBody();
     }
 
     private void setupUI() {
         int buttonSize = BUTTON_WIDTH;
         int margin = 50;
 
-        // Используем твои ButtonView компоненты
         leftButton = new ButtonView(
             margin, margin, buttonSize, buttonSize,
             GameResources.BUTTON_LEFT
@@ -181,7 +164,7 @@ public class GameScreen extends ScreenAdapter {
     public void initializeNetwork() {
         if (myGdxGame.isHost) {
             server = new Server();
-            server.setPhysicsBodies(serverBody, clientBody);
+            server.setPhysicsBodies(serverPlayer.getBody(), clientPlayer.getBody());
             server.start(PORT);
             currentState = server.getLocalState();
             connected = true;
@@ -213,17 +196,19 @@ public class GameScreen extends ScreenAdapter {
 
         if (myGdxGame.isHost) {
             Vector2 force = new Vector2(0, 0);
-            if (leftPressed) force.x = -MOVE_FORCE;
-            if (rightPressed) force.x = MOVE_FORCE;
+            if (leftPressed) force.x = -PLAYER_MOVE_FORCE;
+            if (rightPressed) force.x = PLAYER_MOVE_FORCE;
 
+            Body serverBody = serverPlayer.getBody();
             serverBody.applyForceToCenter(force, true);
 
             Vector2 vel = serverBody.getLinearVelocity();
-            vel.x = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, vel.x));
+            vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
             serverBody.setLinearVelocity(vel);
 
             if (jumpPressed && Math.abs(serverBody.getLinearVelocity().y) < 0.1f) {
-                serverBody.applyLinearImpulse(new Vector2(0, JUMP_FORCE), serverBody.getWorldCenter(), true);
+                serverBody.applyLinearImpulse(new Vector2(0, PLAYER_JUMP_FORCE),
+                    serverBody.getWorldCenter(), true);
                 jumpPressed = false;
             }
 
@@ -238,6 +223,9 @@ public class GameScreen extends ScreenAdapter {
 
             GameState serverState = client.getState();
             if (serverState != null) {
+                serverState.serverBody = currentState.serverBody;
+                serverState.clientBody = currentState.clientBody;
+
                 currentState = serverState;
                 currentState.applyToPhysics();
             }
@@ -260,32 +248,15 @@ public class GameScreen extends ScreenAdapter {
         for (PlatformObject platform : platforms) {
             platform.draw(batch);
         }
+        serverPlayer.draw(batch);
+        clientPlayer.draw(batch);
 
-        // Рисуем кнопки
         leftButton.draw(batch);
         rightButton.draw(batch);
         jumpButton.draw(batch);
         batch.end();
+//        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-
-        Vector2 serverPos = serverBody.getPosition();
-        shapeRenderer.setColor(Color.RED);
-        shapeRenderer.rect(
-            currentState.serverCubeX - CUBE_SIZE / 2,
-            currentState.serverCubeY - CUBE_SIZE / 2,
-            CUBE_SIZE, CUBE_SIZE
-        );
-
-        Vector2 clientPos = clientBody.getPosition();
-        shapeRenderer.setColor(Color.BLUE);
-        shapeRenderer.rect(
-            currentState.clientCubeX - CUBE_SIZE / 2,
-            currentState.clientCubeY - CUBE_SIZE / 2,
-            CUBE_SIZE, CUBE_SIZE
-        );
-
-        shapeRenderer.end();
 
         batch.begin();
         myGdxGame.font.setColor(Color.WHITE);
@@ -318,10 +289,12 @@ public class GameScreen extends ScreenAdapter {
         disconnect();
         shapeRenderer.dispose();
 
-        // Удаляем кнопки
         leftButton.dispose();
         rightButton.dispose();
         jumpButton.dispose();
+
+        serverPlayer.dispose();
+        clientPlayer.dispose();
 
         for (PlatformObject platform : platforms) {
             platform.dispose();
