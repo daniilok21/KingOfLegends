@@ -8,15 +8,14 @@ import io.github.some_example_name.game.PlayerInput;
 
 import java.io.*;
 import java.net.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static io.github.some_example_name.GameSettings.*;
 
 public class Server {
     private GameState world = new GameState();
     private volatile boolean running = true;
-    private BlockingQueue<PlayerInput> inputQueue = new ArrayBlockingQueue<>(10);
+    private AtomicReference<PlayerInput> latestInput = new AtomicReference<>(null);
 
     private Body serverBody;
     private Body clientBody;
@@ -43,35 +42,29 @@ public class Server {
                         while (running) {
                             PlayerInput input = (PlayerInput) in.readObject();
                             if (input != null) {
-                                inputQueue.put(input);
+                                latestInput.set(input);
                             }
                         }
+                    } catch (EOFException | SocketException e) {
+                        System.out.println("Client disconnected from input thread");
                     } catch (Exception e) {
-                        System.out.println("Input stopped: " + e.getMessage());
+                        System.out.println("Input thread error: " + e.getMessage());
+                        e.printStackTrace();
                     }
                 });
                 inputThread.start();
 
-                while (running) {
-                    PlayerInput clientInput = inputQueue.poll();
-                    if (clientInput != null && clientBody != null) {
-                        Vector2 force = new Vector2(0, 0);
-                        if (clientInput.moveRight) force.x = PLAYER_MOVE_FORCE;
-                        if (clientInput.moveLeft) force.x = -PLAYER_MOVE_FORCE;
-                        if (clientInput.jump) {
-                            if (Math.abs(clientBody.getLinearVelocity().y) < 0.1f) {
-                                clientBody.applyLinearImpulse(
-                                    new Vector2(0, PLAYER_JUMP_FORCE),
-                                    clientBody.getWorldCenter(),
-                                    true
-                                );
-                            }
-                        }
-                        clientBody.applyForceToCenter(force, true);
+                long lastTime = System.currentTimeMillis();
 
-                        Vector2 vel = clientBody.getLinearVelocity();
-                        vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
-                        clientBody.setLinearVelocity(vel);
+                while (running) {
+                    long currentTime = System.currentTimeMillis();
+                    float delta = (currentTime - lastTime) / 1000f;
+                    lastTime = currentTime;
+
+                    PlayerInput currentInput = latestInput.getAndSet(null);
+
+                    if (currentInput != null && clientBody != null) {
+                        applyInput(currentInput, delta);
                     }
 
                     world.updateFromPhysics();
@@ -80,16 +73,41 @@ public class Server {
                     out.flush();
                     out.reset();
 
-                    Thread.sleep(FRAME_DELAY_MS);
+                    long elapsed = System.currentTimeMillis() - currentTime;
+                    long sleepTime = FRAME_DELAY_MS - elapsed;
+                    if (sleepTime > 0) {
+                        Thread.sleep(sleepTime);
+                    }
                 }
 
                 inputThread.interrupt();
                 client.close();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    private void applyInput(PlayerInput input, float delta) {
+        Vector2 force = new Vector2(0, 0);
+        if (input.moveRight) force.x = PLAYER_MOVE_FORCE * delta * FRAME_RATE;
+        if (input.moveLeft) force.x = -PLAYER_MOVE_FORCE * delta * FRAME_RATE;
+
+        clientBody.applyForceToCenter(force, true);
+
+        Vector2 vel = clientBody.getLinearVelocity();
+        vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
+        clientBody.setLinearVelocity(vel);
+
+        if (input.jump) {
+            if (Math.abs(clientBody.getLinearVelocity().y) < 0.1f) {
+                clientBody.applyLinearImpulse(
+                    new Vector2(0, PLAYER_JUMP_FORCE),
+                    clientBody.getWorldCenter(),
+                    true
+                );
+            }
+        }
     }
 
     public void stop() {
@@ -99,27 +117,5 @@ public class Server {
     public GameState getLocalState() {
         world.updateFromPhysics();
         return world;
-    }
-
-    public void moveServerCubeRight() {
-        if (serverBody != null) {
-            serverBody.applyForceToCenter(new Vector2(PLAYER_MOVE_FORCE, 0), true);
-        }
-    }
-
-    public void moveServerCubeLeft() {
-        if (serverBody != null) {
-            serverBody.applyForceToCenter(new Vector2(-PLAYER_MOVE_FORCE, 0), true);
-        }
-    }
-
-    public void serverJump() {
-        if (serverBody != null && Math.abs(serverBody.getLinearVelocity().y) < 0.1f) {
-            serverBody.applyLinearImpulse(
-                new Vector2(0, PLAYER_JUMP_FORCE),
-                serverBody.getWorldCenter(),
-                true
-            );
-        }
     }
 }

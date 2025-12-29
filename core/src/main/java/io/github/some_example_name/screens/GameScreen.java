@@ -126,7 +126,7 @@ public class GameScreen extends ScreenAdapter {
             client = new Client();
             connected = client.connect(myGdxGame.hostIp, PORT);
             if (!connected) {
-                Gdx.app.error("GameScreen", "Failed to connect to server");
+                System.out.println("Failed to connect to server");
                 myGdxGame.showMenuScreen();
             }
         }
@@ -154,7 +154,6 @@ public class GameScreen extends ScreenAdapter {
                 leftButton.setPressed(true);
             }
             if (rightButton.isHit(touch.x, touch.y)) {
-                System.out.println(touch.x + "      " + touch.y);
                 rightPressed = true;
                 rightButton.setPressed(true);
             }
