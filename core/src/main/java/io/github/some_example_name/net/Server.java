@@ -150,7 +150,7 @@ public class Server {
 
                 Vector2 currentVelocity = clientBody.getLinearVelocity();
                 clientBody.setLinearVelocity(currentVelocity.x, 0);
-
+                System.out.println("clientJumpsRemaining = " + clientJumpsRemaining);
                 clientBody.applyLinearImpulse(
                     new Vector2(0, PLAYER_JUMP_FORCE),
                     clientBody.getWorldCenter(),

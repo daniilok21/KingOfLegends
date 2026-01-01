@@ -52,8 +52,6 @@ public class GameScreen extends ScreenAdapter {
     private boolean jumpPressed = false;
     private boolean dodgePressed = false;
     private boolean attackPressed = false;
-
-    private float jumpButtonCooldown = 0f;
     private boolean jumpWasPressed = false;
     private boolean dodgeWasPressed = false;
 
@@ -159,14 +157,6 @@ public class GameScreen extends ScreenAdapter {
         update(delta);
         draw();
         myGdxGame.stepWorld();
-        updateButtonCooldowns(delta);
-    }
-
-    private void updateButtonCooldowns(float delta) {
-        jumpButtonCooldown -= delta;
-        if (jumpButtonCooldown < 0) {
-            jumpButtonCooldown = 0;
-        }
     }
 
     private void handleInput() {
@@ -219,11 +209,9 @@ public class GameScreen extends ScreenAdapter {
             Vector2 vel = serverBody.getLinearVelocity();
             vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
             serverBody.setLinearVelocity(vel);
-            if (jumpPressed && jumpButtonCooldown == 0.0f) {
+            if (jumpPressed) {
                 boolean jumpSuccessful = serverPlayer.jump(PLAYER_JUMP_FORCE);
                 if (jumpSuccessful) {
-                    jumpButtonCooldown = 0.2f;
-                    System.out.println(serverPlayer.getJumpsRemaining());
                 }
             }
             if (dodgePressed) {

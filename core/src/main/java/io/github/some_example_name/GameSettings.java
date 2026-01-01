@@ -26,7 +26,7 @@ public class GameSettings {
     public static final float DODGE_COOLDOWN = 1.0f;
 
     // Прыжок
-    public static final int MAX_JUMPS = 2;
+    public static final float JUMP_COOLDOWN = 0.2f;
 
     // Физика Box2D
     public static final float STEP_TIME = 1f / 60f;
