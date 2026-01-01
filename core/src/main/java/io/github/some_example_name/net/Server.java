@@ -17,6 +17,13 @@ public class Server {
     private volatile boolean running = true;
     private AtomicReference<PlayerInput> latestInput = new AtomicReference<>(null);
 
+    private int clientJumpsRemaining = 2;
+    private boolean clientIsOnGround = false;
+
+    private boolean clientIsDodging = false;
+    private float clientDodgeTimer = 0f;
+    private float clientDodgeCooldown = 0f;
+
     private Body serverBody;
     private Body clientBody;
 
@@ -61,6 +68,9 @@ public class Server {
                     float delta = (currentTime - lastTime) / 1000f;
                     lastTime = currentTime;
 
+                    updateDodgeState(delta);
+                    updateClientGroundStatus();
+
                     PlayerInput currentInput = latestInput.getAndSet(null);
 
                     if (currentInput != null && clientBody != null) {
@@ -88,6 +98,37 @@ public class Server {
         }).start();
     }
 
+    private void updateDodgeState(float delta) {
+        if (clientIsDodging) {
+            clientDodgeTimer += delta;
+            if (clientDodgeTimer >= DODGE_DURATION) {
+                clientIsDodging = false;
+                clientDodgeTimer = 0f;
+                if (clientBody != null) {
+                    clientBody.setGravityScale(1.0f);
+                }
+            }
+        }
+
+        if (clientDodgeCooldown > 0) {
+            clientDodgeCooldown -= delta;
+        }
+    }
+
+    private void updateClientGroundStatus() {
+        if (clientBody == null) return;
+
+        float velocityY = clientBody.getLinearVelocity().y;
+        if (velocityY == 0f) {
+            if (!clientIsOnGround) {
+                clientIsOnGround = true;
+                clientJumpsRemaining = 2;
+            }
+        } else {
+            clientIsOnGround = false;
+        }
+    }
+
     private void applyInput(PlayerInput input, float delta) {
         Vector2 force = new Vector2(0, 0);
         if (input.moveRight) force.x = PLAYER_MOVE_FORCE * delta * FRAME_RATE;
@@ -100,12 +141,47 @@ public class Server {
         clientBody.setLinearVelocity(vel);
 
         if (input.jump) {
-            if (Math.abs(clientBody.getLinearVelocity().y) < 0.1f) {
+            if (clientJumpsRemaining > 0) {
+                if (clientIsDodging) {
+                    clientIsDodging = false;
+                    clientDodgeTimer = 0f;
+                    clientBody.setGravityScale(1.0f);
+                }
+
+                Vector2 currentVelocity = clientBody.getLinearVelocity();
+                clientBody.setLinearVelocity(currentVelocity.x, 0);
+
                 clientBody.applyLinearImpulse(
                     new Vector2(0, PLAYER_JUMP_FORCE),
                     clientBody.getWorldCenter(),
                     true
                 );
+
+                clientJumpsRemaining--;
+            }
+        }
+
+        if (input.dodge && clientDodgeCooldown <= 0 && !clientIsDodging) {
+            float dodgeDirection = 0;
+            if (input.moveLeft) dodgeDirection = -1;
+            else if (input.moveRight) dodgeDirection = 1;
+            else {
+                float currentVelX = clientBody.getLinearVelocity().x;
+                if (currentVelX != 0) {
+                    if (currentVelX > 0) dodgeDirection = 0;
+                    else dodgeDirection = 1;
+                }
+            }
+
+            if (dodgeDirection != 0) {
+                clientIsDodging = true;
+                clientDodgeTimer = 0f;
+                clientDodgeCooldown = DODGE_COOLDOWN;
+
+                Vector2 dodgeImpulse = new Vector2(dodgeDirection, 0).nor().scl(DODGE_FORCE);
+                clientBody.applyLinearImpulse(dodgeImpulse, clientBody.getWorldCenter(), true);
+
+                clientBody.setGravityScale(0.2f);
             }
         }
     }

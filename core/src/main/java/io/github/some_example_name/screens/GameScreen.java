@@ -44,10 +44,18 @@ public class GameScreen extends ScreenAdapter {
     private ButtonView leftButton;
     private ButtonView rightButton;
     private ButtonView jumpButton;
+    private ButtonView dodgeButton;
+    private ButtonView attackButton;
 
     private boolean leftPressed = false;
     private boolean rightPressed = false;
     private boolean jumpPressed = false;
+    private boolean dodgePressed = false;
+    private boolean attackPressed = false;
+
+    private float jumpButtonCooldown = 0f;
+    private boolean jumpWasPressed = false;
+    private boolean dodgeWasPressed = false;
 
     private boolean connected = false;
 
@@ -95,21 +103,29 @@ public class GameScreen extends ScreenAdapter {
 
     private void setupUI() {
         int buttonSize = BUTTON_WIDTH;
-        int margin = 50;
+        int offset = 50;
 
         leftButton = new ButtonView(
-            margin, margin, buttonSize, buttonSize,
+            offset, offset, buttonSize, buttonSize,
             GameResources.BUTTON_LEFT
         );
 
         rightButton = new ButtonView(
-            margin + buttonSize + 20, margin, buttonSize, buttonSize,
+            offset + buttonSize + 20, offset, buttonSize, buttonSize,
             GameResources.BUTTON_RIGHT
         );
 
         jumpButton = new ButtonView(
-            SCREEN_WIDTH - margin - buttonSize, margin, buttonSize, buttonSize,
+            SCREEN_WIDTH - offset - buttonSize, offset, buttonSize, buttonSize,
             GameResources.BUTTON_JUMP
+        );
+        dodgeButton = new ButtonView(
+            SCREEN_WIDTH - offset - buttonSize * 2 - 20, offset, buttonSize, buttonSize,
+            GameResources.BUTTON_DODGE
+        );
+        attackButton = new ButtonView(
+            SCREEN_WIDTH - offset - buttonSize * 3 - 2 * 20, offset, buttonSize, buttonSize,
+            GameResources.BUTTON_ATTACK
         );
     }
 
@@ -143,11 +159,32 @@ public class GameScreen extends ScreenAdapter {
         update(delta);
         draw();
         myGdxGame.stepWorld();
+        updateButtonCooldowns(delta);
+    }
+
+    private void updateButtonCooldowns(float delta) {
+        jumpButtonCooldown -= delta;
+        if (jumpButtonCooldown < 0) {
+            jumpButtonCooldown = 0;
+        }
     }
 
     private void handleInput() {
         if (!connected) return;
         Vector3 touch = myGdxGame.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+        if (!Gdx.input.isTouched()) {
+            leftPressed = false;
+            rightPressed = false;
+            jumpPressed = false;
+            dodgePressed = false;
+            attackPressed = false;
+            leftButton.setPressed(false);
+            rightButton.setPressed(false);
+            jumpButton.setPressed(false);
+            dodgeButton.setPressed(false);
+            attackButton.setPressed(false);
+        }
+
         if (Gdx.input.isTouched()) {
             if (leftButton.isHit(touch.x, touch.y)) {
                 leftPressed = true;
@@ -160,6 +197,14 @@ public class GameScreen extends ScreenAdapter {
             if (jumpButton.isHit(touch.x, touch.y)) {
                 jumpPressed = true;
                 jumpButton.setPressed(true);
+            }
+            if (dodgeButton.isHit(touch.x, touch.y)) {
+                dodgePressed = true;
+                dodgeButton.setPressed(true);
+            }
+            if (attackButton.isHit(touch.x, touch.y)) {
+                attackPressed = true;
+                attackButton.setPressed(true);
             }
         }
 
@@ -174,11 +219,30 @@ public class GameScreen extends ScreenAdapter {
             Vector2 vel = serverBody.getLinearVelocity();
             vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
             serverBody.setLinearVelocity(vel);
+            if (jumpPressed && jumpButtonCooldown == 0.0f) {
+                boolean jumpSuccessful = serverPlayer.jump(PLAYER_JUMP_FORCE);
+                if (jumpSuccessful) {
+                    jumpButtonCooldown = 0.2f;
+                    System.out.println(serverPlayer.getJumpsRemaining());
+                }
+            }
+            if (dodgePressed) {
+                float dodgeDirection = 0;
+                if (leftPressed) dodgeDirection = -1;
+                else if (rightPressed) dodgeDirection = 1;
+                else {
+                    float velX = serverBody.getLinearVelocity().x;
+                    if (velX != 0) {
+                        if (velX > 0) dodgeDirection = 0;
+                        else dodgeDirection = 1;
+                    }
+                }
 
-            if (jumpPressed && Math.abs(serverBody.getLinearVelocity().y) < 0.1f) {
-                serverBody.applyLinearImpulse(new Vector2(0, PLAYER_JUMP_FORCE),
-                    serverBody.getWorldCenter(), true);
-                jumpPressed = false;
+                if (dodgeDirection != 0) {
+                    boolean dodgeSuccessful = serverPlayer.dodge(dodgeDirection);
+                    if (dodgeSuccessful) {
+                    }
+                }
             }
 
         } else if (client != null) {
@@ -186,9 +250,13 @@ public class GameScreen extends ScreenAdapter {
             input.moveLeft = leftPressed;
             input.moveRight = rightPressed;
             input.jump = jumpPressed;
+            input.dodge = dodgePressed;
+            input.attack = attackPressed;
             client.sendInput(input);
 
-            if (jumpPressed) jumpPressed = false;
+            jumpPressed = false;
+            dodgePressed = false;
+            attackPressed = false;
 
             GameState serverState = client.getState();
             if (serverState != null) {
@@ -199,21 +267,14 @@ public class GameScreen extends ScreenAdapter {
                 currentState.applyToPhysics();
             }
         }
-        if (!Gdx.input.isTouched()) {
-            leftPressed = false;
-            rightPressed = false;
-            jumpPressed = false;
-            leftButton.setPressed(false);
-            rightButton.setPressed(false);
-            jumpButton.setPressed(false);
-        }
     }
 
     private void update(float delta) {
+        serverPlayer.update(delta);
+        clientPlayer.update(delta);
         if (myGdxGame.isHost) {
             currentState.updateFromPhysics();
         }
-
     }
 
     private void draw() {
@@ -231,9 +292,10 @@ public class GameScreen extends ScreenAdapter {
         leftButton.draw(batch);
         rightButton.draw(batch);
         jumpButton.draw(batch);
-        batch.end();
-//        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        dodgeButton.draw(batch);
+        attackButton.draw(batch);
 
+        batch.end();
 
         batch.begin();
         myGdxGame.font.setColor(Color.WHITE);
@@ -269,6 +331,8 @@ public class GameScreen extends ScreenAdapter {
         leftButton.dispose();
         rightButton.dispose();
         jumpButton.dispose();
+        dodgeButton.dispose();
+        attackButton.dispose();
 
         serverPlayer.dispose();
         clientPlayer.dispose();

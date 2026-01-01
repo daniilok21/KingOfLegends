@@ -9,7 +9,7 @@ public class GameSettings {
     public static final int PLAYER_WIDTH = 64;
     public static final int PLAYER_HEIGHT = 64;
     public static final float PLAYER_MOVE_FORCE = 500f;
-    public static final float PLAYER_JUMP_FORCE = 40f;
+    public static final float PLAYER_JUMP_FORCE = 25f;
     public static final float PLAYER_MAX_VELOCITY = 10f;
 
     // Гравитация
@@ -19,6 +19,14 @@ public class GameSettings {
     public static final int PORT = 9090;
     public static final int FRAME_RATE = 60;
     public static final int FRAME_DELAY_MS = 1000 / FRAME_RATE;
+
+    // Уворот
+    public static final float DODGE_FORCE = 1500f;
+    public static final float DODGE_DURATION = 0.3f;
+    public static final float DODGE_COOLDOWN = 1.0f;
+
+    // Прыжок
+    public static final int MAX_JUMPS = 2;
 
     // Физика Box2D
     public static final float STEP_TIME = 1f / 60f;

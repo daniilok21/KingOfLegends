@@ -7,5 +7,6 @@ public class PlayerInput implements Serializable {
     public boolean moveRight = false;
     public boolean moveLeft = false;
     public boolean jump = false;
+    public boolean dodge = false;
     public boolean attack = false;
 }
