@@ -9,4 +9,6 @@ public class PlayerInput implements Serializable {
     public boolean jump = false;
     public boolean dodge = false;
     public boolean attack = false;
+    public boolean attackUp = false;
+    public boolean attackDown = false;
 }

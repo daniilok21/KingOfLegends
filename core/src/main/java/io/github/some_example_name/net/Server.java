@@ -213,6 +213,17 @@ public class Server {
                 clientBody.setGravityScale(0.2f);
             }
         }
+        if (input.attack) {
+            if (input.attackUp) {
+                System.out.println("Server: Client attack UP");
+            }
+            else if (input.attackDown) {
+                System.out.println("Server: Client attack DOWN");
+            }
+            else {
+                System.out.println("Server: Client attack FORWARD");
+            }
+        }
     }
 
     public void stop() {

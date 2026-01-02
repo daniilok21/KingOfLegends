@@ -14,4 +14,7 @@ public class GameResources {
     public static final String RED_PLAYER_SPRITE_SHEET = "textures/red_player.png";
     public static final String BLUE_PLAYER_SPRITE_SHEET = "textures/blue_player.png";
 
+    // Джойстик
+    public static final String JOYSTICK_BG = "textures/Joystick.png";
+    public static final String JOYSTICK_HANDLE = "textures/LargeHandleFilled.png";
 }

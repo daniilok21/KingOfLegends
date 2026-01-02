@@ -14,6 +14,7 @@ import com.badlogic.gdx.physics.box2d.Body;
 import io.github.some_example_name.GameResources;
 import io.github.some_example_name.MyGdxGame;
 import io.github.some_example_name.components.ButtonView;
+import io.github.some_example_name.components.JoystickView;
 import io.github.some_example_name.game.GameState;
 import io.github.some_example_name.game.PlayerInput;
 import io.github.some_example_name.net.Client;
@@ -41,8 +42,7 @@ public class GameScreen extends ScreenAdapter {
 
     private ArrayList<PlatformObject> platforms;
 
-    private ButtonView leftButton;
-    private ButtonView rightButton;
+    private JoystickView joystick;
     private ButtonView jumpButton;
     private ButtonView dodgeButton;
     private ButtonView attackButton;
@@ -52,8 +52,9 @@ public class GameScreen extends ScreenAdapter {
     private boolean jumpPressed = false;
     private boolean dodgePressed = false;
     private boolean attackPressed = false;
-    private boolean jumpWasPressed = false;
-    private boolean dodgeWasPressed = false;
+    private boolean attackUp = false;
+    private boolean attackDown = false;
+    private boolean attackNeutral = false;
 
     private boolean connected = false;
 
@@ -100,29 +101,20 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void setupUI() {
-        int buttonSize = BUTTON_WIDTH;
         int offset = 50;
 
-        leftButton = new ButtonView(
-            offset, offset, buttonSize, buttonSize,
-            GameResources.BUTTON_LEFT
-        );
-
-        rightButton = new ButtonView(
-            offset + buttonSize + 20, offset, buttonSize, buttonSize,
-            GameResources.BUTTON_RIGHT
-        );
+        joystick = new JoystickView(offset, offset, GameResources.JOYSTICK_BG, GameResources.JOYSTICK_HANDLE);
 
         jumpButton = new ButtonView(
-            SCREEN_WIDTH - offset - buttonSize, offset, buttonSize, buttonSize,
+            SCREEN_WIDTH - offset - BUTTON_WIDTH, offset, BUTTON_WIDTH, BUTTON_HEIGHT,
             GameResources.BUTTON_JUMP
         );
         dodgeButton = new ButtonView(
-            SCREEN_WIDTH - offset - buttonSize * 2 - 20, offset, buttonSize, buttonSize,
+            SCREEN_WIDTH - offset - BUTTON_WIDTH * 2 - 20, offset, BUTTON_WIDTH, BUTTON_HEIGHT,
             GameResources.BUTTON_DODGE
         );
         attackButton = new ButtonView(
-            SCREEN_WIDTH - offset - buttonSize * 3 - 2 * 20, offset, buttonSize, buttonSize,
+            SCREEN_WIDTH - offset - BUTTON_WIDTH * 3 - 2 * 20, offset, BUTTON_WIDTH, BUTTON_HEIGHT,
             GameResources.BUTTON_ATTACK
         );
     }
@@ -154,6 +146,7 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
+        checkTouchUp();
         handleInput();
         update(delta);
         draw();
@@ -162,7 +155,6 @@ public class GameScreen extends ScreenAdapter {
 
     private void handleInput() {
         if (!connected) return;
-        Vector3 touch = myGdxGame.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
 
         if (!myGdxGame.isHost && client != null) {
             GameState serverState = client.getState();
@@ -172,48 +164,82 @@ public class GameScreen extends ScreenAdapter {
             }
         }
 
-        if (currentState.gameStatus != GameState.GameStatus.PLAYING) {
-            leftPressed = false;
-            rightPressed = false;
-            jumpPressed = false;
-            dodgePressed = false;
-            attackPressed = false;
-            return;
+//        if (currentState.gameStatus != GameState.GameStatus.PLAYING) {
+//            leftPressed = false;
+//            rightPressed = false;
+//            jumpPressed = false;
+//            dodgePressed = false;
+//            attackPressed = false;
+//            return;
+//        }
+
+
+        leftPressed = false;
+        rightPressed = false;
+        jumpPressed = false;
+        dodgePressed = false;
+        attackPressed = false;
+        attackUp = false;
+        attackDown = false;
+        attackNeutral = false;
+        jumpButton.setPressed(false);
+        dodgeButton.setPressed(false);
+        attackButton.setPressed(false);
+
+        if (joystick.isCaptured()) {
+            int capturedPointer = joystick.getCapturedPointer();
+            if (capturedPointer >= 0 && capturedPointer < 5) {
+                if (!Gdx.input.isTouched(capturedPointer)) {
+                    joystick.reset();
+                }
+            }
         }
 
-        if (!Gdx.input.isTouched()) {
-            leftPressed = false;
-            rightPressed = false;
-            jumpPressed = false;
-            dodgePressed = false;
-            attackPressed = false;
-            leftButton.setPressed(false);
-            rightButton.setPressed(false);
-            jumpButton.setPressed(false);
-            dodgeButton.setPressed(false);
-            attackButton.setPressed(false);
+        boolean[] fingerProcessed = new boolean[5];
+        // джостик
+        for (int i = 0; i < 5; i++) {
+            if (Gdx.input.isTouched(i)) {
+                Vector3 touch = myGdxGame.camera.unproject(new Vector3(Gdx.input.getX(i), Gdx.input.getY(i), 0));
+
+                if (joystick.processTouch(touch.x, touch.y, true, i)) {
+                    fingerProcessed[i] = true;
+                }
+            }
+        }
+        // кнопки
+        for (int i = 0; i < 5; i++) {
+            if (Gdx.input.isTouched(i)) {
+                Vector3 touch = myGdxGame.camera.unproject(new Vector3(Gdx.input.getX(i), Gdx.input.getY(i), 0));
+
+                if (jumpButton.isHit(touch.x, touch.y)) {
+                    jumpPressed = true;
+                    jumpButton.setPressed(true);
+                }
+                if (dodgeButton.isHit(touch.x, touch.y)) {
+                    dodgePressed = true;
+                    dodgeButton.setPressed(true);
+                }
+                if (attackButton.isHit(touch.x, touch.y)) {
+                    attackPressed = true;
+                    attackButton.setPressed(true);
+                    if (joystick.isUp()) attackUp = true;
+                    else if (joystick.isDown()) attackDown = true;
+                    else attackNeutral = true;
+                }
+            }
+        }
+        // отпускание пальца
+        for (int i = 0; i < 5; i++) {
+            if (!Gdx.input.isTouched(i) && fingerProcessed[i]) {
+                joystick.processTouch(0, 0, false, i);
+            }
         }
 
-        if (Gdx.input.isTouched()) {
-            if (leftButton.isHit(touch.x, touch.y)) {
+        if (joystick.isCaptured()) {
+            if (joystick.isLeft()) {
                 leftPressed = true;
-                leftButton.setPressed(true);
-            }
-            if (rightButton.isHit(touch.x, touch.y)) {
+            } else if (joystick.isRight()) {
                 rightPressed = true;
-                rightButton.setPressed(true);
-            }
-            if (jumpButton.isHit(touch.x, touch.y)) {
-                jumpPressed = true;
-                jumpButton.setPressed(true);
-            }
-            if (dodgeButton.isHit(touch.x, touch.y)) {
-                dodgePressed = true;
-                dodgeButton.setPressed(true);
-            }
-            if (attackButton.isHit(touch.x, touch.y)) {
-                attackPressed = true;
-                attackButton.setPressed(true);
             }
         }
 
@@ -276,12 +302,33 @@ public class GameScreen extends ScreenAdapter {
         }
     }
 
+    private void checkTouchUp() {
+        if (!Gdx.input.isTouched()) {
+            jumpButton.setPressed(false);
+            dodgeButton.setPressed(false);
+            attackButton.setPressed(false);
+            joystick.reset();
+        }
+    }
+
     private void update(float delta) {
         serverPlayer.update(delta);
         clientPlayer.update(delta);
         if (myGdxGame.isHost) {
+            if (attackPressed) {
+                exampleAttack();
+            }
             updateGameState(delta);
             currentState.updateFromPhysics();
+        }
+    }
+    private void exampleAttack() {
+        if (attackUp) {
+            System.out.println("Attack UP");
+        } else if (attackDown) {
+            System.out.println("Attack DOWN");
+        } else {
+            System.out.println("Attack FORWARD");
         }
     }
     private void updateGameState(float delta) {
@@ -318,8 +365,7 @@ public class GameScreen extends ScreenAdapter {
         serverPlayer.draw(batch);
         clientPlayer.draw(batch);
 
-        leftButton.draw(batch);
-        rightButton.draw(batch);
+        joystick.draw(batch);
         jumpButton.draw(batch);
         dodgeButton.draw(batch);
         attackButton.draw(batch);
@@ -375,8 +421,7 @@ public class GameScreen extends ScreenAdapter {
         disconnect();
         shapeRenderer.dispose();
 
-        leftButton.dispose();
-        rightButton.dispose();
+        joystick.dispose();
         jumpButton.dispose();
         dodgeButton.dispose();
         attackButton.dispose();

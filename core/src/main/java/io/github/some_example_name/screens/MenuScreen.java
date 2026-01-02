@@ -25,7 +25,7 @@ public class MenuScreen extends ScreenAdapter {
     private int selectedItem = 0;
 
     private boolean enteringIp = false;
-    private String ipAddress = "192.168.1.49";
+    private String ipAddress;
 
     public MenuScreen(MyGdxGame game) {
         this.game = game;
@@ -89,12 +89,15 @@ public class MenuScreen extends ScreenAdapter {
             selectedItem = (selectedItem - 1 + menuItems.length) % menuItems.length;
         }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isTouched()) {
             if (enteringIp) {
                 // Подтверждение IP
                 game.showGameScreen(false, ipAddress.toString());
                 enteringIp = false;
             } else {
+                if (Gdx.input.isTouched()) {
+                    selectedItem = 0;
+                }
                 // Выбор пункта меню
                 switch (selectedItem) {
                     case 0: // Host Game

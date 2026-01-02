@@ -38,6 +38,8 @@ public class GameSettings {
     public static final int BUTTON_WIDTH = 150;
     public static final int BUTTON_HEIGHT = 150;
     public static final float BUTTON_ALPHA = 0.7f;
+    public static final float JOYSTICK_BG_RADIUS = 80f;
+    public static final float JOYSTICK_HANDLE_RADIUS = 30f;
 
     // Категории коллизий
     public static final short PLAYER_BIT = 2;
