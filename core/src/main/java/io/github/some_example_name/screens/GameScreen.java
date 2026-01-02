@@ -164,6 +164,14 @@ public class GameScreen extends ScreenAdapter {
         if (!connected) return;
         Vector3 touch = myGdxGame.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
 
+        if (!myGdxGame.isHost && client != null) {
+            GameState serverState = client.getState();
+            if (serverState != null) {
+                currentState.gameStatus = serverState.gameStatus;
+                currentState.countdownTimer = serverState.countdownTimer;
+            }
+        }
+
         if (currentState.gameStatus != GameState.GameStatus.PLAYING) {
             leftPressed = false;
             rightPressed = false;
