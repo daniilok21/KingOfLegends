@@ -45,7 +45,7 @@ public class PlayerObject extends GameObject {
 
     private void checkGroundStatus() {
         float velocityY = body.getLinearVelocity().y;
-        if (velocityY == 0f) {
+        if (Math.abs(velocityY) <= 0.1f) {
             if (!isOnGround) {
                 isOnGround = true;
                 jumpsRemaining = 2;

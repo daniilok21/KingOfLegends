@@ -28,6 +28,8 @@ public class Server {
     private Body serverBody;
     private Body clientBody;
 
+    private Socket clientSocket;
+
     public void setPhysicsBodies(Body serverBody, Body clientBody) {
         this.serverBody = serverBody;
         this.clientBody = clientBody;
@@ -39,11 +41,11 @@ public class Server {
         new Thread(() -> {
             try (ServerSocket server = new ServerSocket(port)) {
                 System.out.println("Server started");
-                Socket client = server.accept();
-                System.out.println("Client connected: " + client.getInetAddress());
+                clientSocket = server.accept();
+                System.out.println("Client connected: " + clientSocket.getInetAddress());
 
-                ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(client.getInputStream());
+                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
 
                 Thread inputThread = new Thread(() -> {
                     try {
@@ -69,6 +71,7 @@ public class Server {
                     float delta = (currentTime - lastTime) / 1000f;
                     lastTime = currentTime;
 
+                    updateGameState(delta);
                     updateDodgeState(delta);
                     updateClientGroundStatus();
 
@@ -92,11 +95,31 @@ public class Server {
                 }
 
                 inputThread.interrupt();
-                client.close();
+                clientSocket.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    private void updateGameState(float delta) {
+        switch (world.gameStatus) {
+            case WAITING:
+                if (clientSocket != null && clientSocket.isConnected() && !clientSocket.isClosed()) {
+                    world.gameStatus = GameState.GameStatus.COUNTDOWN;
+                    world.countdownTimer = 3.0f;
+                }
+                break;
+            case COUNTDOWN:
+                world.countdownTimer -= delta;
+                if (world.countdownTimer <= 0) {
+                    world.gameStatus = GameState.GameStatus.PLAYING;
+                    System.out.println("Game started");
+                }
+                break;
+            case PLAYING:
+                break;
+        }
     }
 
     private void updateDodgeState(float delta) {
@@ -120,17 +143,20 @@ public class Server {
         if (clientBody == null) return;
 
         float velocityY = clientBody.getLinearVelocity().y;
-        if (velocityY == 0f) {
+        if (Math.abs(velocityY) <= 0.1f) {
             if (!clientIsOnGround) {
                 clientIsOnGround = true;
                 clientJumpsRemaining = 2;
             }
-        } else {
+        }
+        else {
             clientIsOnGround = false;
         }
     }
 
     private void applyInput(PlayerInput input, float delta) {
+        if (world.gameStatus != GameState.GameStatus.PLAYING) return;
+
         Vector2 force = new Vector2(0, 0);
         if (input.moveRight) force.x = PLAYER_MOVE_FORCE * delta * FRAME_RATE;
         if (input.moveLeft) force.x = -PLAYER_MOVE_FORCE * delta * FRAME_RATE;
@@ -154,7 +180,6 @@ public class Server {
                 clientJumpCooldown = JUMP_COOLDOWN;
                 Vector2 currentVelocity = clientBody.getLinearVelocity();
                 clientBody.setLinearVelocity(currentVelocity.x, 0);
-                System.out.println("clientJumpsRemaining = " + clientJumpsRemaining);
                 clientBody.applyLinearImpulse(
                     new Vector2(0, PLAYER_JUMP_FORCE),
                     clientBody.getWorldCenter(),

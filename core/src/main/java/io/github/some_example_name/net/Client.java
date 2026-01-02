@@ -12,6 +12,7 @@ public class Client {
     private ObjectInputStream in;
     private volatile boolean running = true;
     private GameState latestState = new GameState();
+    private volatile boolean connected = false;
 
     public boolean connect(String host, int port) {
         try {
@@ -19,6 +20,7 @@ public class Client {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
+            connected = true;
             // приём состояния от сервера
             new Thread(() -> {
                 try {
@@ -45,6 +47,7 @@ public class Client {
     }
 
     public void sendInput(PlayerInput input) {
+        if (!connected || out == null) return;
         try {
             out.writeObject(input);
             out.flush();
@@ -52,6 +55,7 @@ public class Client {
         }
         catch (IOException e) {
             System.out.println("Failed to send input: " + e.getMessage());
+            connected = false;
         }
     }
 
@@ -61,9 +65,16 @@ public class Client {
         }
     }
 
+    public boolean isConnected() {
+        return connected && socket != null && !socket.isClosed() && socket.isConnected();
+    }
+
     public void disconnect() {
         running = false;
+        connected = false;
         try {
+            if (out != null) out.close();
+            if (in != null) in.close();
             if (socket != null) socket.close();
         }
         catch (IOException e) {}

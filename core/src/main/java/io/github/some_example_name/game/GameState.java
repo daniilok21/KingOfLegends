@@ -29,6 +29,13 @@ public class GameState implements Serializable {
     public transient boolean clientMoveLeft = false;
     public transient boolean clientMoveRight = false;
     public transient boolean clientJump = false;
+    public enum GameStatus {
+        WAITING, // ждем
+        COUNTDOWN, // отсчет
+        PLAYING // играем
+    }
+    public GameStatus gameStatus = GameStatus.WAITING;
+    public float countdownTimer = 3.0f;
 
     public void updateFromPhysics() {
         if (serverBody != null) {
@@ -72,6 +79,8 @@ public class GameState implements Serializable {
 
     public GameState clone() {
         GameState copy = new GameState();
+        copy.gameStatus = this.gameStatus;
+        copy.countdownTimer = this.countdownTimer;
         copy.serverCubeX = this.serverCubeX;
         copy.serverCubeY = this.serverCubeY;
         copy.clientCubeX = this.clientCubeX;

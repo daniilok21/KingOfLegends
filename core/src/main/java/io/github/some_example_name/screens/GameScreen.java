@@ -136,7 +136,8 @@ public class GameScreen extends ScreenAdapter {
             server.start(PORT);
             currentState = server.getLocalState();
             connected = true;
-        } else {
+        }
+        else {
             client = new Client();
             connected = client.connect(myGdxGame.hostIp, PORT);
             if (!connected) {
@@ -162,6 +163,16 @@ public class GameScreen extends ScreenAdapter {
     private void handleInput() {
         if (!connected) return;
         Vector3 touch = myGdxGame.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+
+        if (currentState.gameStatus != GameState.GameStatus.PLAYING) {
+            leftPressed = false;
+            rightPressed = false;
+            jumpPressed = false;
+            dodgePressed = false;
+            attackPressed = false;
+            return;
+        }
+
         if (!Gdx.input.isTouched()) {
             leftPressed = false;
             rightPressed = false;
@@ -261,7 +272,29 @@ public class GameScreen extends ScreenAdapter {
         serverPlayer.update(delta);
         clientPlayer.update(delta);
         if (myGdxGame.isHost) {
+            updateGameState(delta);
             currentState.updateFromPhysics();
+        }
+    }
+    private void updateGameState(float delta) {
+        switch (currentState.gameStatus) {
+            case WAITING:
+                if (client != null && client.isConnected()) {
+                    currentState.gameStatus = GameState.GameStatus.COUNTDOWN;
+                    currentState.countdownTimer = 3.0f;
+                }
+                break;
+
+            case COUNTDOWN:
+                currentState.countdownTimer -= delta;
+                if (currentState.countdownTimer <= 0) {
+                    currentState.gameStatus = GameState.GameStatus.PLAYING;
+                    System.out.println("Game started");
+                }
+                break;
+
+            case PLAYING:
+                break;
         }
     }
 
@@ -283,12 +316,30 @@ public class GameScreen extends ScreenAdapter {
         dodgeButton.draw(batch);
         attackButton.draw(batch);
 
-        batch.end();
+        drawGameStateUI();
 
-        batch.begin();
+        batch.end();
+    }
+
+    private void drawGameStateUI() {
         myGdxGame.font.setColor(Color.WHITE);
         myGdxGame.font.draw(batch, myGdxGame.isHost ? "HOST" : "CLIENT", 10, SCREEN_HEIGHT - 10);
-        batch.end();
+
+        switch (currentState.gameStatus) {
+            case WAITING:
+                myGdxGame.font.setColor(Color.WHITE);
+                myGdxGame.font.draw(batch, "WAITING FOR CLIENT...", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+                break;
+
+            case COUNTDOWN:
+                myGdxGame.font.setColor(Color.WHITE);
+                int seconds = (int) Math.ceil(currentState.countdownTimer);
+                myGdxGame.font.draw(batch, "STARTING IN: " + seconds, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+                break;
+
+            case PLAYING:
+                break;
+        }
     }
 
     public void disconnect() {
