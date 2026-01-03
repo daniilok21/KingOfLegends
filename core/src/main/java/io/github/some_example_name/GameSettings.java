@@ -25,6 +25,9 @@ public class GameSettings {
     public static final float DODGE_DURATION = 0.3f;
     public static final float DODGE_COOLDOWN = 1.0f;
 
+    // Атака
+    public static final float ATTACK_DURATION = 0.3f;
+
     // Прыжок
     public static final float JUMP_COOLDOWN = 0.2f;
 

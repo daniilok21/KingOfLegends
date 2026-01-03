@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -15,6 +16,7 @@ import io.github.some_example_name.GameResources;
 import io.github.some_example_name.MyGdxGame;
 import io.github.some_example_name.components.ButtonView;
 import io.github.some_example_name.components.JoystickView;
+import io.github.some_example_name.game.AttackDirection;
 import io.github.some_example_name.game.GameState;
 import io.github.some_example_name.game.PlayerInput;
 import io.github.some_example_name.net.Client;
@@ -74,7 +76,7 @@ public class GameScreen extends ScreenAdapter {
 
         platforms.add(new PlatformObject(
             0, 200,
-            1500,
+            SCREEN_WIDTH,
             100,
             GameResources.PLATFORM,
             myGdxGame.world
@@ -243,6 +245,27 @@ public class GameScreen extends ScreenAdapter {
             }
         }
 
+        if (attackPressed) {
+            AttackDirection direction;
+
+            if (attackUp) {
+                direction = AttackDirection.UP;
+                System.out.println("Атака ВВЕРХ");
+            } else if (attackDown) {
+                direction = AttackDirection.DOWN;
+                System.out.println("Атака ВНИЗ");
+            } else {
+                direction = AttackDirection.SIDE;
+                System.out.println("Атака ВБОК");
+            }
+
+            if (myGdxGame.isHost) {
+                serverPlayer.startAttack(direction);
+            } else {
+                clientPlayer.startAttack(direction);
+            }
+        }
+
         if (myGdxGame.isHost) {
             Vector2 force = new Vector2(0, 0);
             if (leftPressed) force.x = -PLAYER_MOVE_FORCE;
@@ -314,21 +337,20 @@ public class GameScreen extends ScreenAdapter {
     private void update(float delta) {
         serverPlayer.update(delta);
         clientPlayer.update(delta);
-        if (myGdxGame.isHost) {
-            if (attackPressed) {
-                exampleAttack();
+        if (serverPlayer.isAttacking()) {
+            if (serverPlayer.checkHit(clientPlayer)) {
+                System.out.println("Сервер попал по клиенту");
             }
+        }
+
+        if (clientPlayer.isAttacking()) {
+            if (clientPlayer.checkHit(serverPlayer)) {
+                System.out.println("Клиент попал по серверу");
+            }
+        }
+        if (myGdxGame.isHost) {
             updateGameState(delta);
             currentState.updateFromPhysics();
-        }
-    }
-    private void exampleAttack() {
-        if (attackUp) {
-            System.out.println("Attack UP");
-        } else if (attackDown) {
-            System.out.println("Attack DOWN");
-        } else {
-            System.out.println("Attack FORWARD");
         }
     }
     private void updateGameState(float delta) {
@@ -356,6 +378,8 @@ public class GameScreen extends ScreenAdapter {
     private void draw() {
         Gdx.gl.glClearColor(0.15f, 0.2f, 0.25f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        myGdxGame.camera.update();
+        batch.setProjectionMatrix(myGdxGame.camera.combined);
 
         batch.begin();
 
@@ -365,6 +389,8 @@ public class GameScreen extends ScreenAdapter {
         serverPlayer.draw(batch);
         clientPlayer.draw(batch);
 
+        drawAttackHitboxes(batch);
+
         joystick.draw(batch);
         jumpButton.draw(batch);
         dodgeButton.draw(batch);
@@ -373,6 +399,25 @@ public class GameScreen extends ScreenAdapter {
         drawGameStateUI();
 
         batch.end();
+    }
+
+    private void drawAttackHitboxes(SpriteBatch batch) {
+        batch.end();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.ORANGE);
+
+        if (serverPlayer.isAttacking()) {
+            Rectangle hitbox = serverPlayer.getAttackHitbox();
+            shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+        }
+
+        if (clientPlayer.isAttacking()) {
+            Rectangle hitbox = clientPlayer.getAttackHitbox();
+            shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+        }
+
+        shapeRenderer.end();
+        batch.begin();
     }
 
     private void drawGameStateUI() {

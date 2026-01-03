@@ -3,10 +3,12 @@ package io.github.some_example_name.objects;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.World;
 
 import io.github.some_example_name.GameSettings;
+import io.github.some_example_name.game.AttackDirection;
 
 public class PlayerObject extends GameObject {
 
@@ -18,6 +20,12 @@ public class PlayerObject extends GameObject {
     private float dodgeTimer = 0f;
     private float dodgeCooldown = 0f;
     private Vector2 dodgeDirection = new Vector2();
+
+    private boolean isAttacking = false;
+    private float attackTimer = 0f;
+    private AttackDirection currentAttackDirection = AttackDirection.SIDE;
+    private Rectangle attackHitbox = new Rectangle();
+    private boolean facingRight = true;
 
     public PlayerObject(int x, int y, int width, int height, String texturePath, World world) {
         super(texturePath, x, y, width, height, GameSettings.PLAYER_BIT, world, true, BodyDef.BodyType.DynamicBody);
@@ -35,17 +43,101 @@ public class PlayerObject extends GameObject {
                 body.setLinearVelocity(vel);
             }
         }
+        if (isAttacking) {
+            attackTimer += delta;
+            if (attackTimer >= GameSettings.ATTACK_DURATION) {
+                isAttacking = false;
+                attackTimer = 0f;
+            }
+        }
         jumpCooldown -= delta;
         dodgeCooldown -= delta;
         if (jumpCooldown < 0) jumpCooldown = 0;
         if (dodgeCooldown < 0) dodgeCooldown = 0;
 
         checkGroundStatus();
+        updateFacingDirection();
+    }
+
+    private void updateFacingDirection() {
+        float velocityX = body.getLinearVelocity().x;
+
+        if (velocityX > 0.1f) {
+            facingRight = true;
+        }
+        else if (velocityX < -0.1f) {
+            facingRight = false;
+        }
+    }
+
+
+
+    public void startAttack(AttackDirection direction) {
+        if (isAttacking) return;
+
+        isAttacking = true;
+        attackTimer = 0f;
+        currentAttackDirection = direction;
+
+        updateAttackHitbox();
+    }
+
+    private void updateAttackHitbox() {
+        if (!isAttacking) return;
+
+        // Размеры и позиция хитбокса
+        float hitboxX = 0, hitboxY = 0;
+        float hitboxWidth = 0, hitboxHeight = 0;
+
+        switch (currentAttackDirection) {
+            case SIDE:
+                hitboxWidth = width / 2f;
+                hitboxHeight = height;
+
+                if (facingRight) {
+                    hitboxX = getX() + width;
+                    hitboxY = getY();
+                } else {
+                    hitboxX = getX() - hitboxWidth;
+                    hitboxY = getY();
+                }
+                break;
+
+            case UP:
+                hitboxWidth = width;
+                hitboxHeight = height / 2f;
+
+                hitboxX = getX();
+                hitboxY = getY() + height;
+                break;
+
+            case DOWN:
+                hitboxWidth = width;
+                hitboxHeight = height / 2f;
+
+                hitboxX = getX();
+                hitboxY = getY() - hitboxHeight;
+                break;
+        }
+
+        attackHitbox.set(hitboxX, hitboxY, hitboxWidth, hitboxHeight);
+    }
+
+    public boolean checkHit(PlayerObject player) {
+        if (!isAttacking) return false;
+
+        updateAttackHitbox();
+
+        if (attackHitbox.overlaps(player.getBounds())) {
+            System.out.println("Попал. Атака: " + currentAttackDirection);
+            return true;
+        }
+        return false;
     }
 
     private void checkGroundStatus() {
         float velocityY = body.getLinearVelocity().y;
-        if (Math.abs(velocityY) <= 0.1f) {
+        if (Math.abs(velocityY) <= 0.1f && !isDodging) {
             if (!isOnGround) {
                 isOnGround = true;
                 jumpsRemaining = 2;
@@ -114,6 +206,23 @@ public class PlayerObject extends GameObject {
     public boolean canDodge() {
         return dodgeCooldown <= 0 && !isDodging;
     }
+    public boolean getFacingRight() {
+        return facingRight;
+    }
+
+    public boolean isAttacking() {
+        return isAttacking;
+    }
+
+    public AttackDirection getCurrentAttackDirection() {
+        return currentAttackDirection;
+    }
+
+    public Rectangle getAttackHitbox() {
+        updateAttackHitbox();
+        return attackHitbox;
+    }
+
 
     @Override
     public void hit() {

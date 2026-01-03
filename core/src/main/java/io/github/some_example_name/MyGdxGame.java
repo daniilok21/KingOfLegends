@@ -30,7 +30,7 @@ public class MyGdxGame extends Game {
 
 
     public boolean isHost = false;
-    public String hostIp = "192.168.0.11";
+    public String hostIp = "192.168.0.15";
     float accumulator = 0;
 
     @Override
