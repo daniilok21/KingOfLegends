@@ -18,7 +18,6 @@ public class PlayerObject extends GameObject {
     private boolean isOnGround = false;
 
     private boolean isDodging = false;
-    private float jumpCooldown = 0f;
     private float dodgeTimer = 0f;
     private float dodgeCooldown = 0f;
 
@@ -54,9 +53,7 @@ public class PlayerObject extends GameObject {
                 attackTimer = 0f;
             }
         }
-        jumpCooldown -= delta;
         dodgeCooldown -= delta;
-        if (jumpCooldown < 0) jumpCooldown = 0;
         if (dodgeCooldown < 0) dodgeCooldown = 0;
 
         checkGroundStatus();
@@ -138,7 +135,7 @@ public class PlayerObject extends GameObject {
 
     private void checkGroundStatus() {
         float velocityY = body.getLinearVelocity().y;
-        if (Math.abs(velocityY) <= 0.1f && !isDodging) {
+        if (Math.abs(velocityY) <= 0.1f) {
             if (!isOnGround) {
                 isOnGround = true;
                 jumpsRemaining = 2;
@@ -150,13 +147,13 @@ public class PlayerObject extends GameObject {
     }
 
     public boolean jump(float force) {
-        if (jumpsRemaining > 0 && jumpCooldown == 0f) {
+        if (jumpsRemaining > 0) {
             if (isDodging) {
                 isDodging = false;
                 dodgeTimer = 0f;
                 endDodge();
             }
-            jumpCooldown = GameSettings.JUMP_COOLDOWN;
+
             Vector2 currentVelocity = body.getLinearVelocity();
             body.setLinearVelocity(currentVelocity.x, 0);
             body.applyLinearImpulse(new Vector2(0, force), body.getWorldCenter(), true);

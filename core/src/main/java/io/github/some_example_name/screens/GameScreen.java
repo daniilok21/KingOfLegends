@@ -58,6 +58,8 @@ public class GameScreen extends ScreenAdapter {
     private boolean attackDown = false;
     private boolean attackNeutral = false;
 
+    private boolean jumpWasPressed = false;
+
     private boolean connected = false;
 
     public GameScreen(MyGdxGame myGdxGame) {
@@ -265,7 +267,8 @@ public class GameScreen extends ScreenAdapter {
                 clientPlayer.startAttack(direction);
             }
         }
-
+        boolean jumpJustPressed = jumpPressed && !jumpWasPressed;
+        System.out.println(jumpJustPressed + "---" + jumpPressed + "---" + !jumpWasPressed);
         if (myGdxGame.isHost) {
             Vector2 force = new Vector2(0, 0);
             if (leftPressed) force.x = -PLAYER_MOVE_FORCE;
@@ -277,7 +280,7 @@ public class GameScreen extends ScreenAdapter {
             Vector2 vel = serverBody.getLinearVelocity();
             vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
             serverBody.setLinearVelocity(vel);
-            if (jumpPressed) {
+            if (jumpJustPressed) {
                 boolean jumpSuccessful = serverPlayer.jump(PLAYER_JUMP_FORCE);
                 if (jumpSuccessful) {
                 }
@@ -303,14 +306,10 @@ public class GameScreen extends ScreenAdapter {
             PlayerInput input = new PlayerInput();
             input.moveLeft = leftPressed;
             input.moveRight = rightPressed;
-            input.jump = jumpPressed;
+            input.jump = jumpJustPressed;
             input.dodge = dodgePressed;
             input.attack = attackPressed;
             client.sendInput(input);
-
-            jumpPressed = false;
-            dodgePressed = false;
-            attackPressed = false;
 
             GameState serverState = client.getState();
             if (serverState != null) {
@@ -321,6 +320,7 @@ public class GameScreen extends ScreenAdapter {
                 currentState.applyToPhysics();
             }
         }
+        jumpWasPressed = jumpPressed;
     }
 
     private void checkTouchUp() {

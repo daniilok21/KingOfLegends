@@ -21,7 +21,6 @@ public class Server {
     private boolean clientIsOnGround = false;
 
     private boolean clientIsDodging = false;
-    private float clientJumpCooldown = 0f;
     private float clientDodgeTimer = 0f;
     private float clientDodgeCooldown = 0f;
 
@@ -166,26 +165,17 @@ public class Server {
         Vector2 vel = clientBody.getLinearVelocity();
         vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
         clientBody.setLinearVelocity(vel);
-        clientJumpCooldown -= delta;
-        if (clientJumpCooldown < 0) {
-            clientJumpCooldown = 0;
-        }
+
         if (input.jump) {
-            if (clientJumpsRemaining > 0 && clientJumpCooldown == 0f) {
+            if (clientJumpsRemaining > 0 ) {
                 if (clientIsDodging) {
                     clientIsDodging = false;
                     clientDodgeTimer = 0f;
                     clientBody.setGravityScale(1.0f);
                 }
-                clientJumpCooldown = JUMP_COOLDOWN;
                 Vector2 currentVelocity = clientBody.getLinearVelocity();
                 clientBody.setLinearVelocity(currentVelocity.x, 0);
-                clientBody.applyLinearImpulse(
-                    new Vector2(0, PLAYER_JUMP_FORCE),
-                    clientBody.getWorldCenter(),
-                    true
-                );
-
+                clientBody.applyLinearImpulse(new Vector2(0, PLAYER_JUMP_FORCE), clientBody.getWorldCenter(), true);
                 clientJumpsRemaining--;
             }
         }

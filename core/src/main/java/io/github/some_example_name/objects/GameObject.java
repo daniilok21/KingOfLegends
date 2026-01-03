@@ -103,7 +103,6 @@ public class GameObject {
     }
 
     public void hit() {
-        System.out.println(122121);
     }
 
     public int getX() {
