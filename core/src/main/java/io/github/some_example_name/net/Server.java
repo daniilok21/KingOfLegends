@@ -207,10 +207,13 @@ public class Server {
                 clientDodgeTimer = 0f;
                 clientDodgeCooldown = DODGE_COOLDOWN;
 
-                Vector2 dodgeImpulse = new Vector2(dodgeDirection, 0).nor().scl(DODGE_FORCE);
-                clientBody.applyLinearImpulse(dodgeImpulse, clientBody.getWorldCenter(), true);
-
-                clientBody.setGravityScale(0.2f);
+                Vector2 currentPos = clientBody.getPosition();
+                Vector2 s = new Vector2(dodgeDirection, 0).nor().scl(DODGE_DISTANCE * SCALE);
+                Vector2 newPos = new Vector2(currentPos).add(s);
+                clientBody.setTransform(newPos, clientBody.getAngle());
+            }
+            else {
+                clientBody.setLinearVelocity(0, 0);
             }
         }
         if (input.attack) {

@@ -5,6 +5,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Filter;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.World;
 
 import io.github.some_example_name.GameSettings;
@@ -19,7 +21,6 @@ public class PlayerObject extends GameObject {
     private float jumpCooldown = 0f;
     private float dodgeTimer = 0f;
     private float dodgeCooldown = 0f;
-    private Vector2 dodgeDirection = new Vector2();
 
     private boolean isAttacking = false;
     private float attackTimer = 0f;
@@ -29,6 +30,12 @@ public class PlayerObject extends GameObject {
 
     public PlayerObject(int x, int y, int width, int height, String texturePath, World world) {
         super(texturePath, x, y, width, height, GameSettings.PLAYER_BIT, world, true, BodyDef.BodyType.DynamicBody);
+        if (body != null && body.getFixtureList().size > 0) {
+            Fixture fixture = body.getFixtureList().first();
+            Filter filter = fixture.getFilterData();
+            filter.maskBits = GameSettings.PLATFORM_BIT;
+            fixture.setFilterData(filter);
+        }
     }
 
     public void update(float delta) {
@@ -38,9 +45,6 @@ public class PlayerObject extends GameObject {
                 isDodging = false;
                 endDodge();
                 dodgeTimer = 0f;
-                Vector2 vel = body.getLinearVelocity();
-                vel.x *= 0.3f;
-                body.setLinearVelocity(vel);
             }
         }
         if (isAttacking) {
@@ -85,7 +89,6 @@ public class PlayerObject extends GameObject {
     private void updateAttackHitbox() {
         if (!isAttacking) return;
 
-        // Размеры и позиция хитбокса
         float hitboxX = 0, hitboxY = 0;
         float hitboxWidth = 0, hitboxHeight = 0;
 
@@ -93,11 +96,11 @@ public class PlayerObject extends GameObject {
             case SIDE:
                 hitboxWidth = width / 2f;
                 hitboxHeight = height;
-
                 if (facingRight) {
                     hitboxX = getX() + width;
                     hitboxY = getY();
-                } else {
+                }
+                else {
                     hitboxX = getX() - hitboxWidth;
                     hitboxY = getY();
                 }
@@ -106,7 +109,6 @@ public class PlayerObject extends GameObject {
             case UP:
                 hitboxWidth = width;
                 hitboxHeight = height / 2f;
-
                 hitboxX = getX();
                 hitboxY = getY() + height;
                 break;
@@ -114,7 +116,6 @@ public class PlayerObject extends GameObject {
             case DOWN:
                 hitboxWidth = width;
                 hitboxHeight = height / 2f;
-
                 hitboxX = getX();
                 hitboxY = getY() - hitboxHeight;
                 break;
@@ -166,19 +167,25 @@ public class PlayerObject extends GameObject {
     }
 
     public boolean dodge(float directionX) {
-        if (dodgeCooldown > 0 || isDodging || directionX == 0) {
+        if (dodgeCooldown > 0 || isDodging) {
             return false;
         }
 
         isDodging = true;
         dodgeTimer = 0f;
         dodgeCooldown = GameSettings.DODGE_COOLDOWN;
-        dodgeDirection.set(directionX, 0).nor();
 
-        Vector2 dodgeImpulse = new Vector2(dodgeDirection).scl(GameSettings.DODGE_FORCE);
-        body.applyLinearImpulse(dodgeImpulse, body.getWorldCenter(), true);
+        if (directionX != 0) {
+            Vector2 currentPos = body.getPosition();
+            Vector2 s = new Vector2(directionX, 0).nor().scl(GameSettings.DODGE_DISTANCE * GameSettings.SCALE);
+            Vector2 newPos = new Vector2(currentPos).add(s);
+            body.setTransform(newPos, body.getAngle());
+        }
+        else {
+            body.setLinearVelocity(0, 0);
+        }
 
-        body.setGravityScale(0.2f);
+//        body.setGravityScale(0.2f);
 
         return true;
     }

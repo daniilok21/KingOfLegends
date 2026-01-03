@@ -289,15 +289,13 @@ public class GameScreen extends ScreenAdapter {
                 else {
                     float velX = serverBody.getLinearVelocity().x;
                     if (velX != 0) {
-                        if (velX > 0) dodgeDirection = 0;
-                        else dodgeDirection = 1;
+                        if (velX > 0) dodgeDirection = 1;
+                        else dodgeDirection = -1;
                     }
                 }
 
-                if (dodgeDirection != 0) {
-                    boolean dodgeSuccessful = serverPlayer.dodge(dodgeDirection);
-                    if (dodgeSuccessful) {
-                    }
+                boolean dodgeSuccessful = serverPlayer.dodge(dodgeDirection);
+                if (dodgeSuccessful) {
                 }
             }
 
@@ -386,8 +384,14 @@ public class GameScreen extends ScreenAdapter {
         for (PlatformObject platform : platforms) {
             platform.draw(batch);
         }
-        serverPlayer.draw(batch);
-        clientPlayer.draw(batch);
+        if (myGdxGame.isHost) {
+            clientPlayer.draw(batch);
+            serverPlayer.draw(batch);
+        }
+        else {
+            serverPlayer.draw(batch);
+            clientPlayer.draw(batch);
+        }
 
         drawAttackHitboxes(batch);
 

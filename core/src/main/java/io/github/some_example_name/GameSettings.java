@@ -21,9 +21,9 @@ public class GameSettings {
     public static final int FRAME_DELAY_MS = 1000 / FRAME_RATE;
 
     // Уворот
-    public static final float DODGE_FORCE = 1500f;
     public static final float DODGE_DURATION = 0.3f;
     public static final float DODGE_COOLDOWN = 1.0f;
+    public static final float DODGE_DISTANCE = 50f;
 
     // Атака
     public static final float ATTACK_DURATION = 0.3f;
