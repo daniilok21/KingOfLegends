@@ -26,6 +26,8 @@ public class PlayerObject extends GameObject {
     private AttackDirection currentAttackDirection = AttackDirection.SIDE;
     private Rectangle attackHitbox = new Rectangle();
     private boolean facingRight = true;
+    private int health = 100;
+    private int maxHealth = 100;
 
     public PlayerObject(int x, int y, int width, int height, String texturePath, World world) {
         super(texturePath, x, y, width, height, GameSettings.PLAYER_BIT, world, true, BodyDef.BodyType.DynamicBody);
@@ -121,16 +123,63 @@ public class PlayerObject extends GameObject {
         attackHitbox.set(hitboxX, hitboxY, hitboxWidth, hitboxHeight);
     }
 
-    public boolean checkHit(PlayerObject player) {
+    public boolean checkHit(PlayerObject target) {
         if (!isAttacking) return false;
 
         updateAttackHitbox();
 
-        if (attackHitbox.overlaps(player.getBounds())) {
+        if (attackHitbox.overlaps(target.getBounds())) {
             System.out.println("Попал. Атака: " + currentAttackDirection);
+
+            int damage = calculateDamage();
+            target.takeDamage(damage);
+            applyKnockback(target, damage);
+
             return true;
         }
         return false;
+    }
+
+    private int calculateDamage() {
+        switch (currentAttackDirection) {
+            case SIDE:
+                return 4;
+            case UP:
+                return 10;
+            case DOWN:
+                return 6;
+            default:
+                return 4;
+        }
+    }
+
+    private void applyKnockback(PlayerObject target, int damage) {
+        Vector2 knockbackDirection = new Vector2();
+        float forse = 1000f;
+
+        switch (currentAttackDirection) {
+            case SIDE:
+                knockbackDirection.set(facingRight ? 1 : -1, 0.3f);
+                break;
+            case UP:
+                knockbackDirection.set(0, 1);
+                forse = 18f;
+                break;
+            case DOWN:
+                knockbackDirection.set(facingRight ? 0.3f : -0.3f, -0.7f);
+                forse = 12f;
+                break;
+        }
+
+        knockbackDirection.nor();
+
+        float bonusForceWithHealth = 1 + (100 - target.getHealth()) / 100f;
+        float totalForce = forse * bonusForceWithHealth;
+
+        Vector2 knockbackImpulse = knockbackDirection.scl(totalForce);
+        target.getBody().applyLinearImpulse(knockbackImpulse, target.getBody().getWorldCenter(), true);
+
+        System.out.println("ОТДАЧА. Сила = " + totalForce + ", Направление = " + knockbackDirection);
     }
 
     private void checkGroundStatus() {
@@ -185,6 +234,28 @@ public class PlayerObject extends GameObject {
 //        body.setGravityScale(0.2f);
 
         return true;
+    }
+    public int getHealth() {
+        return health;
+    }
+
+    public int getMaxHealth() {
+        return maxHealth;
+    }
+
+    public void takeDamage(int damage) {
+        health -= damage;
+        if (health < 0) health = 0;
+        System.out.println("Игрок получил " + damage + " урона. HP = " + health);
+    }
+
+    public void heal(int amount) {
+        health += amount;
+        if (health > maxHealth) health = maxHealth;
+    }
+
+    public boolean isDead() {
+        return health <= 0;
     }
 
     private void endDodge() {
