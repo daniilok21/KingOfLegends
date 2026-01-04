@@ -91,30 +91,30 @@ public class PlayerObject extends GameObject {
 
         switch (currentAttackDirection) {
             case SIDE:
-                hitboxWidth = width / 2f;
+                hitboxWidth = width + width / 2f;
                 hitboxHeight = height;
                 if (facingRight) {
-                    hitboxX = getX() + width;
+                    hitboxX = getX();
                     hitboxY = getY();
                 }
                 else {
-                    hitboxX = getX() - hitboxWidth;
+                    hitboxX = getX() - width / 2f;
                     hitboxY = getY();
                 }
                 break;
 
             case UP:
                 hitboxWidth = width;
-                hitboxHeight = height / 2f;
+                hitboxHeight = height + height / 2f;
                 hitboxX = getX();
-                hitboxY = getY() + height;
+                hitboxY = getY();
                 break;
 
             case DOWN:
                 hitboxWidth = width;
-                hitboxHeight = height / 2f;
+                hitboxHeight = height + height / 2f;
                 hitboxX = getX();
-                hitboxY = getY() - hitboxHeight;
+                hitboxY = getY() - height / 2f;
                 break;
         }
 
@@ -225,6 +225,9 @@ public class PlayerObject extends GameObject {
     public Rectangle getAttackHitbox() {
         updateAttackHitbox();
         return attackHitbox;
+    }
+    public Rectangle getPlayerHitbox() {
+        return new Rectangle(getX(), getY(), width, height);
     }
 
 

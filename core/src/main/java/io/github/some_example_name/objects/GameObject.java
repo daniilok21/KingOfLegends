@@ -137,8 +137,10 @@ public class GameObject {
     }
 
     protected void updateBounds() {
-        bounds.setPosition(getX() - width / 2, getY() - height / 2);
+        bounds.setPosition(getX(), getY());
+        bounds.setSize(width, height);
     }
+
 
     public boolean contains(float x, float y) {
         return getBounds().contains(x, y);

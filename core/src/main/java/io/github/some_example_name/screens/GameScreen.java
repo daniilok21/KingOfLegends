@@ -268,7 +268,6 @@ public class GameScreen extends ScreenAdapter {
             }
         }
         boolean jumpJustPressed = jumpPressed && !jumpWasPressed;
-        System.out.println(jumpJustPressed + "---" + jumpPressed + "---" + !jumpWasPressed);
         if (myGdxGame.isHost) {
             Vector2 force = new Vector2(0, 0);
             if (leftPressed) force.x = -PLAYER_MOVE_FORCE;
@@ -419,6 +418,22 @@ public class GameScreen extends ScreenAdapter {
             Rectangle hitbox = clientPlayer.getAttackHitbox();
             shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
         }
+
+        shapeRenderer.end();
+        batch.begin();
+    }
+
+    private void drawPlayerHitboxes(SpriteBatch batch) {
+        batch.end();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+
+        shapeRenderer.setColor(Color.GREEN);
+        Rectangle serverHitbox = serverPlayer.getPlayerHitbox();
+        shapeRenderer.rect(serverHitbox.x, serverHitbox.y, serverHitbox.width, serverHitbox.height);
+
+        shapeRenderer.setColor(Color.CYAN);
+        Rectangle clientHitbox = clientPlayer.getPlayerHitbox();
+        shapeRenderer.rect(clientHitbox.x, clientHitbox.y, clientHitbox.width, clientHitbox.height);
 
         shapeRenderer.end();
         batch.begin();
