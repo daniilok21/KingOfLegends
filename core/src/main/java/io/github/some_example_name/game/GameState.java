@@ -22,6 +22,8 @@ public class GameState implements Serializable {
 
     public transient Body serverBody;
     public transient Body clientBody;
+    public int serverHealth = 100;
+    public int clientHealth = 100;
 
     public transient boolean serverMoveLeft = false;
     public transient boolean serverMoveRight = false;
@@ -57,22 +59,28 @@ public class GameState implements Serializable {
         }
     }
 
-    public void applyToPhysics() {
+    public void applyToPhysics(float alpha) {
         if (serverBody != null) {
-            serverBody.setTransform(
+            Vector2 targetPos = new Vector2(
                 serverCubeX * GameSettings.SCALE,
-                serverCubeY * GameSettings.SCALE,
-                0
+                serverCubeY * GameSettings.SCALE
             );
+            Vector2 currentPos = serverBody.getPosition();
+            Vector2 newPos = currentPos.lerp(targetPos, alpha);
+
+            serverBody.setTransform(newPos, 0);
             serverBody.setLinearVelocity(serverVelocityX, serverVelocityY);
         }
 
         if (clientBody != null) {
-            clientBody.setTransform(
+            Vector2 targetPos = new Vector2(
                 clientCubeX * GameSettings.SCALE,
-                clientCubeY * GameSettings.SCALE,
-                0
+                clientCubeY * GameSettings.SCALE
             );
+            Vector2 currentPos = clientBody.getPosition();
+            Vector2 newPos = currentPos.lerp(targetPos, alpha);
+
+            clientBody.setTransform(newPos, 0);
             clientBody.setLinearVelocity(clientVelocityX, clientVelocityY);
         }
     }
@@ -89,6 +97,8 @@ public class GameState implements Serializable {
         copy.serverVelocityY = this.serverVelocityY;
         copy.clientVelocityX = this.clientVelocityX;
         copy.clientVelocityY = this.clientVelocityY;
+        copy.serverHealth = this.serverHealth;
+        copy.clientHealth = this.clientHealth;
         return copy;
     }
 }

@@ -3,8 +3,10 @@ package io.github.some_example_name.net;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 
+import io.github.some_example_name.game.AttackDirection;
 import io.github.some_example_name.game.GameState;
 import io.github.some_example_name.game.PlayerInput;
+import io.github.some_example_name.objects.PlayerObject;
 
 import java.io.*;
 import java.net.*;
@@ -26,12 +28,16 @@ public class Server {
 
     private Body serverBody;
     private Body clientBody;
+    private PlayerObject serverPlayer;
+    private PlayerObject clientPlayer;
 
     private Socket clientSocket;
 
-    public void setPhysicsBodies(Body serverBody, Body clientBody) {
-        this.serverBody = serverBody;
-        this.clientBody = clientBody;
+    public void setPhysicsBodies(PlayerObject serverPlayer, PlayerObject clientPlayer) {
+        this.serverPlayer = serverPlayer;
+        this.clientPlayer = clientPlayer;
+        serverBody = serverPlayer.getBody();
+        clientBody = clientPlayer.getBody();
         world.serverBody = serverBody;
         world.clientBody = clientBody;
     }
@@ -79,6 +85,9 @@ public class Server {
                     if (currentInput != null && clientBody != null) {
                         applyInput(currentInput, delta);
                     }
+
+                    if (serverPlayer != null) world.serverHealth = serverPlayer.getHealth();
+                    if (clientPlayer != null) world.clientHealth = clientPlayer.getHealth();
 
                     world.updateFromPhysics();
 
@@ -155,18 +164,22 @@ public class Server {
 
     private void applyInput(PlayerInput input, float delta) {
         if (world.gameStatus != GameState.GameStatus.PLAYING) return;
-
+        if (clientPlayer != null && !clientPlayer.canReceiveInput()) return;
         Vector2 force = new Vector2(0, 0);
-        if (input.moveRight) force.x = PLAYER_MOVE_FORCE * delta * FRAME_RATE;
-        if (input.moveLeft) force.x = -PLAYER_MOVE_FORCE * delta * FRAME_RATE;
+        if (input.moveRight && clientPlayer.canMove()) force.x = PLAYER_MOVE_FORCE * delta * FRAME_RATE;
+        if (input.moveLeft && clientPlayer.canMove()) force.x = -PLAYER_MOVE_FORCE * delta * FRAME_RATE;
 
-        clientBody.applyForceToCenter(force, true);
+        if (clientPlayer.canMove()) {
+            clientBody.applyForceToCenter(force, true);
+        }
 
         Vector2 vel = clientBody.getLinearVelocity();
-        vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
+        if (!clientPlayer.isInHitStun()) {
+            vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
+        }
         clientBody.setLinearVelocity(vel);
 
-        if (input.jump) {
+        if (input.jump && clientPlayer.canJump()) {
             if (clientJumpsRemaining > 0 ) {
                 if (clientIsDodging) {
                     clientIsDodging = false;
@@ -180,7 +193,7 @@ public class Server {
             }
         }
 
-        if (input.dodge && clientDodgeCooldown <= 0 && !clientIsDodging) {
+        if (input.dodge && clientDodgeCooldown <= 0 && !clientIsDodging && clientPlayer.canDodge()) {
             float dodgeDirection = 0;
             if (input.moveLeft) dodgeDirection = -1;
             else if (input.moveRight) dodgeDirection = 1;
@@ -206,15 +219,22 @@ public class Server {
                 clientBody.setLinearVelocity(0, 0);
             }
         }
-        if (input.attack) {
-            if (input.attackUp) {
-                System.out.println("Server: Client attack UP");
-            }
-            else if (input.attackDown) {
-                System.out.println("Server: Client attack DOWN");
-            }
-            else {
-                System.out.println("Server: Client attack FORWARD");
+        if (input.attack && clientPlayer.canAttack()) {
+            AttackDirection direction;
+            if (input.attackUp) direction = AttackDirection.UP;
+            else if (input.attackDown) direction = AttackDirection.DOWN;
+            else direction = AttackDirection.SIDE;
+
+            clientPlayer.startAttack(direction);
+            System.out.println("Server: Client attack " + direction);
+
+            if (serverPlayer != null) {
+                if (clientPlayer.isAttacking()) {
+                    boolean hit = clientPlayer.checkHit(serverPlayer);
+                    if (hit) {
+                        System.out.println("Клиент попал по серверу на сервере!");
+                    }
+                }
             }
         }
     }

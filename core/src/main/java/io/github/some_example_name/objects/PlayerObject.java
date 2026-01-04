@@ -20,7 +20,9 @@ public class PlayerObject extends GameObject {
     private boolean isDodging = false;
     private float dodgeTimer = 0f;
     private float dodgeCooldown = 0f;
-
+    private float hitStunTimer = 0f;
+    private float hitImmunityTimer = 0f;
+    private boolean isInHitStun = false;
     private boolean isAttacking = false;
     private float attackTimer = 0f;
     private AttackDirection currentAttackDirection = AttackDirection.SIDE;
@@ -55,11 +57,30 @@ public class PlayerObject extends GameObject {
                 attackTimer = 0f;
             }
         }
+        if (isInHitStun) {
+            hitStunTimer -= delta;
+            if (hitStunTimer <= 0) {
+                endHitStun();
+            }
+        }
         dodgeCooldown -= delta;
+        hitImmunityTimer -= delta;
+        if (hitImmunityTimer < 0) hitImmunityTimer = 0;
         if (dodgeCooldown < 0) dodgeCooldown = 0;
 
         checkGroundStatus();
         updateFacingDirection();
+    }
+    public void applyHitStun(float duration) {
+        if (hitImmunityTimer > 0) return;
+
+        isInHitStun = true;
+        hitStunTimer = duration;
+        hitImmunityTimer = GameSettings.HIT_IMMUNITY_DURATION;
+    }
+    private void endHitStun() {
+        isInHitStun = false;
+        hitStunTimer = 0f;
     }
 
     private void updateFacingDirection() {
@@ -76,7 +97,7 @@ public class PlayerObject extends GameObject {
 
 
     public void startAttack(AttackDirection direction) {
-        if (isAttacking) return;
+        if (isAttacking && !canAttack()) return;
 
         isAttacking = true;
         attackTimer = 0f;
@@ -124,7 +145,7 @@ public class PlayerObject extends GameObject {
     }
 
     public boolean checkHit(PlayerObject target) {
-        if (!isAttacking) return false;
+        if (!isAttacking || target.hasHitImmunity()) return false;
 
         updateAttackHitbox();
 
@@ -132,7 +153,6 @@ public class PlayerObject extends GameObject {
             System.out.println("Попал. Атака: " + currentAttackDirection);
 
             int damage = calculateDamage();
-            target.takeDamage(damage);
             applyKnockback(target, damage);
 
             return true;
@@ -163,11 +183,11 @@ public class PlayerObject extends GameObject {
                 break;
             case UP:
                 knockbackDirection.set(0, 1);
-                forse = 18f;
+                forse = 1800f;
                 break;
             case DOWN:
                 knockbackDirection.set(facingRight ? 0.3f : -0.3f, -0.7f);
-                forse = 12f;
+                forse = 1200f;
                 break;
         }
 
@@ -175,6 +195,9 @@ public class PlayerObject extends GameObject {
 
         float bonusForceWithHealth = 1 + (100 - target.getHealth()) / 100f;
         float totalForce = forse * bonusForceWithHealth;
+
+        target.applyHitStun(GameSettings.HIT_STUN_DURATION);
+        target.takeDamage(damage);
 
         Vector2 knockbackImpulse = knockbackDirection.scl(totalForce);
         target.getBody().applyLinearImpulse(knockbackImpulse, target.getBody().getWorldCenter(), true);
@@ -277,10 +300,6 @@ public class PlayerObject extends GameObject {
     public float getDodgeCooldown() {
         return dodgeCooldown;
     }
-
-    public boolean canDodge() {
-        return dodgeCooldown <= 0 && !isDodging;
-    }
     public boolean getFacingRight() {
         return facingRight;
     }
@@ -288,6 +307,35 @@ public class PlayerObject extends GameObject {
     public boolean isAttacking() {
         return isAttacking;
     }
+
+    public boolean isInHitStun() {
+        return isInHitStun;
+    }
+
+    public boolean hasHitImmunity() {
+        return hitImmunityTimer > 0;
+    }
+
+    public boolean canMove() {
+        return !isInHitStun && !isDodging;
+    }
+
+    public boolean canJump() {
+        return !isInHitStun && jumpsRemaining > 0;
+    }
+
+    public boolean canAttack() {
+        return !isInHitStun && !isAttacking;
+    }
+
+    public boolean canDodge() {
+        return !isInHitStun && dodgeCooldown <= 0 && !isDodging;
+    }
+
+    public boolean canReceiveInput() {
+        return !isInHitStun;
+    }
+
 
     public AttackDirection getCurrentAttackDirection() {
         return currentAttackDirection;

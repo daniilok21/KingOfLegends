@@ -1,6 +1,7 @@
 package io.github.some_example_name.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
@@ -123,12 +124,10 @@ public class GameScreen extends ScreenAdapter {
         );
     }
 
-
-
     public void initializeNetwork() {
         if (myGdxGame.isHost) {
             server = new Server();
-            server.setPhysicsBodies(serverPlayer.getBody(), clientPlayer.getBody());
+            server.setPhysicsBodies(serverPlayer, clientPlayer);
             server.start(PORT);
             currentState = server.getLocalState();
             connected = true;
@@ -247,6 +246,14 @@ public class GameScreen extends ScreenAdapter {
             }
         }
 
+        if (Gdx.input.isKeyPressed(Input.Keys.W)) attackUp = true;
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) attackDown = true;
+        if (Gdx.input.isKeyPressed(Input.Keys.A)) leftPressed = true;
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) rightPressed = true;
+        if (Gdx.input.isKeyPressed(Input.Keys.Q)) dodgePressed = true;
+        if (Gdx.input.isKeyPressed(Input.Keys.E)) attackPressed = true;
+        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) jumpPressed = true;
+
         if (attackPressed) {
             AttackDirection direction;
 
@@ -261,30 +268,36 @@ public class GameScreen extends ScreenAdapter {
                 System.out.println("Атака ВБОК");
             }
 
-            if (myGdxGame.isHost) {
-                serverPlayer.startAttack(direction);
-            } else {
-                clientPlayer.startAttack(direction);
-            }
+            if (myGdxGame.isHost) serverPlayer.startAttack(direction);
         }
         boolean jumpJustPressed = jumpPressed && !jumpWasPressed;
         if (myGdxGame.isHost) {
+            if (!serverPlayer.canReceiveInput()) {
+                leftPressed = false;
+                rightPressed = false;
+                jumpPressed = false;
+                dodgePressed = false;
+                attackPressed = false;
+            }
             Vector2 force = new Vector2(0, 0);
             if (leftPressed) force.x = -PLAYER_MOVE_FORCE;
             if (rightPressed) force.x = PLAYER_MOVE_FORCE;
 
             Body serverBody = serverPlayer.getBody();
-            serverBody.applyForceToCenter(force, true);
-
+            if (serverPlayer.canMove()) {
+                serverBody.applyForceToCenter(force, true);
+            }
             Vector2 vel = serverBody.getLinearVelocity();
-            vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
+            if (!serverPlayer.isInHitStun()) {
+                vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
+            }
             serverBody.setLinearVelocity(vel);
-            if (jumpJustPressed) {
+            if (jumpJustPressed && serverPlayer.canJump()) {
                 boolean jumpSuccessful = serverPlayer.jump(PLAYER_JUMP_FORCE);
                 if (jumpSuccessful) {
                 }
             }
-            if (dodgePressed) {
+            if (dodgePressed && serverPlayer.canDodge()) {
                 float dodgeDirection = 0;
                 if (leftPressed) dodgeDirection = -1;
                 else if (rightPressed) dodgeDirection = 1;
@@ -308,6 +321,8 @@ public class GameScreen extends ScreenAdapter {
             input.jump = jumpJustPressed;
             input.dodge = dodgePressed;
             input.attack = attackPressed;
+            input.attackUp = attackUp;
+            input.attackDown = attackDown;
             client.sendInput(input);
 
             GameState serverState = client.getState();
@@ -316,7 +331,7 @@ public class GameScreen extends ScreenAdapter {
                 serverState.clientBody = currentState.clientBody;
 
                 currentState = serverState;
-                currentState.applyToPhysics();
+                currentState.applyToPhysics(0.3f);
             }
         }
         jumpWasPressed = jumpPressed;
@@ -334,21 +349,17 @@ public class GameScreen extends ScreenAdapter {
     private void update(float delta) {
         serverPlayer.update(delta);
         clientPlayer.update(delta);
-        if (serverPlayer.isAttacking()) {
-            if (serverPlayer.checkHit(clientPlayer)) {
-                System.out.println("Сервер попал по клиенту");
-            }
-        }
-
-        if (clientPlayer.isAttacking()) {
-            if (clientPlayer.checkHit(serverPlayer)) {
-                System.out.println("Клиент попал по серверу");
-            }
-        }
         if (myGdxGame.isHost) {
+            if (serverPlayer.isAttacking()) {
+                if (serverPlayer.checkHit(clientPlayer)) {
+                    System.out.println("Сервер попал по клиенту");
+                }
+            }
+
             updateGameState(delta);
             currentState.updateFromPhysics();
         }
+
     }
     private void updateGameState(float delta) {
         switch (currentState.gameStatus) {

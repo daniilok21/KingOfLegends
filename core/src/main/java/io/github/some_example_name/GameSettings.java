@@ -12,7 +12,8 @@ public class GameSettings {
     public static final float PLAYER_JUMP_FORCE = 25f;
     public static final float PLAYER_MAX_VELOCITY = 10f;
     public static final float PLAYER_MAX_KNOCKBACK_VELOCITY = 60f;
-
+    public static final float HIT_STUN_DURATION = 0.3f;
+    public static final float HIT_IMMUNITY_DURATION = 0.2f;
     // Гравитация
     public static final float GRAVITY = -100f;
 
