@@ -86,6 +86,15 @@ public class Server {
                         applyInput(currentInput, delta);
                     }
 
+                    if (serverPlayer != null) {
+                        world.serverAttacking = serverPlayer.isAttacking();
+                        world.serverAttackDirection = serverPlayer.getCurrentAttackDirection();
+                    }
+                    if (clientPlayer != null) {
+                        world.clientAttacking = clientPlayer.isAttacking();
+                        world.clientAttackDirection = clientPlayer.getCurrentAttackDirection();
+                    }
+
                     if (serverPlayer != null) world.serverHealth = serverPlayer.getHealth();
                     if (clientPlayer != null) world.clientHealth = clientPlayer.getHealth();
 

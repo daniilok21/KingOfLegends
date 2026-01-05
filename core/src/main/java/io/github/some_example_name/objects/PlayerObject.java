@@ -304,6 +304,11 @@ public class PlayerObject extends GameObject {
         return facingRight;
     }
 
+    public void stopAttacking() {
+        isAttacking = false;
+        attackTimer = 0f;
+    }
+
     public boolean isAttacking() {
         return isAttacking;
     }

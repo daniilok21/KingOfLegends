@@ -25,12 +25,11 @@ public class GameState implements Serializable {
     public int serverHealth = 100;
     public int clientHealth = 100;
 
-    public transient boolean serverMoveLeft = false;
-    public transient boolean serverMoveRight = false;
-    public transient boolean serverJump = false;
-    public transient boolean clientMoveLeft = false;
-    public transient boolean clientMoveRight = false;
-    public transient boolean clientJump = false;
+    public boolean serverAttacking = false;
+    public AttackDirection serverAttackDirection = AttackDirection.SIDE;
+    public boolean clientAttacking = false;
+    public AttackDirection clientAttackDirection = AttackDirection.SIDE;
+
     public enum GameStatus {
         WAITING, // ждем
         COUNTDOWN, // отсчет
@@ -99,6 +98,10 @@ public class GameState implements Serializable {
         copy.clientVelocityY = this.clientVelocityY;
         copy.serverHealth = this.serverHealth;
         copy.clientHealth = this.clientHealth;
+        copy.serverAttacking = this.serverAttacking;
+        copy.serverAttackDirection = this.serverAttackDirection;
+        copy.clientAttacking = this.clientAttacking;
+        copy.clientAttackDirection = this.clientAttackDirection;
         return copy;
     }
 }

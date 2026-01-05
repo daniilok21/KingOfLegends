@@ -314,7 +314,8 @@ public class GameScreen extends ScreenAdapter {
                 }
             }
 
-        } else if (client != null) {
+        }
+        else if (client != null) {
             PlayerInput input = new PlayerInput();
             input.moveLeft = leftPressed;
             input.moveRight = rightPressed;
@@ -327,6 +328,8 @@ public class GameScreen extends ScreenAdapter {
 
             GameState serverState = client.getState();
             if (serverState != null) {
+                syncAttackState(serverState);
+
                 serverState.serverBody = currentState.serverBody;
                 serverState.clientBody = currentState.clientBody;
 
@@ -335,6 +338,13 @@ public class GameScreen extends ScreenAdapter {
             }
         }
         jumpWasPressed = jumpPressed;
+    }
+
+    private void syncAttackState(GameState serverState) {
+        if (serverState.serverAttacking && !serverPlayer.isAttacking()) serverPlayer.startAttack(serverState.serverAttackDirection);
+        else if (!serverState.serverAttacking && serverPlayer.isAttacking()) serverPlayer.stopAttacking();
+        if (serverState.clientAttacking && !clientPlayer.isAttacking()) clientPlayer.startAttack(serverState.clientAttackDirection);
+        else if (!serverState.clientAttacking && clientPlayer.isAttacking()) clientPlayer.stopAttacking();
     }
 
     private void checkTouchUp() {
