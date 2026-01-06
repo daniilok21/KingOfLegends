@@ -17,4 +17,9 @@ public class GameResources {
     // Джойстик
     public static final String JOYSTICK_BG = "textures/Joystick.png";
     public static final String JOYSTICK_HANDLE = "textures/LargeHandleFilled.png";
+
+    // Для верхней панели
+    public static final String HEART_FULL = "textures/life.png";
+    public static final String HEART_EMPTY = "textures/life_empty.png";
+    public static final String TOP_PANEL_BG = "textures/blackout_top.png";
 }

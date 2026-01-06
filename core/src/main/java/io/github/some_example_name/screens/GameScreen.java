@@ -17,6 +17,7 @@ import io.github.some_example_name.GameResources;
 import io.github.some_example_name.MyGdxGame;
 import io.github.some_example_name.components.ButtonView;
 import io.github.some_example_name.components.JoystickView;
+import io.github.some_example_name.components.TopPanelView;
 import io.github.some_example_name.game.AttackDirection;
 import io.github.some_example_name.game.GameState;
 import io.github.some_example_name.game.PlayerInput;
@@ -50,6 +51,8 @@ public class GameScreen extends ScreenAdapter {
     private ButtonView dodgeButton;
     private ButtonView attackButton;
 
+    private TopPanelView topPanel;
+
     private boolean leftPressed = false;
     private boolean rightPressed = false;
     private boolean jumpPressed = false;
@@ -57,7 +60,6 @@ public class GameScreen extends ScreenAdapter {
     private boolean attackPressed = false;
     private boolean attackUp = false;
     private boolean attackDown = false;
-    private boolean attackNeutral = false;
 
     private boolean jumpWasPressed = false;
 
@@ -72,6 +74,18 @@ public class GameScreen extends ScreenAdapter {
         setupPlatforms();
         setupPhysicsBodies();
         setupUI();
+        setupTopPanel();
+    }
+
+    private void setupTopPanel() {
+        topPanel = new TopPanelView(
+            200, SCREEN_HEIGHT - TOP_PANEL_HEIGHT,
+            SCREEN_WIDTH - 400, TOP_PANEL_HEIGHT,
+            myGdxGame.font,
+            GameResources.TOP_PANEL_BG,
+            GameResources.HEART_FULL,
+            GameResources.HEART_EMPTY
+        );
     }
 
     private void setupPlatforms() {
@@ -88,14 +102,14 @@ public class GameScreen extends ScreenAdapter {
 
     private void setupPhysicsBodies() {
         serverPlayer = new PlayerObject(
-            100, 400,
+            START_PLAYER_SERVER_X, START_PLAYER_SERVER_Y,
             PLAYER_WIDTH, PLAYER_HEIGHT,
             GameResources.RED_PLAYER_SPRITE_SHEET,
             myGdxGame.world
         );
 
         clientPlayer = new PlayerObject(
-            SCREEN_WIDTH - 150, 400,
+            START_PLAYER_CLIENT_X, START_PLAYER_CLIENT_Y,
             PLAYER_WIDTH, PLAYER_HEIGHT,
             GameResources.BLUE_PLAYER_SPRITE_SHEET,
             myGdxGame.world
@@ -184,7 +198,6 @@ public class GameScreen extends ScreenAdapter {
         attackPressed = false;
         attackUp = false;
         attackDown = false;
-        attackNeutral = false;
         jumpButton.setPressed(false);
         dodgeButton.setPressed(false);
         attackButton.setPressed(false);
@@ -227,7 +240,6 @@ public class GameScreen extends ScreenAdapter {
                     attackButton.setPressed(true);
                     if (joystick.isUp()) attackUp = true;
                     else if (joystick.isDown()) attackDown = true;
-                    else attackNeutral = true;
                 }
             }
         }
@@ -259,13 +271,10 @@ public class GameScreen extends ScreenAdapter {
 
             if (attackUp) {
                 direction = AttackDirection.UP;
-                System.out.println("Атака ВВЕРХ");
             } else if (attackDown) {
                 direction = AttackDirection.DOWN;
-                System.out.println("Атака ВНИЗ");
             } else {
                 direction = AttackDirection.SIDE;
-                System.out.println("Атака ВБОК");
             }
 
             if (myGdxGame.isHost) serverPlayer.startAttack(direction);
@@ -359,6 +368,34 @@ public class GameScreen extends ScreenAdapter {
     private void update(float delta) {
         serverPlayer.update(delta);
         clientPlayer.update(delta);
+        topPanel.update(delta);
+        if (serverPlayer != null) {
+            float serverX = serverPlayer.getX();
+            float serverY = serverPlayer.getY();
+            topPanel.checkOutOfBounds(serverX, serverY, true);
+
+            if (topPanel.getNeedChange1Player() && topPanel.getPlayer1Lives() > 0) {
+                serverPlayer.setX(START_PLAYER_SERVER_X);
+                serverPlayer.setY(START_PLAYER_SERVER_Y);
+                serverPlayer.getBody().setLinearVelocity(0, 0);
+                serverPlayer.heal(100 - serverPlayer.getHealth());
+                serverPlayer.setHitImmunityTimer(2.0f);
+            }
+        }
+
+        if (clientPlayer != null) {
+            float clientX = clientPlayer.getX();
+            float clientY = clientPlayer.getY();
+            topPanel.checkOutOfBounds(clientX, clientY, false);
+
+            if (topPanel.getNeedChange2Player() && topPanel.getPlayer2Lives() > 0) {
+                clientPlayer.setX(START_PLAYER_CLIENT_X);
+                clientPlayer.setY(START_PLAYER_CLIENT_Y);
+                clientPlayer.getBody().setLinearVelocity(0, 0);
+                clientPlayer.heal(100 - clientPlayer.getHealth());
+                clientPlayer.setHitImmunityTimer(2.0f);
+            }
+        }
         if (myGdxGame.isHost) {
             if (serverPlayer.isAttacking()) {
                 if (serverPlayer.checkHit(clientPlayer)) {
@@ -398,6 +435,7 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         myGdxGame.camera.update();
         batch.setProjectionMatrix(myGdxGame.camera.combined);
+        shapeRenderer.setProjectionMatrix(myGdxGame.camera.combined);
 
         batch.begin();
 
@@ -414,6 +452,8 @@ public class GameScreen extends ScreenAdapter {
         }
 
         drawAttackHitboxes(batch);
+
+        topPanel.draw(batch);
 
         joystick.draw(batch);
         jumpButton.draw(batch);
@@ -462,7 +502,7 @@ public class GameScreen extends ScreenAdapter {
 
     private void drawGameStateUI() {
         myGdxGame.font.setColor(Color.WHITE);
-        myGdxGame.font.draw(batch, myGdxGame.isHost ? "HOST" : "CLIENT", 10, SCREEN_HEIGHT - 10);
+        // myGdxGame.font.draw(batch, myGdxGame.isHost ? "HOST" : "CLIENT", 10, SCREEN_HEIGHT - 10);
 
         switch (currentState.gameStatus) {
             case WAITING:

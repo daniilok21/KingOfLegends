@@ -49,4 +49,22 @@ public class GameSettings {
     // Категории коллизий
     public static final short PLAYER_BIT = 2;
     public static final short PLATFORM_BIT = 4;
+
+    // Верхняя панель
+    public static final int TOP_PANEL_HEIGHT = 100;
+    public static final int PLAYER_MAX_LIVES = 3;
+    public static final float OUT_OF_BOUNDS_RESPAWN_TIME = 3.0f; // 3 секунды за вылет из арены
+    public static final int MATCH_DURATION_SECONDS = 600;
+
+    // Границы арены
+    public static final float ARENA_LEFT_BOUND = -PLAYER_WIDTH;
+    public static final float ARENA_RIGHT_BOUND = SCREEN_WIDTH + PLAYER_WIDTH;
+    public static final float ARENA_TOP_BOUND = SCREEN_HEIGHT + PLAYER_HEIGHT;
+    public static final float ARENA_BOTTOM_BOUND = -PLAYER_HEIGHT;
+
+    // Начальная растановка игроков
+    public static final int START_PLAYER_SERVER_X = 100;
+    public static final int START_PLAYER_SERVER_Y = 400;
+    public static final int START_PLAYER_CLIENT_X = SCREEN_WIDTH - 150;
+    public static final int START_PLAYER_CLIENT_Y = 400;
 }

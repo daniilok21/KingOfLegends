@@ -324,6 +324,9 @@ public class PlayerObject extends GameObject {
     public boolean canMove() {
         return !isInHitStun && !isDodging;
     }
+    public void setHitImmunityTimer(float hitImmunityTimer) {
+        this.hitImmunityTimer = hitImmunityTimer;
+    }
 
     public boolean canJump() {
         return !isInHitStun && jumpsRemaining > 0;
