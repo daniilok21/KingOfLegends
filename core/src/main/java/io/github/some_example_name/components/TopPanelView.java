@@ -22,8 +22,6 @@ public class TopPanelView extends View {
     private int player2Lives;
     private float matchTimer;
     private boolean isMatchActive;
-    private float player1RespawnTimer;
-    private float player2RespawnTimer;
     private boolean player1IsOutOfBounds;
     private boolean player2IsOutOfBounds;
     private float player1OutTimer = 0f;
@@ -58,8 +56,6 @@ public class TopPanelView extends View {
         matchTimer = GameSettings.MATCH_DURATION_SECONDS;
         isMatchActive = true;
 
-        player1RespawnTimer = 0;
-        player2RespawnTimer = 0;
         player1IsOutOfBounds = false;
         player2IsOutOfBounds = false;
         player1OutTimer = 0f;
@@ -80,9 +76,8 @@ public class TopPanelView extends View {
 
         if (player1IsOutOfBounds) {
             player1OutTimer += delta;
-            player1RespawnTimer -= delta;
 
-            if (player1OutTimer >= 3.0f) {
+            if (player1OutTimer >= GameSettings.OUT_OF_BOUNDS_RESPAWN_TIME) {
                 player1Lives--;
                 player1IsOutOfBounds = false;
                 player1OutTimer = 0f;
@@ -93,20 +88,15 @@ public class TopPanelView extends View {
                     System.out.println("Матч завершен!");
                 }
             }
-
-            if (player1RespawnTimer <= 0) {
-                player1IsOutOfBounds = false;
-                player1OutTimer = 0f;
-            }
-        } else {
+        }
+        else {
             player1OutTimer = 0f;
         }
 
         if (player2IsOutOfBounds) {
             player2OutTimer += delta;
-            player2RespawnTimer -= delta;
 
-            if (player2OutTimer >= 3.0f) {
+            if (player2OutTimer >= GameSettings.OUT_OF_BOUNDS_RESPAWN_TIME) {
                 player2Lives--;
                 player2IsOutOfBounds = false;
                 player2OutTimer = 0f;
@@ -118,11 +108,8 @@ public class TopPanelView extends View {
                 }
             }
 
-            if (player2RespawnTimer <= 0) {
-                player2IsOutOfBounds = false;
-                player2OutTimer = 0f;
-            }
-        } else {
+        }
+        else {
             player2OutTimer = 0f;
         }
     }
@@ -203,7 +190,6 @@ public class TopPanelView extends View {
             if (isOut && !player1IsOutOfBounds) {
                 player1IsOutOfBounds = true;
                 player1OutTimer = 0f;
-                player1RespawnTimer = GameSettings.OUT_OF_BOUNDS_RESPAWN_TIME;
                 System.out.println(player1Name + " вылетел. 3 секунды чтобы вернуться");
             }
             else if (!isOut && player1IsOutOfBounds) {
@@ -216,7 +202,6 @@ public class TopPanelView extends View {
             if (isOut && !player2IsOutOfBounds) {
                 player2IsOutOfBounds = true;
                 player2OutTimer = 0f;
-                player2RespawnTimer = GameSettings.OUT_OF_BOUNDS_RESPAWN_TIME;
                 System.out.println(player2Name + " вылетел. 3 секунды чтобы вернуться");
             }
             else if (!isOut && player2IsOutOfBounds) {

@@ -9,7 +9,7 @@ public class GameSettings {
     public static final int PLAYER_WIDTH = 64;
     public static final int PLAYER_HEIGHT = 64;
     public static final float PLAYER_MOVE_FORCE = 500f;
-    public static final float PLAYER_JUMP_FORCE = 25f;
+    public static final float PLAYER_JUMP_FORCE = 35f;
     public static final float PLAYER_MAX_VELOCITY = 10f;
     public static final float PLAYER_MAX_KNOCKBACK_VELOCITY = 60f;
     public static final float HIT_STUN_DURATION = 0.3f;
@@ -25,7 +25,7 @@ public class GameSettings {
     // Уворот
     public static final float DODGE_DURATION = 0.3f;
     public static final float DODGE_COOLDOWN = 1.0f;
-    public static final float DODGE_DISTANCE = 50f;
+    public static final float DODGE_DISTANCE = 100f;
 
     // Атака
     public static final float ATTACK_DURATION = 0.3f;
@@ -40,8 +40,8 @@ public class GameSettings {
     public static final float SCALE = 0.05f;
 
     // UI
-    public static final int BUTTON_WIDTH = 150;
-    public static final int BUTTON_HEIGHT = 150;
+    public static final int BUTTON_WIDTH = 80;
+    public static final int BUTTON_HEIGHT = 80;
     public static final float BUTTON_ALPHA = 0.7f;
     public static final float JOYSTICK_BG_RADIUS = 80f;
     public static final float JOYSTICK_HANDLE_RADIUS = 30f;
@@ -53,7 +53,7 @@ public class GameSettings {
     // Верхняя панель
     public static final int TOP_PANEL_HEIGHT = 100;
     public static final int PLAYER_MAX_LIVES = 3;
-    public static final float OUT_OF_BOUNDS_RESPAWN_TIME = 3.0f; // 3 секунды за вылет из арены
+    public static final float OUT_OF_BOUNDS_RESPAWN_TIME = 3.0f;
     public static final int MATCH_DURATION_SECONDS = 600;
 
     // Границы арены

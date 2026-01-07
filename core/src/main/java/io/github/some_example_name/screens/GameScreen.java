@@ -92,8 +92,8 @@ public class GameScreen extends ScreenAdapter {
         platforms = new ArrayList<>();
 
         platforms.add(new PlatformObject(
-            0, 200,
-            SCREEN_WIDTH,
+            100, 100,
+            SCREEN_WIDTH - 200,
             100,
             GameResources.PLATFORM,
             myGdxGame.world

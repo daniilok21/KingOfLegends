@@ -175,7 +175,7 @@ public class PlayerObject extends GameObject {
 
     private void applyKnockback(PlayerObject target, int damage) {
         Vector2 knockbackDirection = new Vector2();
-        float forse = 1000f;
+        float forse = 40f;
 
         switch (currentAttackDirection) {
             case SIDE:
@@ -183,11 +183,11 @@ public class PlayerObject extends GameObject {
                 break;
             case UP:
                 knockbackDirection.set(0, 1);
-                forse = 1800f;
+                forse = 72f;
                 break;
             case DOWN:
                 knockbackDirection.set(facingRight ? 0.3f : -0.3f, -0.7f);
-                forse = 1200f;
+                forse = 48f;
                 break;
         }
 
@@ -322,7 +322,7 @@ public class PlayerObject extends GameObject {
     }
 
     public boolean canMove() {
-        return !isInHitStun && !isDodging;
+        return !isInHitStun && !isDodging && !isAttacking;
     }
     public void setHitImmunityTimer(float hitImmunityTimer) {
         this.hitImmunityTimer = hitImmunityTimer;
