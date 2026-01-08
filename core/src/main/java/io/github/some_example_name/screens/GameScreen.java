@@ -2,7 +2,6 @@ package io.github.some_example_name.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -23,6 +22,7 @@ import io.github.some_example_name.game.GameState;
 import io.github.some_example_name.game.PlayerInput;
 import io.github.some_example_name.net.Client;
 import io.github.some_example_name.net.Server;
+import io.github.some_example_name.objects.OneWayPlatformObject;
 import io.github.some_example_name.objects.PlatformObject;
 import io.github.some_example_name.objects.PlayerObject;
 
@@ -45,6 +45,7 @@ public class GameScreen extends ScreenAdapter {
     private PlayerObject clientPlayer;
 
     private ArrayList<PlatformObject> platforms;
+    private ArrayList<OneWayPlatformObject> oneWayPlatforms;
 
     private JoystickView joystick;
     private ButtonView jumpButton;
@@ -55,6 +56,7 @@ public class GameScreen extends ScreenAdapter {
 
     private boolean leftPressed = false;
     private boolean rightPressed = false;
+    private boolean wantsToGoDown = false;
     private boolean jumpPressed = false;
     private boolean dodgePressed = false;
     private boolean attackPressed = false;
@@ -72,6 +74,7 @@ public class GameScreen extends ScreenAdapter {
         this.currentState = new GameState();
 
         setupPlatforms();
+        setupOneWayPlatforms();
         setupPhysicsBodies();
         setupUI();
         setupTopPanel();
@@ -95,6 +98,16 @@ public class GameScreen extends ScreenAdapter {
             100, 100,
             SCREEN_WIDTH - 200,
             100,
+            GameResources.PLATFORM,
+            myGdxGame.world
+        ));
+    }
+    private void setupOneWayPlatforms() {
+        oneWayPlatforms = new ArrayList<>();
+
+        oneWayPlatforms.add(new OneWayPlatformObject(
+            SCREEN_WIDTH / 2 - 200, 300,
+            400, 30,
             GameResources.PLATFORM,
             myGdxGame.world
         ));
@@ -193,6 +206,7 @@ public class GameScreen extends ScreenAdapter {
 
         leftPressed = false;
         rightPressed = false;
+        wantsToGoDown = false;
         jumpPressed = false;
         dodgePressed = false;
         attackPressed = false;
@@ -253,17 +267,21 @@ public class GameScreen extends ScreenAdapter {
         if (joystick.isCaptured()) {
             if (joystick.isLeft()) {
                 leftPressed = true;
-            } else if (joystick.isRight()) {
+            }
+            else if (joystick.isRight()) {
                 rightPressed = true;
+            } else if (joystick.isDown()) {
+                wantsToGoDown = true;
             }
         }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) attackUp = true;
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) attackDown = true;
         if (Gdx.input.isKeyPressed(Input.Keys.A)) leftPressed = true;
         if (Gdx.input.isKeyPressed(Input.Keys.D)) rightPressed = true;
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) wantsToGoDown = true;
         if (Gdx.input.isKeyPressed(Input.Keys.Q)) dodgePressed = true;
         if (Gdx.input.isKeyPressed(Input.Keys.E)) attackPressed = true;
+        if (Gdx.input.isKeyPressed(Input.Keys.W) && attackPressed) attackUp = true;
+        if (Gdx.input.isKeyPressed(Input.Keys.S) && attackPressed) attackDown = true;
         if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) jumpPressed = true;
 
         if (attackPressed) {
@@ -301,6 +319,8 @@ public class GameScreen extends ScreenAdapter {
                 vel.x = Math.max(-PLAYER_MAX_VELOCITY, Math.min(PLAYER_MAX_VELOCITY, vel.x));
             }
             serverBody.setLinearVelocity(vel);
+            serverPlayer.setWantsToGoDown(wantsToGoDown);
+
             if (jumpJustPressed && serverPlayer.canJump()) {
                 boolean jumpSuccessful = serverPlayer.jump(PLAYER_JUMP_FORCE);
                 if (jumpSuccessful) {
@@ -333,6 +353,7 @@ public class GameScreen extends ScreenAdapter {
             input.attack = attackPressed;
             input.attackUp = attackUp;
             input.attackDown = attackDown;
+            input.wantToGoDown = wantsToGoDown;
             client.sendInput(input);
 
             GameState serverState = client.getState();
@@ -369,11 +390,12 @@ public class GameScreen extends ScreenAdapter {
         serverPlayer.update(delta);
         clientPlayer.update(delta);
         topPanel.update(delta);
+
+
         if (serverPlayer != null) {
             float serverX = serverPlayer.getX();
             float serverY = serverPlayer.getY();
             topPanel.checkOutOfBounds(serverX, serverY, true);
-
             if (topPanel.getNeedChange1Player() && topPanel.getPlayer1Lives() > 0) {
                 serverPlayer.setX(START_PLAYER_SERVER_X);
                 serverPlayer.setY(START_PLAYER_SERVER_Y);
@@ -387,7 +409,6 @@ public class GameScreen extends ScreenAdapter {
             float clientX = clientPlayer.getX();
             float clientY = clientPlayer.getY();
             topPanel.checkOutOfBounds(clientX, clientY, false);
-
             if (topPanel.getNeedChange2Player() && topPanel.getPlayer2Lives() > 0) {
                 clientPlayer.setX(START_PLAYER_CLIENT_X);
                 clientPlayer.setY(START_PLAYER_CLIENT_Y);
@@ -439,9 +460,9 @@ public class GameScreen extends ScreenAdapter {
 
         batch.begin();
 
-        for (PlatformObject platform : platforms) {
-            platform.draw(batch);
-        }
+        for (PlatformObject platform : platforms) platform.draw(batch);
+        for (OneWayPlatformObject oneWayPlatformObject : oneWayPlatforms) oneWayPlatformObject.draw(batch);
+
         if (myGdxGame.isHost) {
             clientPlayer.draw(batch);
             serverPlayer.draw(batch);
@@ -555,6 +576,9 @@ public class GameScreen extends ScreenAdapter {
         clientPlayer.dispose();
 
         for (PlatformObject platform : platforms) {
+            platform.dispose();
+        }
+        for (OneWayPlatformObject platform : oneWayPlatforms) {
             platform.dispose();
         }
     }

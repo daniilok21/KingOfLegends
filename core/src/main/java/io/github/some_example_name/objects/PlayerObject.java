@@ -30,6 +30,7 @@ public class PlayerObject extends GameObject {
     private boolean facingRight = true;
     private int health = 100;
     private int maxHealth = 100;
+    private boolean wantsToGoDown = false;
 
     public PlayerObject(int x, int y, int width, int height, String texturePath, World world) {
         super(texturePath, x, y, width, height, GameSettings.PLAYER_BIT, world, true, BodyDef.BodyType.DynamicBody);
@@ -258,6 +259,14 @@ public class PlayerObject extends GameObject {
 
         return true;
     }
+    public void setWantsToGoDown(boolean wantsToGoDown) {
+        this.wantsToGoDown = wantsToGoDown;
+    }
+
+    public boolean wantsToGoDown() {
+        return wantsToGoDown;
+    }
+
     public int getHealth() {
         return health;
     }
@@ -343,7 +352,6 @@ public class PlayerObject extends GameObject {
     public boolean canReceiveInput() {
         return !isInHitStun;
     }
-
 
     public AttackDirection getCurrentAttackDirection() {
         return currentAttackDirection;

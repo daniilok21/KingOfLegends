@@ -177,7 +177,9 @@ public class Server {
         Vector2 force = new Vector2(0, 0);
         if (input.moveRight && clientPlayer.canMove()) force.x = PLAYER_MOVE_FORCE * delta * FRAME_RATE;
         if (input.moveLeft && clientPlayer.canMove()) force.x = -PLAYER_MOVE_FORCE * delta * FRAME_RATE;
-
+        if (clientPlayer != null) {
+            clientPlayer.setWantsToGoDown(input.wantToGoDown);
+        }
         if (clientPlayer.canMove()) {
             clientBody.applyForceToCenter(force, true);
         }

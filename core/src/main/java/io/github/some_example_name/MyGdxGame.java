@@ -11,6 +11,7 @@ import com.badlogic.gdx.physics.box2d.Box2D;
 import com.badlogic.gdx.physics.box2d.World;
 
 import io.github.some_example_name.managers.AudioManager;
+import io.github.some_example_name.managers.ContactManager;
 import io.github.some_example_name.screens.GameScreen;
 import io.github.some_example_name.screens.MenuScreen;
 
@@ -21,6 +22,7 @@ public class MyGdxGame extends Game {
     public SpriteBatch batch;
     public OrthographicCamera camera;
     public BitmapFont font;
+    public ContactManager contactManager;
 
     public AudioManager audioManager;
 
@@ -37,6 +39,7 @@ public class MyGdxGame extends Game {
     public void create() {
         Box2D.init();
         world = new World(new Vector2(0, GRAVITY), true);
+        contactManager = new ContactManager(world);
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
         camera.setToOrtho(false, SCREEN_WIDTH, SCREEN_HEIGHT);
