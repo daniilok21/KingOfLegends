@@ -7,6 +7,8 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 
 import io.github.some_example_name.GameSettings;
@@ -31,9 +33,12 @@ public class PlayerObject extends GameObject {
     private int health = 100;
     private int maxHealth = 100;
     private boolean wantsToGoDown = false;
+    private Fixture footSensor;
+    private int groundContacts = 0;
 
     public PlayerObject(int x, int y, int width, int height, String texturePath, World world) {
         super(texturePath, x, y, width, height, GameSettings.PLAYER_BIT, world, true, BodyDef.BodyType.DynamicBody);
+        createFootSensor();
         if (body != null && body.getFixtureList().size > 0) {
             Fixture fixture = body.getFixtureList().first();
             Filter filter = fixture.getFilterData();
@@ -206,17 +211,39 @@ public class PlayerObject extends GameObject {
         System.out.println("ОТДАЧА. Сила = " + totalForce + ", Направление = " + knockbackDirection);
     }
 
-    private void checkGroundStatus() {
-        float velocityY = body.getLinearVelocity().y;
-        if (Math.abs(velocityY) <= 0.1f) {
-            if (!isOnGround) {
-                isOnGround = true;
-                jumpsRemaining = 2;
-            }
-        }
-        else {
+    private void createFootSensor() {
+        PolygonShape footShape = new PolygonShape();
+        footShape.setAsBox((width / 2f) * GameSettings.SCALE * 0.9f, 5 * GameSettings.SCALE, new Vector2(0, -height / 2f * GameSettings.SCALE), 0);
+
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = footShape;
+        fixtureDef.isSensor = true;
+        fixtureDef.density = 0f;
+
+        footSensor = body.createFixture(fixtureDef);
+        footSensor.setUserData(this);
+
+        Filter filter = new Filter();
+        filter.categoryBits = GameSettings.PLAYER_BIT;
+        filter.maskBits = GameSettings.PLATFORM_BIT;
+        footSensor.setFilterData(filter);
+
+        footShape.dispose();
+    }
+    public void beginGroundContact() {
+        groundContacts++;
+        isOnGround = true;
+        jumpsRemaining = 2;
+    }
+
+    public void endGroundContact() {
+        groundContacts--;
+        if (groundContacts <= 0) {
+            groundContacts = 0;
             isOnGround = false;
         }
+    }
+    private void checkGroundStatus() {
     }
 
     public boolean jump(float force) {
