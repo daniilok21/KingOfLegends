@@ -89,14 +89,13 @@ public class Server {
                     if (serverPlayer != null) {
                         world.serverAttacking = serverPlayer.isAttacking();
                         world.serverAttackDirection = serverPlayer.getCurrentAttackDirection();
+                        world.serverHealth = serverPlayer.getHealth();
                     }
                     if (clientPlayer != null) {
                         world.clientAttacking = clientPlayer.isAttacking();
                         world.clientAttackDirection = clientPlayer.getCurrentAttackDirection();
+                        world.clientHealth = clientPlayer.getHealth();
                     }
-
-                    if (serverPlayer != null) world.serverHealth = serverPlayer.getHealth();
-                    if (clientPlayer != null) world.clientHealth = clientPlayer.getHealth();
 
                     world.updateFromPhysics();
 

@@ -18,7 +18,6 @@ public class MenuScreen extends ScreenAdapter {
 
     private final MyGdxGame game;
     private SpriteBatch batch;
-    private BitmapFont font;
     private ShapeRenderer shapeRenderer;
 
     private String[] menuItems = {"Host Game", "Join Game", "Exit"};
@@ -30,7 +29,6 @@ public class MenuScreen extends ScreenAdapter {
     public MenuScreen(MyGdxGame game) {
         this.game = game;
         this.batch = game.batch;
-        this.font = game.font;
         this.shapeRenderer = new ShapeRenderer();
         this.ipAddress = game.hostIp;
     }
@@ -45,36 +43,33 @@ public class MenuScreen extends ScreenAdapter {
     public void render(float delta) {
         handleInput();
 
-        // Отрисовка
         Gdx.gl.glClearColor(0.2f, 0.2f, 0.3f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         batch.begin();
 
         // Заголовок
-        font.setColor(Color.YELLOW);
-        font.getData().setScale(1.5f);
-        font.draw(batch, "NETWORK CUBE GAME",
+        game.titleFont.draw(batch, "NETWORK CUBE GAME",
             SCREEN_WIDTH / 2 - 150, SCREEN_HEIGHT - 50);
-        font.getData().setScale(1.0f);
+        game.titleFont.getData().setScale(1.0f);
 
         // Элементы меню
-        font.setColor(Color.WHITE);
+        game.titleFont.setColor(Color.WHITE);
         for (int i = 0; i < menuItems.length; i++) {
             if (i == selectedItem) {
-                font.setColor(Color.GREEN);
-                font.draw(batch, "> " + menuItems[i],
+                game.titleFont.setColor(Color.GREEN);
+                game.titleFont.draw(batch, "> " + menuItems[i],
                     SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 - i * 40);
-                font.setColor(Color.WHITE);
+                game.titleFont.setColor(Color.WHITE);
             } else {
-                font.draw(batch, menuItems[i],
+                game.titleFont.draw(batch, menuItems[i],
                     SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 - i * 40);
             }
         }
 
         // Инструкции
-        font.setColor(Color.LIGHT_GRAY);
-        font.draw(batch, "Use UP/DOWN to navigate, ENTER to select",
+        game.titleFont.setColor(Color.LIGHT_GRAY);
+        game.titleFont.draw(batch, "Use UP/DOWN to navigate, ENTER to select",
             10, 40);
 
         batch.end();

@@ -12,10 +12,11 @@ public class TopPanelView extends View {
     private Texture panelBackground;
     private Texture heartTexture;
     private Texture emptyHeartTexture;
-
-    private BitmapFont font;
-    private GlyphLayout glyphLayout;
-
+    TextView player1NameText;
+    TextView player2NameText;
+    TextView timerText;
+    TextView player1RespawnText;
+    TextView player2RespawnText;
     private String player1Name;
     private String player2Name;
     private int player1Lives;
@@ -34,18 +35,32 @@ public class TopPanelView extends View {
     private int heartSpacing = 5;
 
     public TopPanelView(float x, float y, float width, float height,
-                        BitmapFont font, String panelTexturePath,
+                        BitmapFont font, BitmapFont timerFont, String panelTexturePath,
                         String heartTexturePath, String emptyHeartTexturePath) {
         super(x, y, width, height);
 
-        this.font = font;
-        this.glyphLayout = new GlyphLayout();
+
+        player1NameText = new TextView(font, x, y + height - 40, "Player1");
+        player1NameText.setCenterX(x + width / 4 - 10);
+        player2NameText = new TextView(font, x + width - 100, y + height - 40, "Player2");
+        player2NameText.setCenterX(x + width / 4 + 10);
+        timerText = new TextView(font, x + width / 2, y + height - 20, "10:00");
+        player1RespawnText = new TextView(timerFont, x + 20, y + 15, "");
+        player2RespawnText = new TextView(timerFont, x + width - 50, y + 15, "");
 
         panelBackground = new Texture(panelTexturePath);
         heartTexture = new Texture(heartTexturePath);
         emptyHeartTexture = new Texture(emptyHeartTexturePath);
 
         reset();
+    }
+
+    private void updateTextPositions() {
+        timerText.setX(x + width / 2 - timerText.getWidth() / 2);
+        player1NameText.setCenterX(x + width / 4 - 10);
+        player1RespawnText.setX(x + 20);
+        player2NameText.setCenterX(x + width / 4 * 3 + 10);
+        player2RespawnText.setX(x + width - player2RespawnText.getWidth() - 20);
     }
 
     public void reset() {
@@ -112,21 +127,39 @@ public class TopPanelView extends View {
         else {
             player2OutTimer = 0f;
         }
+        updateText();
+        updateTextPositions();
+    }
+    private void updateText() {
+        player1NameText.setText(player1Name);
+        player1NameText.setCenterX(x + width / 4 - 10);
+
+        int minutes = (int) (matchTimer / 60);
+        int seconds = (int) (matchTimer % 60);
+        String timeText = String.format("%02d:%02d", minutes, seconds);
+        timerText.setText(timeText);
+
+        if (player1IsOutOfBounds) {
+            float timeLeft = 3.0f - player1OutTimer;
+            player1RespawnText.setText(String.format("%.1f", timeLeft));
+        } else {
+            player1RespawnText.setText("");
+        }
+
+        if (player2IsOutOfBounds) {
+            float timeLeft = 3.0f - player2OutTimer;
+            player2RespawnText.setText(String.format("%.1f", timeLeft));
+        } else {
+            player2RespawnText.setText("");
+        }
     }
 
     @Override
     public void draw(SpriteBatch batch) {
         batch.draw(panelBackground, x, y, width, height);
 
-        Color originalColor = batch.getColor();
-
-        font.setColor(Color.WHITE);
-        glyphLayout.setText(font, player1Name);
-        font.draw(batch, player1Name, x + 20, y + height - 20);
-
-        float heartsStartX = x + 20;
+        float heartsStartX = x + width / 7f + 30;
         float heartsY = y + heartHeight / 2f;
-
         for (int i = 0; i < GameSettings.PLAYER_MAX_LIVES; i++) {
             if (i < player1Lives) {
                 batch.draw(heartTexture, heartsStartX + i * (heartWidth + heartSpacing), heartsY, heartWidth, heartHeight);
@@ -136,19 +169,8 @@ public class TopPanelView extends View {
             }
         }
 
-        int minutes = (int) (matchTimer / 60);
-        int seconds = (int) (matchTimer % 60);
-        String timeText = String.format("%02d:%02d", minutes, seconds);
-
-
-        glyphLayout.setText(font, timeText);
-        font.draw(batch, timeText, x + width / 2 - glyphLayout.width / 2, y + height - 20);
-
-        glyphLayout.setText(font, player2Name);
-        font.draw(batch, player2Name, x + width - glyphLayout.width - 20, y + height - 20);
-
         float totalHeartsWidth = GameSettings.PLAYER_MAX_LIVES * heartWidth + (GameSettings.PLAYER_MAX_LIVES - 1) * heartSpacing;
-        float heartsStartX2 = x + width - totalHeartsWidth - 20;
+        float heartsStartX2 = x + width - totalHeartsWidth - width / 7f - 30;
 
         for (int i = 0; i < GameSettings.PLAYER_MAX_LIVES; i++) {
             if (i < player2Lives) {
@@ -159,24 +181,11 @@ public class TopPanelView extends View {
             }
         }
 
-        if (player1IsOutOfBounds) {
-            font.setColor(Color.RED);
-            float timeLeft = 3.0f - player1OutTimer;
-            String respawnText = String.format("%.1f", timeLeft);
-            glyphLayout.setText(font, respawnText);
-            font.draw(batch, respawnText, x + 20, y + 15);
-        }
-
-        if (player2IsOutOfBounds) {
-            font.setColor(Color.RED);
-            float timeLeft = 3.0f - player2OutTimer;
-            String respawnText = String.format("%.1f", timeLeft);
-            glyphLayout.setText(font, respawnText);
-            font.draw(batch, respawnText, x + width - glyphLayout.width - 20, y + 15);
-        }
-
-        font.setColor(Color.WHITE);
-        batch.setColor(originalColor);
+        player1NameText.draw(batch);
+        player2NameText.draw(batch);
+        timerText.draw(batch);
+        player1RespawnText.draw(batch);
+        player2RespawnText.draw(batch);
     }
 
     public void checkOutOfBounds(float playerX, float playerY, boolean isPlayer1) {
@@ -210,9 +219,19 @@ public class TopPanelView extends View {
                 System.out.println(player2Name + " вернулся в арену.");
             }
         }
+        updateText();
+        updateTextPositions();
     }
-    public void setPlayer1Name(String name) { player1Name = name; }
-    public void setPlayer2Name(String name) { player2Name = name; }
+    public void setPlayer1Name(String name) {
+        player1Name = name;
+        updateText();
+        updateTextPositions();
+    }
+    public void setPlayer2Name(String name) {
+        player2Name = name;
+        updateText();
+        updateTextPositions();
+    }
 
     public void setPlayer1Lives(int lives) { player1Lives = lives; }
     public void setPlayer2Lives(int lives) { player2Lives = lives; }
@@ -230,10 +249,15 @@ public class TopPanelView extends View {
         }
         return false;
     }
+
     public int getPlayer1Lives() { return player1Lives; }
     public int getPlayer2Lives() { return player2Lives; }
 
-    public void setMatchTimer(float timer) { matchTimer = timer; }
+    public void setMatchTimer(float timer) {
+        matchTimer = timer;
+        updateText();
+        updateTextPositions();
+    }
     public float getMatchTimer() { return matchTimer; }
 
     public boolean isMatchActive() { return isMatchActive; }
@@ -246,5 +270,10 @@ public class TopPanelView extends View {
         if (panelBackground != null) panelBackground.dispose();
         if (heartTexture != null) heartTexture.dispose();
         if (emptyHeartTexture != null) emptyHeartTexture.dispose();
+        if (player1NameText != null) player1NameText.dispose();
+        if (player2NameText != null) player2NameText.dispose();
+        if (timerText != null) timerText.dispose();
+        if (player1RespawnText != null) player1RespawnText.dispose();
+        if (player2RespawnText != null) player2RespawnText.dispose();
     }
 }

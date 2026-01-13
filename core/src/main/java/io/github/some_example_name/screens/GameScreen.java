@@ -16,6 +16,7 @@ import io.github.some_example_name.GameResources;
 import io.github.some_example_name.MyGdxGame;
 import io.github.some_example_name.components.ButtonView;
 import io.github.some_example_name.components.JoystickView;
+import io.github.some_example_name.components.TextView;
 import io.github.some_example_name.components.TopPanelView;
 import io.github.some_example_name.game.AttackDirection;
 import io.github.some_example_name.game.GameState;
@@ -67,11 +68,23 @@ public class GameScreen extends ScreenAdapter {
 
     private boolean connected = false;
 
+    // тексты
+    private TextView countdownText;
+    private TextView waitingText;
+
     public GameScreen(MyGdxGame myGdxGame) {
         this.myGdxGame = myGdxGame;
         this.shapeRenderer = new ShapeRenderer();
         this.batch = myGdxGame.batch;
         this.currentState = new GameState();
+
+        waitingText = new TextView(myGdxGame.defaultFont,
+            SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2,
+            "WAITING FOR CLIENT...");
+
+        countdownText = new TextView(myGdxGame.defaultFont,
+            SCREEN_WIDTH / 2 - 80, SCREEN_HEIGHT / 2,
+            "");
 
         setupPlatforms();
         setupOneWayPlatforms();
@@ -84,7 +97,7 @@ public class GameScreen extends ScreenAdapter {
         topPanel = new TopPanelView(
             200, SCREEN_HEIGHT - TOP_PANEL_HEIGHT,
             SCREEN_WIDTH - 400, TOP_PANEL_HEIGHT,
-            myGdxGame.font,
+            myGdxGame.defaultFont, myGdxGame.timerFont,
             GameResources.TOP_PANEL_BG,
             GameResources.HEART_FULL,
             GameResources.HEART_EMPTY
@@ -522,19 +535,15 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void drawGameStateUI() {
-        myGdxGame.font.setColor(Color.WHITE);
-        // myGdxGame.font.draw(batch, myGdxGame.isHost ? "HOST" : "CLIENT", 10, SCREEN_HEIGHT - 10);
-
         switch (currentState.gameStatus) {
             case WAITING:
-                myGdxGame.font.setColor(Color.WHITE);
-                myGdxGame.font.draw(batch, "WAITING FOR CLIENT...", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+                waitingText.draw(batch);
                 break;
 
             case COUNTDOWN:
-                myGdxGame.font.setColor(Color.WHITE);
                 int seconds = (int) Math.ceil(currentState.countdownTimer);
-                myGdxGame.font.draw(batch, "STARTING IN: " + seconds, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+                countdownText.setText("STARTING IN: " + seconds);
+                countdownText.draw(batch);
                 break;
 
             case PLAYING:

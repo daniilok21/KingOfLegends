@@ -21,7 +21,6 @@ public class MyGdxGame extends Game {
     public World world;
     public SpriteBatch batch;
     public OrthographicCamera camera;
-    public BitmapFont font;
     public ContactManager contactManager;
 
     public AudioManager audioManager;
@@ -29,6 +28,12 @@ public class MyGdxGame extends Game {
     // Экран
     public MenuScreen menuScreen;
     public GameScreen gameScreen;
+
+    public BitmapFont defaultFont;
+    public BitmapFont largeFont;
+    public BitmapFont smallFont;
+    public BitmapFont titleFont;
+    public BitmapFont timerFont;
 
 
     public boolean isHost = false;
@@ -40,14 +45,16 @@ public class MyGdxGame extends Game {
         Box2D.init();
         world = new World(new Vector2(0, GRAVITY), true);
         contactManager = new ContactManager(world);
+        audioManager = new AudioManager();
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
         camera.setToOrtho(false, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-        font = new BitmapFont();
-        font.setColor(Color.WHITE);
-
-        audioManager = new AudioManager();
+        defaultFont = FontBuilder.generate(24, Color.WHITE, GameResources.FONT_PATH);
+        largeFont = FontBuilder.generate(48, Color.WHITE, GameResources.FONT_PATH);
+        smallFont = FontBuilder.generate(16, Color.WHITE, GameResources.FONT_PATH);
+        titleFont = FontBuilder.generate(64, Color.WHITE, GameResources.FONT_PATH);
+        timerFont = FontBuilder.generate(24, Color.RED, GameResources.FONT_PATH);
 
         menuScreen = new MenuScreen(this);
         gameScreen = new GameScreen(this);
@@ -63,7 +70,12 @@ public class MyGdxGame extends Game {
     @Override
     public void dispose() {
         batch.dispose();
-        font.dispose();
+
+        defaultFont.dispose();
+        largeFont.dispose();
+        smallFont.dispose();
+        titleFont.dispose();
+        timerFont.dispose();
 
         if (menuScreen != null) {
             menuScreen.dispose();

@@ -9,7 +9,7 @@ public class GameResources {
     public static final String BUTTON_DODGE = "textures/dodge_button.png";
     public static final String BUTTON_ATTACK = "textures/attack_button.png";
 
-    public static final String FONT_PATH = "fonts/Montserrat-Bold.ttf";
+    public static final String FONT_PATH = "fonts/Kenney Future.ttf";
 
     public static final String RED_PLAYER_SPRITE_SHEET = "textures/red_player.png";
     public static final String BLUE_PLAYER_SPRITE_SHEET = "textures/blue_player.png";
