@@ -72,6 +72,8 @@ public class GameScreen extends ScreenAdapter {
     private TextView countdownText;
     private TextView waitingText;
 
+    private boolean matchEnded = false;
+
     public GameScreen(MyGdxGame myGdxGame) {
         this.myGdxGame = myGdxGame;
         this.shapeRenderer = new ShapeRenderer();
@@ -197,7 +199,7 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void handleInput() {
-        if (!connected) return;
+        if (!connected || matchEnded) return;
 
         if (!myGdxGame.isHost && client != null) {
             GameState serverState = client.getState();
@@ -404,6 +406,10 @@ public class GameScreen extends ScreenAdapter {
         clientPlayer.update(delta);
         topPanel.update(delta);
 
+        if (!matchEnded && !topPanel.isMatchActive()) {
+            matchEnded = true;
+            endMatch();
+        }
 
         if (serverPlayer != null) {
             float serverX = serverPlayer.getX();
@@ -442,6 +448,23 @@ public class GameScreen extends ScreenAdapter {
         }
 
     }
+
+    private void endMatch() {
+        serverPlayer.setCanControl(false);
+        clientPlayer.setCanControl(false);
+
+        String winner;
+        if (topPanel.getPlayer1Lives() > topPanel.getPlayer2Lives()) {
+            winner = topPanel.getPlayer1Name();
+        } else if (topPanel.getPlayer2Lives() > topPanel.getPlayer1Lives()) {
+            winner = topPanel.getPlayer2Name();
+        } else {
+            winner = "Ничья";
+        }
+
+        System.out.println("Матч окончен! Победитель: " + winner);
+    }
+
     private void updateGameState(float delta) {
         switch (currentState.gameStatus) {
             case WAITING:

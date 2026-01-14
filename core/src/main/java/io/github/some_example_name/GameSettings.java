@@ -29,6 +29,7 @@ public class GameSettings {
 
     // Атака
     public static final float ATTACK_DURATION = 0.3f;
+    public static final float ATTACK_COOLDOWN = 0.7f;
 
     // Прыжок
     public static final float JUMP_COOLDOWN = 0.2f;

@@ -25,12 +25,14 @@ public class PlayerObject extends GameObject {
     private boolean isInHitStun = false;
     private boolean isAttacking = false;
     private float attackTimer = 0f;
+    private float attackCooldown = 0f;
     private AttackDirection currentAttackDirection = AttackDirection.SIDE;
     private Rectangle attackHitbox = new Rectangle();
     private boolean facingRight = true;
     private int health = 100;
     private int maxHealth = 100;
     private boolean wantsToGoDown = false;
+    private boolean canControl = true;
 
     public PlayerObject(int x, int y, int width, int height, String texturePath, World world) {
         super(texturePath, x, y, width, height, GameSettings.PLAYER_BIT, world, true, BodyDef.BodyType.DynamicBody);
@@ -66,8 +68,10 @@ public class PlayerObject extends GameObject {
         }
         dodgeCooldown -= delta;
         hitImmunityTimer -= delta;
+        attackCooldown -= delta;
         if (hitImmunityTimer < 0) hitImmunityTimer = 0;
         if (dodgeCooldown < 0) dodgeCooldown = 0;
+        if (attackCooldown < 0) attackCooldown = 0;
 
         checkGroundStatus();
         updateFacingDirection();
@@ -98,10 +102,11 @@ public class PlayerObject extends GameObject {
 
 
     public void startAttack(AttackDirection direction) {
-        if (isAttacking && !canAttack()) return;
+        if (!canAttack()) return;
 
         isAttacking = true;
         attackTimer = 0f;
+        attackCooldown = GameSettings.ATTACK_COOLDOWN;
         currentAttackDirection = direction;
 
         updateAttackHitbox();
@@ -184,7 +189,7 @@ public class PlayerObject extends GameObject {
                 break;
             case UP:
                 knockbackDirection.set(0, 1);
-                forse = 72f;
+                forse = 55f;
                 break;
             case DOWN:
                 knockbackDirection.set(facingRight ? 0.3f : -0.3f, -0.7f);
@@ -202,8 +207,6 @@ public class PlayerObject extends GameObject {
 
         Vector2 knockbackImpulse = knockbackDirection.scl(totalForce);
         target.getBody().applyLinearImpulse(knockbackImpulse, target.getBody().getWorldCenter(), true);
-
-        System.out.println("ОТДАЧА. Сила = " + totalForce + ", Направление = " + knockbackDirection);
     }
 
     private void checkGroundStatus() {
@@ -220,7 +223,7 @@ public class PlayerObject extends GameObject {
     }
 
     public boolean jump(float force) {
-        if (jumpsRemaining > 0) {
+        if (jumpsRemaining > 0 && canControl) {
             if (isDodging) {
                 isDodging = false;
                 dodgeTimer = 0f;
@@ -237,7 +240,7 @@ public class PlayerObject extends GameObject {
     }
 
     public boolean dodge(float directionX) {
-        if (dodgeCooldown > 0 || isDodging) {
+        if (!canControl || dodgeCooldown > 0 || isDodging) {
             return false;
         }
 
@@ -258,6 +261,17 @@ public class PlayerObject extends GameObject {
 //        body.setGravityScale(0.2f);
 
         return true;
+    }
+
+    public void setCanControl(boolean canControl) {
+        this.canControl = canControl;
+        if (!canControl) {
+            body.setLinearVelocity(0, 0);
+        }
+    }
+
+    public boolean canControl() {
+        return canControl;
     }
     public void setWantsToGoDown(boolean wantsToGoDown) {
         this.wantsToGoDown = wantsToGoDown;
@@ -331,26 +345,26 @@ public class PlayerObject extends GameObject {
     }
 
     public boolean canMove() {
-        return !isInHitStun && !isDodging && !isAttacking;
+        return canControl && !isInHitStun && !isDodging && !isAttacking;
     }
     public void setHitImmunityTimer(float hitImmunityTimer) {
         this.hitImmunityTimer = hitImmunityTimer;
     }
 
     public boolean canJump() {
-        return !isInHitStun && jumpsRemaining > 0;
+        return !isAttacking && !isInHitStun && jumpsRemaining > 0;
     }
 
     public boolean canAttack() {
-        return !isInHitStun && !isAttacking;
+        return canControl && !isInHitStun && !isAttacking && attackCooldown == 0;
     }
 
     public boolean canDodge() {
-        return !isInHitStun && dodgeCooldown <= 0 && !isDodging;
+        return !isAttacking && canControl && !isInHitStun && dodgeCooldown <= 0 && !isDodging;
     }
 
     public boolean canReceiveInput() {
-        return !isInHitStun;
+        return canControl && !isInHitStun;
     }
 
     public AttackDirection getCurrentAttackDirection() {

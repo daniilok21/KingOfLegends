@@ -44,7 +44,7 @@ public class TopPanelView extends View {
         player1NameText.setCenterX(x + width / 4 - 10);
         player2NameText = new TextView(font, x + width - 100, y + height - 40, "Player2");
         player2NameText.setCenterX(x + width / 4 + 10);
-        timerText = new TextView(font, x + width / 2, y + height - 20, "10:00");
+        timerText = new TextView(font, x + width / 2, y + height / 2, "10:00");
         player1RespawnText = new TextView(timerFont, x + 20, y + 15, "");
         player2RespawnText = new TextView(timerFont, x + width - 50, y + 15, "");
 
@@ -56,7 +56,8 @@ public class TopPanelView extends View {
     }
 
     private void updateTextPositions() {
-        timerText.setX(x + width / 2 - timerText.getWidth() / 2);
+        timerText.setCenterX(x + width / 2);
+        timerText.setCenterY(y + height / 2);
         player1NameText.setCenterX(x + width / 4 - 10);
         player1RespawnText.setX(x + 20);
         player2NameText.setCenterX(x + width / 4 * 3 + 10);
@@ -131,8 +132,6 @@ public class TopPanelView extends View {
         updateTextPositions();
     }
     private void updateText() {
-        player1NameText.setText(player1Name);
-        player1NameText.setCenterX(x + width / 4 - 10);
 
         int minutes = (int) (matchTimer / 60);
         int seconds = (int) (matchTimer % 60);
@@ -264,6 +263,9 @@ public class TopPanelView extends View {
 
     public boolean isPlayer1OutOfBounds() { return player1IsOutOfBounds; }
     public boolean isPlayer2OutOfBounds() { return player2IsOutOfBounds; }
+    public String getPlayer1Name() { return player1Name; }
+    public String getPlayer2Name() { return player2Name; }
+
 
     @Override
     public void dispose() {
