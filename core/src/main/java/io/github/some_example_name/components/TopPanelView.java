@@ -198,24 +198,20 @@ public class TopPanelView extends View {
             if (isOut && !player1IsOutOfBounds) {
                 player1IsOutOfBounds = true;
                 player1OutTimer = 0f;
-                System.out.println(player1Name + " вылетел. 3 секунды чтобы вернуться");
             }
             else if (!isOut && player1IsOutOfBounds) {
                 player1IsOutOfBounds = false;
                 player1OutTimer = 0f;
-                System.out.println(player1Name + " вернулся в арену.");
             }
         }
         else {
             if (isOut && !player2IsOutOfBounds) {
                 player2IsOutOfBounds = true;
                 player2OutTimer = 0f;
-                System.out.println(player2Name + " вылетел. 3 секунды чтобы вернуться");
             }
             else if (!isOut && player2IsOutOfBounds) {
                 player2IsOutOfBounds = false;
                 player2OutTimer = 0f;
-                System.out.println(player2Name + " вернулся в арену.");
             }
         }
         updateText();

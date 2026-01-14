@@ -34,6 +34,10 @@ public class PlayerObject extends GameObject {
     private boolean wantsToGoDown = false;
     private boolean canControl = true;
 
+    private float lastVelocityY = 0f;
+    private boolean wasMovingUpBeforeHit = false;
+    private float headHitCooldown = 0.15f;
+
     public PlayerObject(int x, int y, int width, int height, String texturePath, World world) {
         super(texturePath, x, y, width, height, GameSettings.PLAYER_BIT, world, true, BodyDef.BodyType.DynamicBody);
         if (body != null && body.getFixtureList().size > 0) {
@@ -69,11 +73,14 @@ public class PlayerObject extends GameObject {
         dodgeCooldown -= delta;
         hitImmunityTimer -= delta;
         attackCooldown -= delta;
+        headHitCooldown -= delta;
         if (hitImmunityTimer < 0) hitImmunityTimer = 0;
         if (dodgeCooldown < 0) dodgeCooldown = 0;
         if (attackCooldown < 0) attackCooldown = 0;
+        if (headHitCooldown < 0) headHitCooldown = 0;
 
-        checkGroundStatus();
+
+        checkGroundStatus(delta);
         updateFacingDirection();
     }
     public void applyHitStun(float duration) {
@@ -209,17 +216,40 @@ public class PlayerObject extends GameObject {
         target.getBody().applyLinearImpulse(knockbackImpulse, target.getBody().getWorldCenter(), true);
     }
 
-    private void checkGroundStatus() {
+    private void checkGroundStatus(float delta) {
         float velocityY = body.getLinearVelocity().y;
+        float prevVelocityY = lastVelocityY;
+        lastVelocityY = velocityY;
+
+        if (prevVelocityY > 0.5f) {
+            wasMovingUpBeforeHit = true;
+        }
+
         if (Math.abs(velocityY) <= 0.1f) {
             if (!isOnGround) {
-                isOnGround = true;
-                jumpsRemaining = 2;
+                if (wasMovingUpBeforeHit && headHitCooldown > 0) {
+                    wasMovingUpBeforeHit = false;
+                }
+                else {
+                    isOnGround = true;
+                    jumpsRemaining = 2;
+                }
             }
         }
         else {
             isOnGround = false;
+            if (velocityY < -0.1f) {
+                wasMovingUpBeforeHit = false;
+            }
         }
+
+        if (isOnGround && velocityY > 0.5f) {
+            isOnGround = false;
+        }
+    }
+    public void registerHeadHit() {
+        wasMovingUpBeforeHit = true;
+        headHitCooldown = 0.15f;
     }
 
     public boolean jump(float force) {

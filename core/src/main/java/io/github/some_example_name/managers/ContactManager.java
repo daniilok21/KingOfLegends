@@ -24,7 +24,7 @@ public class ContactManager {
                 GameObject objB = (GameObject) fixB.getUserData();
 
                 if (objA != null && objB != null) {
-                    handleBeginContact(objA, objB);
+                    handleBeginContact(objA, objB, contact);
                 }
             }
 
@@ -60,19 +60,31 @@ public class ContactManager {
         });
     }
 
-    private void handleBeginContact(GameObject objA, GameObject objB) {
+    private void handleBeginContact(GameObject objA, GameObject objB, Contact contact) {
         if ((objA.cBits == GameSettings.PLAYER_BIT && objB.cBits == GameSettings.PLATFORM_BIT) ||
             (objB.cBits == GameSettings.PLAYER_BIT && objA.cBits == GameSettings.PLATFORM_BIT)) {
 
             PlayerObject playerObj = null;
-            if (objA instanceof PlayerObject) {
+            GameObject platformObj = null;
+
+            if (objA instanceof PlayerObject && objB.cBits == GameSettings.PLATFORM_BIT) {
                 playerObj = (PlayerObject) objA;
-            } else if (objB instanceof PlayerObject) {
+                platformObj = objB;
+            }
+            else if (objB instanceof PlayerObject && objA.cBits == GameSettings.PLATFORM_BIT) {
                 playerObj = (PlayerObject) objB;
+                platformObj = objA;
             }
 
-            if (playerObj != null) {
-                playerObj.hit();
+            if (playerObj != null && platformObj != null) {
+                if (!(platformObj instanceof OneWayPlatformObject)) {
+                    if (playerObj.getBody().getLinearVelocity().y > 0 && playerObj.getY() + playerObj.getHeight() <= platformObj.getY() + 10) {
+                        playerObj.registerHeadHit();
+                    }
+                }
+                else {
+                    playerObj.hit();
+                }
             }
         }
     }
