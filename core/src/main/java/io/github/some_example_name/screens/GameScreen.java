@@ -582,7 +582,6 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void resize(int width, int height) {
-        myGdxGame.camera.setToOrtho(false, width, height);
         myGdxGame.camera.update();
         batch.setProjectionMatrix(myGdxGame.camera.combined);
         shapeRenderer.setProjectionMatrix(myGdxGame.camera.combined);

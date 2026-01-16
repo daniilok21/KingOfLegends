@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2D;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import io.github.some_example_name.managers.AudioManager;
 import io.github.some_example_name.managers.ContactManager;
@@ -65,6 +66,29 @@ public class MyGdxGame extends Game {
     @Override
     public void render() {
         super.render();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        float screenRatio = width / (float) height;
+
+        if (screenRatio > SCREEN_WIDTH / (float) SCREEN_HEIGHT) {
+            float newWidth = SCREEN_HEIGHT * screenRatio;
+            camera.viewportWidth = newWidth;
+            camera.viewportHeight = SCREEN_HEIGHT;
+            camera.position.x = newWidth / 2;
+        }
+        else {
+            float newHeight = SCREEN_WIDTH / screenRatio;
+            camera.viewportWidth = SCREEN_WIDTH;
+            camera.viewportHeight = newHeight;
+            camera.position.y = newHeight / 2;
+        }
+
+        camera.position.x = SCREEN_WIDTH / 2;
+        camera.position.y = SCREEN_HEIGHT / 2;
+
+        camera.update();
     }
 
     @Override
