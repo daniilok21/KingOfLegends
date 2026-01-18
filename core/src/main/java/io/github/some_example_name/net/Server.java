@@ -1,5 +1,6 @@
 package io.github.some_example_name.net;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 
@@ -83,7 +84,7 @@ public class Server {
                     PlayerInput currentInput = latestInput.getAndSet(null);
 
                     if (currentInput != null && clientBody != null) {
-                        applyInput(currentInput, delta);
+                        applyInput(currentInput);
                     }
 
                     if (serverPlayer != null) {
@@ -170,12 +171,12 @@ public class Server {
         }
     }
 
-    private void applyInput(PlayerInput input, float delta) {
+    private void applyInput(PlayerInput input) {
         if (world.gameStatus != GameState.GameStatus.PLAYING) return;
         if (clientPlayer != null && !clientPlayer.canReceiveInput()) return;
         Vector2 force = new Vector2(0, 0);
-        if (input.moveRight && clientPlayer.canMove()) force.x = PLAYER_MOVE_FORCE * delta * FRAME_RATE;
-        if (input.moveLeft && clientPlayer.canMove()) force.x = -PLAYER_MOVE_FORCE * delta * FRAME_RATE;
+        if (input.moveRight && clientPlayer.canMove()) force.x = PLAYER_MOVE_FORCE;
+        if (input.moveLeft && clientPlayer.canMove()) force.x = -PLAYER_MOVE_FORCE;
         if (clientPlayer != null) {
             clientPlayer.setWantsToGoDown(input.wantToGoDown);
         }

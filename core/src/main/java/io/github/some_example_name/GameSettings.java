@@ -21,6 +21,7 @@ public class GameSettings {
     public static final int PORT = 9090;
     public static final int FRAME_RATE = 60;
     public static final int FRAME_DELAY_MS = 1000 / FRAME_RATE;
+    public static final float FRAME_DELAY_1_60 = 1f / 60f;
 
     // Уворот
     public static final float DODGE_DURATION = 0.3f;

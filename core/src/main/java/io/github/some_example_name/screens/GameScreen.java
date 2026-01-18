@@ -73,6 +73,7 @@ public class GameScreen extends ScreenAdapter {
     private TextView waitingText;
 
     private boolean matchEnded = false;
+    private float timeSinceLastUpdate = 0;
 
     public GameScreen(MyGdxGame myGdxGame) {
         this.myGdxGame = myGdxGame;
@@ -191,9 +192,13 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
-        checkTouchUp();
-        handleInput();
-        update(delta);
+        timeSinceLastUpdate += delta;
+        while (timeSinceLastUpdate >= FRAME_DELAY_1_60) {
+            timeSinceLastUpdate -= FRAME_DELAY_1_60;
+            checkTouchUp();
+            handleInput();
+            update(FRAME_DELAY_1_60);
+        }
         draw();
         myGdxGame.stepWorld();
     }
