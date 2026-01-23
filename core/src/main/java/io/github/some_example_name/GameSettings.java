@@ -10,7 +10,7 @@ public class GameSettings {
     public static final int PLAYER_HEIGHT = 64;
     public static final float PLAYER_MOVE_FORCE = 500f;
     public static final float PLAYER_JUMP_FORCE = 35f;
-    public static final float PLAYER_MAX_VELOCITY = 30f;
+    public static final float PLAYER_MAX_VELOCITY = 20f;
     public static final float PLAYER_MAX_KNOCKBACK_VELOCITY = 60f;
     public static final float HIT_STUN_DURATION = 0.3f;
     public static final float HIT_IMMUNITY_DURATION = 0.2f;
@@ -42,11 +42,11 @@ public class GameSettings {
     public static final float SCALE = 0.05f;
 
     // UI
-    public static final int BUTTON_WIDTH = 80;
-    public static final int BUTTON_HEIGHT = 80;
+    public static final int BUTTON_WIDTH = 120;
+    public static final int BUTTON_HEIGHT = 120;
     public static final float BUTTON_ALPHA = 0.7f;
-    public static final float JOYSTICK_BG_RADIUS = 80f;
-    public static final float JOYSTICK_HANDLE_RADIUS = 30f;
+    public static final float JOYSTICK_BG_RADIUS = 100f;
+    public static final float JOYSTICK_HANDLE_RADIUS = 40f;
 
     // Категории коллизий
     public static final short PLAYER_BIT = 2;
@@ -56,7 +56,7 @@ public class GameSettings {
     public static final int TOP_PANEL_HEIGHT = 100;
     public static final int PLAYER_MAX_LIVES = 3;
     public static final float OUT_OF_BOUNDS_RESPAWN_TIME = 3.0f;
-    public static final int MATCH_DURATION_SECONDS = 600;
+    public static final int MATCH_DURATION_SECONDS = 10;
 
     // Границы арены
     public static final float ARENA_LEFT_BOUND = -PLAYER_WIDTH;
@@ -65,8 +65,8 @@ public class GameSettings {
     public static final float ARENA_BOTTOM_BOUND = -PLAYER_HEIGHT;
 
     // Начальная растановка игроков
-    public static final int START_PLAYER_SERVER_X = 100;
-    public static final int START_PLAYER_SERVER_Y = 400;
-    public static final int START_PLAYER_CLIENT_X = SCREEN_WIDTH - 150;
-    public static final int START_PLAYER_CLIENT_Y = 400;
+    public static final int START_PLAYER_SERVER_X = 275;
+    public static final int START_PLAYER_SERVER_Y = 300;
+    public static final int START_PLAYER_CLIENT_X = SCREEN_WIDTH - 275;
+    public static final int START_PLAYER_CLIENT_Y = 300;
 }

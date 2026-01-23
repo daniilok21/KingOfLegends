@@ -18,7 +18,8 @@ public class GameState implements Serializable {
     public enum GameStatus {
         WAITING,
         COUNTDOWN,
-        PLAYING
+        PLAYING,
+        FINISHED
     }
     public GameStatus gameStatus = GameStatus.WAITING;
     public float countdownTimer = 3.0f;

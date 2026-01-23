@@ -29,27 +29,40 @@ public class GameScreen extends ScreenAdapter {
     private PlayerInput localInput = new PlayerInput();
     private boolean jumpWasPressed = false, connected = false;
     private GameState.GameStatus gameStatus = GameState.GameStatus.WAITING;
-    private float countdown = 3.0f, timeAccumulator = 0;
-    private TextView waitingText, countdownText;
+    private float countdown = 3.0f, timeAccumulator = 0, resultDisplayTimer = 0f;
+    private TextView waitingText, countdownText, resultText;
 
     public GameScreen(MyGdxGame game) {
         this.myGdxGame = game;
         this.batch = game.batch;
-        waitingText = new TextView(game.defaultFont, SCREEN_WIDTH/2 - 100, SCREEN_HEIGHT/2, "WAITING...");
-        countdownText = new TextView(game.defaultFont, SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2, "");
+        waitingText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2, "WAITING...");
+        countdownText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 80, SCREEN_HEIGHT / 2, "");
+        resultText = new TextView(game.titleFont, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100, "");
+
+        waitingText.setCenterX(SCREEN_WIDTH / 2f);
+        countdownText.setCenterX(SCREEN_WIDTH / 2f);
+        resultText.setCenterX(SCREEN_WIDTH / 2f);
+
+        waitingText.setCenterY(SCREEN_HEIGHT / 2f - 10);
+        countdownText.setCenterY(SCREEN_HEIGHT / 2f - 10);
+        resultText.setCenterY(SCREEN_HEIGHT / 2f - 10);
+
         setupWorld();
     }
 
     private void setupWorld() {
-        platforms.add(new PlatformObject(100, 100, SCREEN_WIDTH-200, 100, GameResources.PLATFORM, myGdxGame.world));
-        oneWayPlatforms.add(new OneWayPlatformObject(SCREEN_WIDTH/2-200, 300, 400, 30, GameResources.PLATFORM, myGdxGame.world));
+        int offset_buttons = 50;
+        platforms.add(new PlatformObject(100, 100, SCREEN_WIDTH - 200, 100, GameResources.PLATFORM, myGdxGame.world));
+        platforms.add(new PlatformObject(100, 350, 100, 220, GameResources.PLATFORM, myGdxGame.world));
+        platforms.add(new PlatformObject(SCREEN_WIDTH - 200, 350, 100, 220, GameResources.PLATFORM, myGdxGame.world));
+        oneWayPlatforms.add(new OneWayPlatformObject(SCREEN_WIDTH / 2 - 250, 325, 500, 50, GameResources.PLATFORM, myGdxGame.world));
         serverPlayer = new PlayerObject(START_PLAYER_SERVER_X, START_PLAYER_SERVER_Y, PLAYER_WIDTH, PLAYER_HEIGHT, GameResources.RED_PLAYER_SPRITE_SHEET, myGdxGame.world);
         clientPlayer = new PlayerObject(START_PLAYER_CLIENT_X, START_PLAYER_CLIENT_Y, PLAYER_WIDTH, PLAYER_HEIGHT, GameResources.BLUE_PLAYER_SPRITE_SHEET, myGdxGame.world);
-        joystick = new JoystickView(50, 50, GameResources.JOYSTICK_BG, GameResources.JOYSTICK_HANDLE);
-        jumpButton = new ButtonView(SCREEN_WIDTH-130, 50, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_JUMP);
-        dodgeButton = new ButtonView(SCREEN_WIDTH-230, 50, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_DODGE);
-        attackButton = new ButtonView(SCREEN_WIDTH-330, 50, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_ATTACK);
-        topPanel = new TopPanelView(200, SCREEN_HEIGHT-TOP_PANEL_HEIGHT, SCREEN_WIDTH-400, TOP_PANEL_HEIGHT, myGdxGame.defaultFont, myGdxGame.timerFont, GameResources.TOP_PANEL_BG, GameResources.HEART_FULL, GameResources.HEART_EMPTY);
+        joystick = new JoystickView(50, 30, GameResources.JOYSTICK_BG, GameResources.JOYSTICK_HANDLE);
+        jumpButton = new ButtonView(SCREEN_WIDTH - 130 - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_JUMP);
+        dodgeButton = new ButtonView(SCREEN_WIDTH - 130 - (BUTTON_WIDTH + 20) - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_DODGE);
+        attackButton = new ButtonView(SCREEN_WIDTH - 130 - 2 * (BUTTON_WIDTH + 20) - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_ATTACK);
+        topPanel = new TopPanelView(200, SCREEN_HEIGHT-TOP_PANEL_HEIGHT, SCREEN_WIDTH - 400, TOP_PANEL_HEIGHT, myGdxGame.defaultFont, myGdxGame.timerFont, GameResources.TOP_PANEL_BG, GameResources.HEART_FULL, GameResources.HEART_EMPTY);
     }
 
     public void initializeNetwork() {
@@ -77,6 +90,16 @@ public class GameScreen extends ScreenAdapter {
 
     private void updateLogic(float delta) {
         handleInput();
+
+        checkMatchEndConditions();
+
+        if (gameStatus == GameState.GameStatus.FINISHED) {
+            resultDisplayTimer -= delta;
+            if (resultDisplayTimer <= 0) {
+                myGdxGame.showMenuScreen();
+            }
+            return;
+        }
 
         if (myGdxGame.isHost) {
             PlayerInput remoteInput = server.getClientInput();
@@ -155,6 +178,12 @@ public class GameScreen extends ScreenAdapter {
 
             server.sendState(packet);
 
+            if (gameStatus != GameState.GameStatus.FINISHED && gameStatus != GameState.GameStatus.WAITING && gameStatus != GameState.GameStatus.COUNTDOWN) {
+                if (topPanel.getPlayer1Lives() <= 0 || topPanel.getPlayer2Lives() <= 0) {
+                    endMatch();
+                }
+            }
+
         } else {
             NetworkPacket packet = client.latestPacket;
 
@@ -213,6 +242,51 @@ public class GameScreen extends ScreenAdapter {
         }
     }
 
+    private void checkMatchEndConditions() {
+        if (gameStatus != GameState.GameStatus.PLAYING) return;
+
+        if (topPanel.getMatchTimer() <= 0) {
+            if (topPanel.getPlayer1Lives() > 0 && topPanel.getPlayer2Lives() > 0) endMatchWithDraw();
+            else endMatch();
+        }
+        if (topPanel.getPlayer1Lives() <= 0 || topPanel.getPlayer2Lives() <= 0) {
+            endMatch();
+        }
+    }
+
+    private void endMatch() {
+        gameStatus = GameState.GameStatus.FINISHED;
+        String winner;
+        if (topPanel.getPlayer1Lives() <= 0 && topPanel.getPlayer2Lives() > 0) {
+            winner = topPanel.getPlayer1Name() + " - WIN!";
+        } else if (topPanel.getPlayer2Lives() <= 0 && topPanel.getPlayer1Lives() > 0) {
+            winner = topPanel.getPlayer2Name() + " - WIN!";
+        } else {
+            winner = "DRAW!";
+        }
+
+        resultText.setText(winner);
+        resultDisplayTimer = 3.0f;
+
+        serverPlayer.setCanControl(false);
+        clientPlayer.setCanControl(false);
+
+        serverPlayer.getBody().setLinearVelocity(0, 0);
+        clientPlayer.getBody().setLinearVelocity(0, 0);
+    }
+
+    private void endMatchWithDraw() {
+        gameStatus = GameState.GameStatus.FINISHED;
+        resultText.setText("DRAW!");
+        resultDisplayTimer = 3.0f;
+
+        serverPlayer.setCanControl(false);
+        clientPlayer.setCanControl(false);
+
+        serverPlayer.getBody().setLinearVelocity(0, 0);
+        clientPlayer.getBody().setLinearVelocity(0, 0);
+    }
+
     private void handleInput() {
         localInput.moveLeft = false;
         localInput.moveRight = false;
@@ -248,7 +322,7 @@ public class GameScreen extends ScreenAdapter {
 
 
     private void applyPlayerInput(PlayerObject p, PlayerInput in) {
-        if (gameStatus != GameState.GameStatus.PLAYING && !p.canReceiveInput()) return;
+        if (gameStatus != GameState.GameStatus.PLAYING || !p.canReceiveInput()) return;
 
         Vector2 vel = p.getBody().getLinearVelocity();
         float targetX;
@@ -321,20 +395,35 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.setProjectionMatrix(myGdxGame.camera.combined);
         batch.begin();
+
         for (PlatformObject p : platforms) p.draw(batch);
         for (OneWayPlatformObject o : oneWayPlatforms) o.draw(batch);
-        serverPlayer.draw(batch);
-        clientPlayer.draw(batch);
+
+        if (myGdxGame.isHost) {
+            clientPlayer.draw(batch);
+            serverPlayer.draw(batch);
+        }
+        else {
+            serverPlayer.draw(batch);
+            clientPlayer.draw(batch);
+        }
         topPanel.draw(batch);
         joystick.draw(batch);
         jumpButton.draw(batch);
         dodgeButton.draw(batch);
         attackButton.draw(batch);
-        if (gameStatus == GameState.GameStatus.WAITING) waitingText.draw(batch);
-        else if (gameStatus == GameState.GameStatus.COUNTDOWN) {
+
+        if (gameStatus == GameState.GameStatus.WAITING) {
+            waitingText.draw(batch);
+        } else if (gameStatus == GameState.GameStatus.COUNTDOWN) {
             countdownText.setText("START IN: " + (int)Math.ceil(countdown));
+            countdownText.setCenterX(SCREEN_WIDTH / 2f);
             countdownText.draw(batch);
+        } else if (gameStatus == GameState.GameStatus.FINISHED) {
+            resultText.setCenterX(SCREEN_WIDTH / 2f);
+            resultText.draw(batch);
         }
+
         batch.end();
     }
 

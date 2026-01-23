@@ -79,6 +79,7 @@ public class TopPanelView extends View {
 
         needChange1Player = false;
         needChange2Player = false;
+        updateTextPositions();
     }
 
     public void update(float delta) {
@@ -247,7 +248,8 @@ public class TopPanelView extends View {
 
     public boolean isPlayer1OutOfBounds() { return player1IsOutOfBounds; }
     public boolean isPlayer2OutOfBounds() { return player2IsOutOfBounds; }
-
+    public String getPlayer1Name() { return player1Name; }
+    public String getPlayer2Name() { return player2Name; }
     @Override
     public void dispose() {
         if (panelBackground != null) panelBackground.dispose();
