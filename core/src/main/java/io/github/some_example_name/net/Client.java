@@ -1,82 +1,61 @@
 package io.github.some_example_name.net;
 
-import io.github.some_example_name.game.GameState;
 import io.github.some_example_name.game.PlayerInput;
-
+import io.github.some_example_name.game.GameState;
 import java.io.*;
 import java.net.Socket;
 
 public class Client {
     private Socket socket;
     private ObjectOutputStream out;
-    private ObjectInputStream in;
     private volatile boolean running = true;
-    private GameState latestState = new GameState();
-    private volatile boolean connected = false;
+
+    public volatile NetworkPacket latestPacket;
+    public GameState.GameStatus serverStatus = GameState.GameStatus.WAITING;
+    public float serverCountdown = 3f;
 
     public boolean connect(String host, int port) {
         try {
             socket = new Socket(host, port);
+            socket.setTcpNoDelay(true);
             out = new ObjectOutputStream(socket.getOutputStream());
-            in = new ObjectInputStream(socket.getInputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
-            connected = true;
-            // приём состояния от сервера
             new Thread(() -> {
                 try {
                     while (running) {
-                        GameState state = (GameState) in.readObject();
-                        if (state != null) {
-                            synchronized (this) {
-                                latestState = state;
-                            }
+                        Object obj = in.readObject();
+                        if (obj instanceof NetworkPacket) {
+                            latestPacket = (NetworkPacket) obj;
+                            serverStatus = latestPacket.status;
+                            serverCountdown = latestPacket.countdown;
                         }
                     }
-                }
-                catch (Exception e) {
-                    System.out.println("Client disconnected: " + e.getMessage());
+                } catch (Exception e) {
+                    running = false;
                 }
             }).start();
-
             return true;
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
             return false;
         }
     }
 
     public void sendInput(PlayerInput input) {
-        if (!connected || out == null) return;
+        if (out == null || !running) return;
         try {
             out.writeObject(input);
             out.flush();
             out.reset();
+        } catch (IOException e) {
+            running = false;
         }
-        catch (IOException e) {
-            System.out.println("Failed to send input: " + e.getMessage());
-            connected = false;
-        }
-    }
-
-    public GameState getState() {
-        synchronized (this) {
-            return latestState;
-        }
-    }
-
-    public boolean isConnected() {
-        return connected && socket != null && !socket.isClosed() && socket.isConnected();
     }
 
     public void disconnect() {
         running = false;
-        connected = false;
-        try {
-            if (out != null) out.close();
-            if (in != null) in.close();
-            if (socket != null) socket.close();
-        }
-        catch (IOException e) {}
+        try { if (socket != null) socket.close(); } catch (Exception e) {}
     }
+
+    public boolean isConnected() { return running && socket != null && socket.isConnected(); }
 }

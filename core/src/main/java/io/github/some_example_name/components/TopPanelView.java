@@ -82,7 +82,10 @@ public class TopPanelView extends View {
     }
 
     public void update(float delta) {
-        if (!isMatchActive) return;
+        if (!isMatchActive) {
+            updateText();
+            return;
+        }
 
         matchTimer -= delta;
         if (matchTimer <= 0) {
@@ -92,62 +95,57 @@ public class TopPanelView extends View {
 
         if (player1IsOutOfBounds) {
             player1OutTimer += delta;
-
             if (player1OutTimer >= GameSettings.OUT_OF_BOUNDS_RESPAWN_TIME) {
                 player1Lives--;
                 player1IsOutOfBounds = false;
                 player1OutTimer = 0f;
-                System.out.println(player1Name + " потерял жизнь. Осталось: " + player1Lives);
-                needChange1Player = true;
-                if (player1Lives <= 0 || player2Lives <= 0) {
+                if (player1Lives > 0) {
+                    needChange1Player = true;
+                } else {
+                    player1Lives = 0;
                     isMatchActive = false;
-                    System.out.println("Матч завершен!");
                 }
             }
-        }
-        else {
+        } else {
             player1OutTimer = 0f;
         }
 
         if (player2IsOutOfBounds) {
             player2OutTimer += delta;
-
             if (player2OutTimer >= GameSettings.OUT_OF_BOUNDS_RESPAWN_TIME) {
                 player2Lives--;
                 player2IsOutOfBounds = false;
                 player2OutTimer = 0f;
-                System.out.println(player2Name + " потерял жизнь. Осталось: " + player2Lives);
-                needChange2Player = true;
-                if (player1Lives <= 0 || player2Lives <= 0) {
+                if (player2Lives > 0) {
+                    needChange2Player = true;
+                } else {
+                    player2Lives = 0;
                     isMatchActive = false;
-                    System.out.println("Матч завершен!");
                 }
             }
-
-        }
-        else {
+        } else {
             player2OutTimer = 0f;
         }
         updateText();
         updateTextPositions();
     }
-    private void updateText() {
 
+    private void updateText() {
         int minutes = (int) (matchTimer / 60);
         int seconds = (int) (matchTimer % 60);
         String timeText = String.format("%02d:%02d", minutes, seconds);
         timerText.setText(timeText);
 
-        if (player1IsOutOfBounds) {
-            float timeLeft = 3.0f - player1OutTimer;
-            player1RespawnText.setText(String.format("%.1f", timeLeft));
+        if (player1IsOutOfBounds && player1Lives > 0) {
+            float timeLeft = GameSettings.OUT_OF_BOUNDS_RESPAWN_TIME - player1OutTimer;
+            player1RespawnText.setText(String.format("%.1f", Math.max(0, timeLeft)));
         } else {
             player1RespawnText.setText("");
         }
 
-        if (player2IsOutOfBounds) {
-            float timeLeft = 3.0f - player2OutTimer;
-            player2RespawnText.setText(String.format("%.1f", timeLeft));
+        if (player2IsOutOfBounds && player2Lives > 0) {
+            float timeLeft = GameSettings.OUT_OF_BOUNDS_RESPAWN_TIME - player2OutTimer;
+            player2RespawnText.setText(String.format("%.1f", Math.max(0, timeLeft)));
         } else {
             player2RespawnText.setText("");
         }
@@ -214,22 +212,13 @@ public class TopPanelView extends View {
                 player2OutTimer = 0f;
             }
         }
-        updateText();
-        updateTextPositions();
-    }
-    public void setPlayer1Name(String name) {
-        player1Name = name;
-        updateText();
-        updateTextPositions();
-    }
-    public void setPlayer2Name(String name) {
-        player2Name = name;
-        updateText();
-        updateTextPositions();
     }
 
     public void setPlayer1Lives(int lives) { player1Lives = lives; }
     public void setPlayer2Lives(int lives) { player2Lives = lives; }
+    public void setPlayer1Out(boolean out) { this.player1IsOutOfBounds = out; }
+    public void setPlayer2Out(boolean out) { this.player2IsOutOfBounds = out; }
+
     public boolean getNeedChange1Player() {
         if (needChange1Player) {
             needChange1Player = false;
@@ -250,18 +239,14 @@ public class TopPanelView extends View {
 
     public void setMatchTimer(float timer) {
         matchTimer = timer;
-        updateText();
-        updateTextPositions();
     }
     public float getMatchTimer() { return matchTimer; }
 
     public boolean isMatchActive() { return isMatchActive; }
+    public void setMatchActive(boolean active) { isMatchActive = active; }
 
     public boolean isPlayer1OutOfBounds() { return player1IsOutOfBounds; }
     public boolean isPlayer2OutOfBounds() { return player2IsOutOfBounds; }
-    public String getPlayer1Name() { return player1Name; }
-    public String getPlayer2Name() { return player2Name; }
-
 
     @Override
     public void dispose() {

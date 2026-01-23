@@ -325,6 +325,10 @@ public class PlayerObject extends GameObject {
         System.out.println("Игрок получил " + damage + " урона. HP = " + health);
     }
 
+    public void setHealth(int health) {
+        this.health = health;
+    }
+
     public void heal(int amount) {
         health += amount;
         if (health > maxHealth) health = maxHealth;
@@ -357,9 +361,19 @@ public class PlayerObject extends GameObject {
         return facingRight;
     }
 
+    public float getHitImmunityTimer() { return hitImmunityTimer; }
+
+    public void setFacingRight(boolean facingRight) {
+        this.facingRight = facingRight;
+    }
+
     public void stopAttacking() {
         isAttacking = false;
         attackTimer = 0f;
+    }
+
+    public void setAttacking(boolean attacking) {
+        this.isAttacking = attacking;
     }
 
     public boolean isAttacking() {
@@ -405,6 +419,10 @@ public class PlayerObject extends GameObject {
         updateAttackHitbox();
         return attackHitbox;
     }
+
+    public void setJumpsRemaining(int jumps) { this.jumpsRemaining = jumps; }
+    public void setIsOnGround(boolean onGround) { this.isOnGround = onGround; }
+
     public Rectangle getPlayerHitbox() {
         return new Rectangle(getX(), getY(), width, height);
     }

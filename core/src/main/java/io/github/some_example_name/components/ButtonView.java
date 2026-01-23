@@ -72,6 +72,9 @@ public class ButtonView extends View {
     public boolean isEnabled() {
         return isEnabled;
     }
+    public boolean isPressed() {
+        return isPressed;
+    }
 
     @Override
     public void dispose() {

@@ -1,15 +1,14 @@
 package io.github.some_example_name.game;
-
 import java.io.Serializable;
 
 public class PlayerInput implements Serializable {
     private static final long serialVersionUID = 1L;
-    public boolean moveRight = false;
-    public boolean moveLeft = false;
-    public boolean jump = false;
-    public boolean dodge = false;
-    public boolean attack = false;
-    public boolean attackUp = false;
-    public boolean attackDown = false;
-    public boolean wantToGoDown = false;
+    public boolean moveRight, moveLeft, jump, dodge, attack, attackUp, attackDown, wantToGoDown;
+
+    public float x, y;
+    public float vx, vy;
+    public int health;
+    public boolean facingRight;
+    public boolean isAttacking;
+    public AttackDirection attackDir;
 }
