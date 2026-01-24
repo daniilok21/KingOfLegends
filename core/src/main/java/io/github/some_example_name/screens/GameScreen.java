@@ -7,9 +7,11 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.World;
 import io.github.some_example_name.*;
 import io.github.some_example_name.components.*;
 import io.github.some_example_name.game.*;
+import io.github.some_example_name.managers.ContactManager;
 import io.github.some_example_name.net.*;
 import io.github.some_example_name.objects.*;
 import java.util.ArrayList;
@@ -36,21 +38,40 @@ public class GameScreen extends ScreenAdapter {
         this.myGdxGame = game;
         this.batch = game.batch;
         waitingText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2, "WAITING...");
-        ipAddressText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 + waitingText.getHeight() + 10, "YOUR IP: " + getIP());
+        ipAddressText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 + 50, "");
         countdownText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 80, SCREEN_HEIGHT / 2, "");
         resultText = new TextView(game.titleFont, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100, "");
+    }
 
-        waitingText.setCenterX(SCREEN_WIDTH / 2f);
-        ipAddressText.setCenterX(SCREEN_WIDTH / 2f);
-        countdownText.setCenterX(SCREEN_WIDTH / 2f);
-        resultText.setCenterX(SCREEN_WIDTH / 2f);
+    @Override
+    public void show() {
+        resetGame();
+    }
 
-        waitingText.setCenterY(SCREEN_HEIGHT / 2f - 10);
-        ipAddressText.setCenterY(SCREEN_HEIGHT / 2 + waitingText.getHeight() + 20);
-        countdownText.setCenterY(SCREEN_HEIGHT / 2f - 10);
-        resultText.setCenterY(SCREEN_HEIGHT / 2f - 10);
+    private void resetGame() {
+        disconnect();
+        gameStatus = GameState.GameStatus.WAITING;
+        countdown = 3.0f;
+        timeAccumulator = 0;
+        resultDisplayTimer = 0f;
+        connected = false;
+
+        platforms.clear();
+        oneWayPlatforms.clear();
+
+        if (myGdxGame.world != null) myGdxGame.world.dispose();
+        myGdxGame.world = new World(new Vector2(0, GRAVITY), true);
+        myGdxGame.contactManager = new ContactManager(myGdxGame.world);
 
         setupWorld();
+
+        ipAddressText.setText("YOUR IP: " + getIP());
+        waitingText.setCenterX(SCREEN_WIDTH / 2f);
+        ipAddressText.setCenterX(SCREEN_WIDTH / 2f);
+
+        initializeNetwork();
+
+        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     private void setupWorld() {
@@ -65,6 +86,7 @@ public class GameScreen extends ScreenAdapter {
         jumpButton = new ButtonView(SCREEN_WIDTH - 130 - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_JUMP);
         dodgeButton = new ButtonView(SCREEN_WIDTH - 130 - (BUTTON_WIDTH + 20) - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_DODGE);
         attackButton = new ButtonView(SCREEN_WIDTH - 130 - 2 * (BUTTON_WIDTH + 20) - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_ATTACK);
+        if (topPanel != null) topPanel.dispose();
         topPanel = new TopPanelView(200, SCREEN_HEIGHT-TOP_PANEL_HEIGHT, SCREEN_WIDTH - 400, TOP_PANEL_HEIGHT, myGdxGame.defaultFont, myGdxGame.timerFont, GameResources.TOP_PANEL_BG, GameResources.HEART_FULL, GameResources.HEART_EMPTY);
     }
 
@@ -80,8 +102,25 @@ public class GameScreen extends ScreenAdapter {
     }
 
     @Override
+    public void resize(int width, int height) {
+        float screenRatio = width / (float) height;
+        if (screenRatio > SCREEN_WIDTH / (float) SCREEN_HEIGHT) {
+            myGdxGame.camera.viewportWidth = SCREEN_HEIGHT * screenRatio;
+            myGdxGame.camera.viewportHeight = SCREEN_HEIGHT;
+        } else {
+
+            myGdxGame.camera.viewportWidth = SCREEN_WIDTH;
+            myGdxGame.camera.viewportHeight = SCREEN_WIDTH / screenRatio;
+        }
+
+        myGdxGame.camera.position.set(SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f, 0);
+        myGdxGame.camera.update();
+        batch.setProjectionMatrix(myGdxGame.camera.combined);
+    }
+
+    @Override
     public void render(float delta) {
-        if (!connected) initializeNetwork();
+        if (!connected) return;
         timeAccumulator += delta;
         while (timeAccumulator >= STEP_TIME) {
             updateLogic(STEP_TIME);
@@ -94,6 +133,16 @@ public class GameScreen extends ScreenAdapter {
     private void updateLogic(float delta) {
         handleInput();
 
+        if (gameStatus == GameState.GameStatus.PLAYING || gameStatus == GameState.GameStatus.COUNTDOWN) {
+            if (myGdxGame.isHost && (server == null || !server.isConnected())) {
+                endMatchWithWinner(topPanel.getPlayer1Name() + " WIN (Opponent left)");
+                return;
+            } else if (!myGdxGame.isHost && (client == null || !client.isConnected())) {
+                endMatchWithWinner("Disconnected from server");
+                return;
+            }
+        }
+
         checkMatchEndConditions();
 
         if (gameStatus == GameState.GameStatus.FINISHED) {
@@ -105,7 +154,7 @@ public class GameScreen extends ScreenAdapter {
         }
 
         if (myGdxGame.isHost) {
-            PlayerInput remoteInput = server.getClientInput();
+            PlayerInput remoteInput = (server != null) ? server.getClientInput() : null;
             updateServerState(delta);
 
             applyPlayerInput(serverPlayer, localInput);
@@ -133,13 +182,13 @@ public class GameScreen extends ScreenAdapter {
                 topPanel.update(delta);
             }
 
-            boolean sRespawn = false;
-            boolean cRespawn = false;
 
+            boolean sRespawn = false, cRespawn = false;
             if (topPanel.getNeedChange1Player()) {
                 serverPlayer.getBody().setTransform(START_PLAYER_SERVER_X * SCALE, START_PLAYER_SERVER_Y * SCALE, 0);
                 serverPlayer.getBody().setLinearVelocity(0, 0);
                 serverPlayer.setHealth(100);
+                topPanel.setPlayer1Out(false);
                 serverPlayer.setHitImmunityTimer(2.0f);
                 sRespawn = true;
             }
@@ -147,6 +196,7 @@ public class GameScreen extends ScreenAdapter {
                 clientPlayer.getBody().setTransform(START_PLAYER_CLIENT_X * SCALE, START_PLAYER_CLIENT_Y * SCALE, 0);
                 clientPlayer.getBody().setLinearVelocity(0, 0);
                 clientPlayer.setHealth(100);
+                topPanel.setPlayer2Out(false);
                 clientPlayer.setHitImmunityTimer(2.0f);
                 cRespawn = true;
             }
@@ -179,17 +229,10 @@ public class GameScreen extends ScreenAdapter {
             packet.cInHitStun = clientPlayer.isInHitStun();
             packet.cIsOut = topPanel.isPlayer2OutOfBounds();
 
-            server.sendState(packet);
-
-            if (gameStatus != GameState.GameStatus.FINISHED && gameStatus != GameState.GameStatus.WAITING && gameStatus != GameState.GameStatus.COUNTDOWN) {
-                if (topPanel.getPlayer1Lives() <= 0 || topPanel.getPlayer2Lives() <= 0) {
-                    endMatch();
-                }
-            }
-
-        } else {
-            NetworkPacket packet = client.latestPacket;
-
+            if (server != null) server.sendState(packet);
+        }
+        else {
+            NetworkPacket packet = (client != null) ? client.latestPacket : null;
             applyPlayerInput(clientPlayer, localInput);
             clientPlayer.update(delta);
 
@@ -202,14 +245,8 @@ public class GameScreen extends ScreenAdapter {
                 topPanel.setPlayer1Out(packet.sIsOut);
                 topPanel.setPlayer2Out(packet.cIsOut);
 
-                if (packet.sNeedRespawn) {
-                    serverPlayer.getBody().setTransform(packet.sX, packet.sY, 0);
-                    serverPlayer.getBody().setLinearVelocity(0, 0);
-                } else {
-                    serverPlayer.getBody().setTransform(packet.sX, packet.sY, 0);
-                    serverPlayer.getBody().setLinearVelocity(packet.sVX, packet.sVY);
-                }
-
+                serverPlayer.getBody().setTransform(packet.sX, packet.sY, 0);
+                serverPlayer.getBody().setLinearVelocity(packet.sVX, packet.sVY);
                 serverPlayer.setHealth(packet.sHealth);
                 serverPlayer.setFacingRight(packet.sFacingRight);
                 if (packet.sIsAttacking && !serverPlayer.isAttacking()) {
@@ -221,9 +258,6 @@ public class GameScreen extends ScreenAdapter {
                 if (packet.cNeedRespawn) {
                     clientPlayer.getBody().setTransform(packet.cX, packet.cY, 0);
                     clientPlayer.getBody().setLinearVelocity(0, 0);
-                } else if (packet.cInHitStun || packet.cIsDodging) {
-                    clientPlayer.getBody().setTransform(packet.cX, packet.cY, 0);
-                    clientPlayer.getBody().setLinearVelocity(packet.cVX, packet.cVY);
                 }
             }
 
@@ -240,54 +274,29 @@ public class GameScreen extends ScreenAdapter {
             localInput.isAttacking = clientPlayer.isAttacking();
             localInput.attackDir = clientPlayer.getCurrentAttackDirection();
 
-            client.sendInput(localInput);
+            if (client != null) client.sendInput(localInput);
             serverPlayer.update(delta);
         }
     }
 
     private void checkMatchEndConditions() {
         if (gameStatus != GameState.GameStatus.PLAYING) return;
-
-        if (topPanel.getMatchTimer() <= 0) {
-            if (topPanel.getPlayer1Lives() > 0 && topPanel.getPlayer2Lives() > 0) endMatchWithDraw();
-            else endMatch();
-        }
-        if (topPanel.getPlayer1Lives() <= 0 || topPanel.getPlayer2Lives() <= 0) {
+        if (topPanel.getMatchTimer() <= 0 || topPanel.getPlayer1Lives() <= 0 || topPanel.getPlayer2Lives() <= 0) {
             endMatch();
         }
     }
 
     private void endMatch() {
-        gameStatus = GameState.GameStatus.FINISHED;
-        String winner;
-        if (topPanel.getPlayer1Lives() <= 0 && topPanel.getPlayer2Lives() > 0) {
-            winner = topPanel.getPlayer2Name() + " - WIN!";
-        } else if (topPanel.getPlayer2Lives() <= 0 && topPanel.getPlayer1Lives() > 0) {
-            winner = topPanel.getPlayer1Name() + " - WIN!";
-        } else {
-            winner = "DRAW!";
-        }
-
-        resultText.setText(winner);
-        resultDisplayTimer = 3.0f;
-
-        serverPlayer.setCanControl(false);
-        clientPlayer.setCanControl(false);
-
-        serverPlayer.getBody().setLinearVelocity(0, 0);
-        clientPlayer.getBody().setLinearVelocity(0, 0);
+        String winner = "DRAW!";
+        if (topPanel.getPlayer1Lives() <= 0) winner = topPanel.getPlayer2Name() + " - WIN!";
+        else if (topPanel.getPlayer2Lives() <= 0) winner = topPanel.getPlayer1Name() + " - WIN!";
+        endMatchWithWinner(winner);
     }
 
-    private void endMatchWithDraw() {
+    private void endMatchWithWinner(String message) {
         gameStatus = GameState.GameStatus.FINISHED;
-        resultText.setText("DRAW!");
+        resultText.setText(message);
         resultDisplayTimer = 3.0f;
-
-        serverPlayer.setCanControl(false);
-        clientPlayer.setCanControl(false);
-
-        serverPlayer.getBody().setLinearVelocity(0, 0);
-        clientPlayer.getBody().setLinearVelocity(0, 0);
     }
 
     private void handleInput() {
@@ -312,58 +321,25 @@ public class GameScreen extends ScreenAdapter {
         localInput.attack = Gdx.input.isKeyPressed(Input.Keys.E) || attackButton.isPressed();
         localInput.attackUp = joystick.isUp() || Gdx.input.isKeyPressed(Input.Keys.W);
         localInput.attackDown = joystick.isDown() || Gdx.input.isKeyPressed(Input.Keys.S);
-
-        localInput.x = clientPlayer.getBody().getPosition().x;
-        localInput.y = clientPlayer.getBody().getPosition().y;
-        localInput.vx = clientPlayer.getBody().getLinearVelocity().x;
-        localInput.vy = clientPlayer.getBody().getLinearVelocity().y;
-        localInput.health = clientPlayer.getHealth();
-        localInput.facingRight = clientPlayer.getFacingRight();
-        localInput.isAttacking = clientPlayer.isAttacking();
-        localInput.attackDir = clientPlayer.getCurrentAttackDirection();
     }
-
 
     private void applyPlayerInput(PlayerObject p, PlayerInput in) {
         if (gameStatus != GameState.GameStatus.PLAYING || !p.canReceiveInput()) return;
-
         Vector2 vel = p.getBody().getLinearVelocity();
         float targetX;
+        if (in.moveLeft && p.canMove()) targetX = -PLAYER_MAX_VELOCITY;
+        else if (in.moveRight && p.canMove()) targetX = PLAYER_MAX_VELOCITY;
+        else targetX = vel.x * 0.8f;
 
-        if (in.moveLeft && p.canMove()) {
-            targetX = -PLAYER_MAX_VELOCITY;
-        }
-        else if (in.moveRight && p.canMove()) {
-            targetX = PLAYER_MAX_VELOCITY;
-        }
-        else {
-            targetX = vel.x * 0.8f;
-            if (Math.abs(targetX) < 0.1f) targetX = 0;
-        }
-
-        if (!p.isInHitStun() && !p.isDodging()) {
-            p.getBody().setLinearVelocity(targetX, vel.y);
-        }
-
-        if (in.jump && p.canJump()) {
-            p.jump(PLAYER_JUMP_FORCE);
-        }
-
-        if (in.dodge && p.canDodge()) {
-            float dir = 0;
-            if (in.moveLeft) dir = -1;
-            else if (in.moveRight) dir = 1;
-            p.dodge(dir);
-        }
-
+        if (!p.isInHitStun() && !p.isDodging()) p.getBody().setLinearVelocity(targetX, vel.y);
+        if (in.jump && p.canJump()) p.jump(PLAYER_JUMP_FORCE);
+        if (in.dodge && p.canDodge()) p.dodge(in.moveLeft ? -1 : (in.moveRight ? 1 : 0));
         p.setWantsToGoDown(in.wantToGoDown);
-        if (in.attack && p.canAttack()) {
-            p.startAttack(in.attackUp ? AttackDirection.UP : (in.attackDown ? AttackDirection.DOWN : AttackDirection.SIDE));
-        }
+        if (in.attack && p.canAttack()) p.startAttack(in.attackUp ? AttackDirection.UP : (in.attackDown ? AttackDirection.DOWN : AttackDirection.SIDE));
     }
 
     private void updateServerState(float delta) {
-        if (gameStatus == GameState.GameStatus.WAITING && server.isConnected()) {
+        if (gameStatus == GameState.GameStatus.WAITING && server != null && server.isConnected()) {
             gameStatus = GameState.GameStatus.COUNTDOWN;
             countdown = 3f;
         } else if (gameStatus == GameState.GameStatus.COUNTDOWN) {
@@ -377,7 +353,6 @@ public class GameScreen extends ScreenAdapter {
         jumpButton.setPressed(false);
         dodgeButton.setPressed(false);
         attackButton.setPressed(false);
-
         for (int i = 0; i < 5; i++) {
             if (Gdx.input.isTouched(i)) {
                 anyTouch = true;
@@ -401,7 +376,6 @@ public class GameScreen extends ScreenAdapter {
 
         for (PlatformObject p : platforms) p.draw(batch);
         for (OneWayPlatformObject o : oneWayPlatforms) o.draw(batch);
-
         if (myGdxGame.isHost) {
             clientPlayer.draw(batch);
             serverPlayer.draw(batch);
@@ -438,27 +412,21 @@ public class GameScreen extends ScreenAdapter {
             while (interfaces.hasMoreElements()) {
                 java.net.NetworkInterface network = interfaces.nextElement();
                 if (network.isUp() && !network.isLoopback()) {
-                    java.util.Enumeration<java.net.InetAddress> addresses =
-                        network.getInetAddresses();
-
+                    java.util.Enumeration<java.net.InetAddress> addresses = network.getInetAddresses();
                     while (addresses.hasMoreElements()) {
                         java.net.InetAddress addr = addresses.nextElement();
-                        if (addr.getAddress().length == 4) {
-                            String ip = addr.getHostAddress();
-                            if (!ip.startsWith("127.")) {
-                                return ip;
-                            }
-                        }
+                        if (addr.getAddress().length == 4 && !addr.getHostAddress().startsWith("127.")) return addr.getHostAddress();
                     }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        } catch (Exception ignored) {}
         return "127.0.0.1";
     }
 
+    @Override
+    public void hide() {
+        disconnect();
+    }
     public void disconnect() {
         if (server != null) server.stop();
         if (client != null) client.disconnect();
