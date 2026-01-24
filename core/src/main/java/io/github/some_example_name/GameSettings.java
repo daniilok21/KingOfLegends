@@ -56,7 +56,7 @@ public class GameSettings {
     public static final int TOP_PANEL_HEIGHT = 100;
     public static final int PLAYER_MAX_LIVES = 3;
     public static final float OUT_OF_BOUNDS_RESPAWN_TIME = 3.0f;
-    public static final int MATCH_DURATION_SECONDS = 10;
+    public static final int MATCH_DURATION_SECONDS = 600;
 
     // Границы арены
     public static final float ARENA_LEFT_BOUND = -PLAYER_WIDTH;
