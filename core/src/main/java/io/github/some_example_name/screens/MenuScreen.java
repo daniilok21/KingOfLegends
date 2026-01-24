@@ -2,11 +2,9 @@ package io.github.some_example_name.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
@@ -37,6 +35,7 @@ public class MenuScreen extends ScreenAdapter {
     public void show() {
         selectedItem = 0;
         enteringIp = false;
+        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     @Override
@@ -46,37 +45,30 @@ public class MenuScreen extends ScreenAdapter {
         Gdx.gl.glClearColor(0.2f, 0.2f, 0.3f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        batch.setProjectionMatrix(game.camera.combined);
         batch.begin();
 
-        // Заголовок
-        game.titleFont.draw(batch, "NETWORK CUBE GAME",
-            SCREEN_WIDTH / 2 - 150, SCREEN_HEIGHT - 50);
-        game.titleFont.getData().setScale(1.0f);
+        game.titleFont.draw(batch, "KING OF LEGENDS",
+            SCREEN_WIDTH / 2 - 200, SCREEN_HEIGHT - 100);
 
         // Элементы меню
-        game.titleFont.setColor(Color.WHITE);
         for (int i = 0; i < menuItems.length; i++) {
             if (i == selectedItem) {
                 game.titleFont.setColor(Color.GREEN);
                 game.titleFont.draw(batch, "> " + menuItems[i],
-                    SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 - i * 40);
+                    SCREEN_WIDTH / 2 - 120, SCREEN_HEIGHT / 2 - i * 60);
                 game.titleFont.setColor(Color.WHITE);
             } else {
                 game.titleFont.draw(batch, menuItems[i],
-                    SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 - i * 40);
+                    SCREEN_WIDTH / 2 - 120, SCREEN_HEIGHT / 2 - i * 60);
             }
         }
 
-        // Инструкции
-        game.titleFont.setColor(Color.LIGHT_GRAY);
-        game.titleFont.draw(batch, "Use UP/DOWN to navigate, ENTER to select",
-            10, 40);
-
+        game.smallFont.draw(batch, "Use UP/DOWN to navigate, ENTER to select", 50, 50);
         batch.end();
     }
 
     private void handleInput() {
-        // Навигация по меню
         if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) {
             selectedItem = (selectedItem + 1) % menuItems.length;
         }
@@ -84,55 +76,47 @@ public class MenuScreen extends ScreenAdapter {
             selectedItem = (selectedItem - 1 + menuItems.length) % menuItems.length;
         }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isTouched()) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             if (enteringIp) {
-                // Подтверждение IP
-                game.showGameScreen(false, ipAddress.toString());
+                game.showGameScreen(false, ipAddress);
                 enteringIp = false;
             } else {
-                if (Gdx.input.isTouched()) {
-                    selectedItem = 0;
-                }
-                // Выбор пункта меню
                 switch (selectedItem) {
-                    case 0: // Host Game
-                        game.showGameScreen(true, null);
-                        break;
-                    case 1: // Join Game
-                        enteringIp = true;
-                        break;
-                    case 2: // Exit
-                        Gdx.app.exit();
-                        break;
+                    case 0: game.showGameScreen(true, null); break;
+                    case 1: game.showGameScreen(false, ipAddress); break;
+                    case 2: Gdx.app.exit(); break;
                 }
             }
         }
 
-        // Выход по кнопке BACK
-        if (Gdx.input.isKeyJustPressed(Input.Keys.BACK) && enteringIp) {
-            enteringIp = false;
+        // Поддержка тача для меню
+        if (Gdx.input.justTouched()) {
+            // надо это убрать и заменить на норм кнопки
+            if (selectedItem == 0) game.showGameScreen(true, null);
+            else if (selectedItem == 1) game.showGameScreen(false, ipAddress);
+            else if (selectedItem == 2) Gdx.app.exit();
         }
     }
 
-
     @Override
     public void resize(int width, int height) {
-        game.camera.setToOrtho(false, width, height);
+        float screenRatio = width / (float) height;
+        float targetRatio = SCREEN_WIDTH / (float) SCREEN_HEIGHT;
+
+        if (screenRatio > targetRatio) {
+            float newWidth = SCREEN_HEIGHT * screenRatio;
+            game.camera.viewportWidth = newWidth;
+            game.camera.viewportHeight = SCREEN_HEIGHT;
+        }
+        else {
+            float newHeight = SCREEN_WIDTH / screenRatio;
+            game.camera.viewportWidth = SCREEN_WIDTH;
+            game.camera.viewportHeight = newHeight;
+        }
+
+        game.camera.position.set(SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f, 0);
         game.camera.update();
-        batch.setProjectionMatrix(game.camera.combined);
     }
 
-    @Override
-    public void pause() {}
-
-    @Override
-    public void resume() {}
-
-    @Override
-    public void hide() {}
-
-    @Override
-    public void dispose() {
-        shapeRenderer.dispose();
-    }
+    @Override public void dispose() { shapeRenderer.dispose(); }
 }

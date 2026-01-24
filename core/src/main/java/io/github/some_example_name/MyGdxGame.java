@@ -9,8 +9,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2D;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.utils.viewport.Viewport;
-
 import io.github.some_example_name.managers.AudioManager;
 import io.github.some_example_name.managers.ContactManager;
 import io.github.some_example_name.screens.GameScreen;
@@ -26,16 +24,10 @@ public class MyGdxGame extends Game {
 
     public AudioManager audioManager;
 
-    // Экран
     public MenuScreen menuScreen;
     public GameScreen gameScreen;
 
-    public BitmapFont defaultFont;
-    public BitmapFont largeFont;
-    public BitmapFont smallFont;
-    public BitmapFont titleFont;
-    public BitmapFont timerFont;
-
+    public BitmapFont defaultFont, largeFont, smallFont, titleFont, timerFont;
 
     public boolean isHost = false;
     public String hostIp = "192.168.0.14";
@@ -49,7 +41,6 @@ public class MyGdxGame extends Game {
         audioManager = new AudioManager();
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, SCREEN_WIDTH, SCREEN_HEIGHT);
 
         defaultFont = FontBuilder.generate(24, Color.WHITE, GameResources.FONT_PATH);
         largeFont = FontBuilder.generate(48, Color.WHITE, GameResources.FONT_PATH);
@@ -64,11 +55,6 @@ public class MyGdxGame extends Game {
     }
 
     @Override
-    public void render() {
-        super.render();
-    }
-
-    @Override
     public void resize(int width, int height) {
         float screenRatio = width / (float) height;
 
@@ -76,18 +62,14 @@ public class MyGdxGame extends Game {
             float newWidth = SCREEN_HEIGHT * screenRatio;
             camera.viewportWidth = newWidth;
             camera.viewportHeight = SCREEN_HEIGHT;
-            camera.position.x = newWidth / 2;
         }
         else {
             float newHeight = SCREEN_WIDTH / screenRatio;
             camera.viewportWidth = SCREEN_WIDTH;
             camera.viewportHeight = newHeight;
-            camera.position.y = newHeight / 2;
         }
 
-        camera.position.x = SCREEN_WIDTH / 2;
-        camera.position.y = SCREEN_HEIGHT / 2;
-
+        camera.position.set(SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f, 0);
         camera.update();
     }
 
@@ -115,8 +97,6 @@ public class MyGdxGame extends Game {
         if (ip != null && !ip.isEmpty()) {
             this.hostIp = ip;
         }
-
-        gameScreen.initializeNetwork();
         setScreen(gameScreen);
     }
 
@@ -125,14 +105,5 @@ public class MyGdxGame extends Game {
             gameScreen.disconnect();
         }
         setScreen(menuScreen);
-    }
-    public void stepWorld() {
-        float delta = Gdx.graphics.getDeltaTime();
-        accumulator += Math.min(delta, 0.25f);
-
-        if (accumulator >= STEP_TIME) {
-            accumulator -= STEP_TIME;
-            world.step(STEP_TIME, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
-        }
     }
 }
