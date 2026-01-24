@@ -104,15 +104,13 @@ public class GameScreen extends ScreenAdapter {
     @Override
     public void resize(int width, int height) {
         float screenRatio = width / (float) height;
-
         if (screenRatio > SCREEN_WIDTH / (float) SCREEN_HEIGHT) {
-            float newWidth = SCREEN_HEIGHT * screenRatio;
-            myGdxGame.camera.viewportWidth = newWidth;
+            myGdxGame.camera.viewportWidth = SCREEN_HEIGHT * screenRatio;
             myGdxGame.camera.viewportHeight = SCREEN_HEIGHT;
         } else {
-            float newHeight = SCREEN_WIDTH / screenRatio;
+
             myGdxGame.camera.viewportWidth = SCREEN_WIDTH;
-            myGdxGame.camera.viewportHeight = newHeight;
+            myGdxGame.camera.viewportHeight = SCREEN_WIDTH / screenRatio;
         }
 
         myGdxGame.camera.position.set(SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f, 0);
@@ -134,6 +132,16 @@ public class GameScreen extends ScreenAdapter {
 
     private void updateLogic(float delta) {
         handleInput();
+
+        if (gameStatus == GameState.GameStatus.PLAYING || gameStatus == GameState.GameStatus.COUNTDOWN) {
+            if (myGdxGame.isHost && (server == null || !server.isConnected())) {
+                endMatchWithWinner(topPanel.getPlayer1Name() + " WIN (Opponent left)");
+                return;
+            } else if (!myGdxGame.isHost && (client == null || !client.isConnected())) {
+                endMatchWithWinner("Disconnected from server");
+                return;
+            }
+        }
 
         checkMatchEndConditions();
 
@@ -180,6 +188,7 @@ public class GameScreen extends ScreenAdapter {
                 serverPlayer.getBody().setTransform(START_PLAYER_SERVER_X * SCALE, START_PLAYER_SERVER_Y * SCALE, 0);
                 serverPlayer.getBody().setLinearVelocity(0, 0);
                 serverPlayer.setHealth(100);
+                topPanel.setPlayer1Out(false);
                 serverPlayer.setHitImmunityTimer(2.0f);
                 sRespawn = true;
             }
@@ -187,6 +196,7 @@ public class GameScreen extends ScreenAdapter {
                 clientPlayer.getBody().setTransform(START_PLAYER_CLIENT_X * SCALE, START_PLAYER_CLIENT_Y * SCALE, 0);
                 clientPlayer.getBody().setLinearVelocity(0, 0);
                 clientPlayer.setHealth(100);
+                topPanel.setPlayer2Out(false);
                 clientPlayer.setHitImmunityTimer(2.0f);
                 cRespawn = true;
             }
@@ -277,12 +287,15 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void endMatch() {
-        gameStatus = GameState.GameStatus.FINISHED;
         String winner = "DRAW!";
         if (topPanel.getPlayer1Lives() <= 0) winner = topPanel.getPlayer2Name() + " - WIN!";
         else if (topPanel.getPlayer2Lives() <= 0) winner = topPanel.getPlayer1Name() + " - WIN!";
+        endMatchWithWinner(winner);
+    }
 
-        resultText.setText(winner);
+    private void endMatchWithWinner(String message) {
+        gameStatus = GameState.GameStatus.FINISHED;
+        resultText.setText(message);
         resultDisplayTimer = 3.0f;
     }
 
@@ -410,7 +423,8 @@ public class GameScreen extends ScreenAdapter {
         return "127.0.0.1";
     }
 
-    @Override public void hide() {
+    @Override
+    public void hide() {
         disconnect();
     }
     public void disconnect() {

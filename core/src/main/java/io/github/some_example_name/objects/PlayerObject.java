@@ -281,14 +281,26 @@ public class PlayerObject extends GameObject {
         if (directionX != 0) {
             Vector2 currentPos = body.getPosition();
             Vector2 s = new Vector2(directionX, 0).nor().scl(GameSettings.DODGE_DISTANCE * GameSettings.SCALE);
-            Vector2 newPos = new Vector2(currentPos).add(s);
-            body.setTransform(newPos, body.getAngle());
+            Vector2 targetPos = new Vector2(currentPos).add(s);
+
+            final Vector2 finalPos = new Vector2(targetPos);
+            final float dirX = directionX;
+
+            body.getWorld().rayCast((fixture, point, normal, fraction) -> {
+                if ((fixture.getFilterData().categoryBits & GameSettings.PLATFORM_BIT) != 0) {
+                    float margin = (width / 2f + 1) * GameSettings.SCALE;
+                    finalPos.set(point.x - (dirX * margin), point.y);
+                    return fraction;
+                }
+                return -1;
+            }, currentPos, targetPos);
+
+            body.setTransform(finalPos, body.getAngle());
+            body.setLinearVelocity(0, body.getLinearVelocity().y);
         }
         else {
             body.setLinearVelocity(0, 0);
         }
-
-//        body.setGravityScale(0.2f);
 
         return true;
     }
