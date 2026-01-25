@@ -38,7 +38,11 @@ public class GameObject {
 
         this.bounds = new Rectangle(x - width/2, y - height/2, width, height);
 
-        texture = new Texture(texturePath);
+        if (texturePath != null) {
+            texture = new Texture(texturePath);
+        } else {
+            texture = null;
+        }
 
         if (rectangular) {
             body = createRectangleBody(x, y, world, bodyType);

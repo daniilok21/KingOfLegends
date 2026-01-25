@@ -3,8 +3,11 @@ package io.github.some_example_name.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.World;
@@ -19,6 +22,7 @@ import static io.github.some_example_name.GameSettings.*;
 
 public class GameScreen extends ScreenAdapter {
     private final MyGdxGame myGdxGame;
+    private ShapeRenderer shapeRenderer;
     private SpriteBatch batch;
     private Server server;
     private Client client;
@@ -37,6 +41,7 @@ public class GameScreen extends ScreenAdapter {
     public GameScreen(MyGdxGame game) {
         this.myGdxGame = game;
         this.batch = game.batch;
+        shapeRenderer = new ShapeRenderer();
         waitingText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2, "WAITING...");
         ipAddressText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 + 50, "");
         countdownText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 80, SCREEN_HEIGHT / 2, "");
@@ -80,8 +85,24 @@ public class GameScreen extends ScreenAdapter {
         platforms.add(new PlatformObject(100, 350, 100, 220, GameResources.PLATFORM, myGdxGame.world));
         platforms.add(new PlatformObject(SCREEN_WIDTH - 200, 350, 100, 220, GameResources.PLATFORM, myGdxGame.world));
         oneWayPlatforms.add(new OneWayPlatformObject(SCREEN_WIDTH / 2 - 250, 325, 500, 50, GameResources.PLATFORM, myGdxGame.world));
-        serverPlayer = new PlayerObject(START_PLAYER_SERVER_X, START_PLAYER_SERVER_Y, PLAYER_WIDTH, PLAYER_HEIGHT, GameResources.RED_PLAYER_SPRITE_SHEET, myGdxGame.world);
-        clientPlayer = new PlayerObject(START_PLAYER_CLIENT_X, START_PLAYER_CLIENT_Y, PLAYER_WIDTH, PLAYER_HEIGHT, GameResources.BLUE_PLAYER_SPRITE_SHEET, myGdxGame.world);
+        serverPlayer = new PlayerObject(START_PLAYER_SERVER_X, START_PLAYER_SERVER_Y, PLAYER_WIDTH, PLAYER_HEIGHT,
+            new String[]{
+                GameResources.BLUE_PLAYER_IDLE_SHEET,
+                GameResources.BLUE_PLAYER_RUN_SHEET,
+                GameResources.BLUE_PLAYER_JUMP_SHEET,
+                GameResources.BLUE_PLAYER_ATTACK_SHEET,
+                GameResources.BLUE_PLAYER_DODGE_SHEET,
+                GameResources.BLUE_PLAYER_HIT_SHEET
+            }, new int[] {4, 7, 6, 5, 5, 2}, myGdxGame.world);
+        clientPlayer = new PlayerObject(START_PLAYER_CLIENT_X, START_PLAYER_CLIENT_Y, PLAYER_WIDTH, PLAYER_HEIGHT,new String[]{
+            GameResources.RED_PLAYER_IDLE_SHEET,
+            GameResources.RED_PLAYER_RUN_SHEET,
+            GameResources.RED_PLAYER_JUMP_SHEET,
+            GameResources.RED_PLAYER_ATTACK_SHEET,
+            GameResources.RED_PLAYER_DODGE_SHEET,
+            GameResources.RED_PLAYER_HIT_SHEET
+        }, new int[] {4, 7, 6, 5, 5, 2}, myGdxGame.world);
+        clientPlayer.setFacingRight(false);
         joystick = new JoystickView(50, 30, GameResources.JOYSTICK_BG, GameResources.JOYSTICK_HANDLE);
         jumpButton = new ButtonView(SCREEN_WIDTH - 130 - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_JUMP);
         dodgeButton = new ButtonView(SCREEN_WIDTH - 130 - (BUTTON_WIDTH + 20) - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_DODGE);
@@ -258,6 +279,9 @@ public class GameScreen extends ScreenAdapter {
                 if (packet.cNeedRespawn) {
                     clientPlayer.getBody().setTransform(packet.cX, packet.cY, 0);
                     clientPlayer.getBody().setLinearVelocity(0, 0);
+                } else if (packet.cInHitStun || packet.cIsDodging) {
+                    clientPlayer.getBody().setTransform(packet.cX, packet.cY, 0);
+                    clientPlayer.getBody().setLinearVelocity(packet.cVX, packet.cVY);
                 }
             }
 
@@ -389,6 +413,7 @@ public class GameScreen extends ScreenAdapter {
         jumpButton.draw(batch);
         dodgeButton.draw(batch);
         attackButton.draw(batch);
+        drawAttackHitboxes();
 
         if (gameStatus == GameState.GameStatus.WAITING) {
             waitingText.draw(batch);
@@ -403,6 +428,41 @@ public class GameScreen extends ScreenAdapter {
         }
 
         batch.end();
+    }
+
+    private void drawPlayerHitboxes() {
+        batch.end();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+
+        shapeRenderer.setColor(Color.GREEN);
+        Rectangle serverHitbox = serverPlayer.getPlayerHitbox();
+        shapeRenderer.rect(serverHitbox.x, serverHitbox.y, serverHitbox.width, serverHitbox.height);
+
+        shapeRenderer.setColor(Color.CYAN);
+        Rectangle clientHitbox = clientPlayer.getPlayerHitbox();
+        shapeRenderer.rect(clientHitbox.x, clientHitbox.y, clientHitbox.width, clientHitbox.height);
+
+        shapeRenderer.end();
+        batch.begin();
+    }
+
+    private void drawAttackHitboxes() {
+        batch.end();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.ORANGE);
+
+        if (serverPlayer.isAttacking()) {
+            Rectangle hitbox = serverPlayer.getAttackHitbox();
+            shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+        }
+
+        if (clientPlayer.isAttacking()) {
+            Rectangle hitbox = clientPlayer.getAttackHitbox();
+            shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+        }
+
+        shapeRenderer.end();
+        batch.begin();
     }
 
     private String getIP() {

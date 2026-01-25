@@ -1,6 +1,9 @@
 package io.github.some_example_name.objects;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Rectangle;
@@ -13,10 +16,20 @@ import io.github.some_example_name.GameSettings;
 import io.github.some_example_name.game.AttackDirection;
 
 public class PlayerObject extends GameObject {
+    private Animation<TextureRegion> idleAnimation;
+    private Animation<TextureRegion> runAnimation;
+    private Animation<TextureRegion> jumpAnimation;
+    private Animation<TextureRegion> attackAnimation;
+    private Animation<TextureRegion> dodgeAnimation;
+    private Animation<TextureRegion> hitAnimation;
+
+    private float stateTime = 0;
+    private float pivotOffsetX = 48f;
+    private float pivotOffsetY = 51f;
+    private float visualScale = 1.6f;
 
     private int jumpsRemaining = 2;
     private boolean isOnGround = false;
-
     private boolean isDodging = false;
     private float dodgeTimer = 0f;
     private float dodgeCooldown = 0f;
@@ -38,8 +51,11 @@ public class PlayerObject extends GameObject {
     private boolean wasMovingUpBeforeHit = false;
     private float headHitCooldown = 0.15f;
 
-    public PlayerObject(int x, int y, int width, int height, String texturePath, World world) {
-        super(texturePath, x, y, width, height, GameSettings.PLAYER_BIT, world, true, BodyDef.BodyType.DynamicBody);
+    public PlayerObject(int x, int y, int width, int height, String[] texturePaths, int[] framesPerAnimation, World world) {
+        super(null, x, y, width, height, GameSettings.PLAYER_BIT, world, true, BodyDef.BodyType.DynamicBody);
+
+        loadAnimations(texturePaths, framesPerAnimation);
+
         if (body != null && body.getFixtureList().size > 0) {
             Fixture fixture = body.getFixtureList().first();
             Filter filter = fixture.getFilterData();
@@ -48,7 +64,56 @@ public class PlayerObject extends GameObject {
         }
     }
 
+    private void loadAnimations(String[] texturePaths, int[] framesPerAnimation) {
+        Texture idleSheet = new Texture(texturePaths[0]);
+        int idleFrameWidth = idleSheet.getWidth() / framesPerAnimation[0];
+        int idleFrameHeight = idleSheet.getHeight();
+        idleAnimation = createAnimation(idleSheet, idleFrameWidth, idleFrameHeight,
+            framesPerAnimation[0], 0.15f);
+
+        Texture runSheet = new Texture(texturePaths[1]);
+        int runFrameWidth = runSheet.getWidth() / framesPerAnimation[1];
+        int runFrameHeight = runSheet.getHeight();
+        runAnimation = createAnimation(runSheet, runFrameWidth, runFrameHeight,
+            framesPerAnimation[1], 0.08f);
+
+        Texture jumpSheet = new Texture(texturePaths[2]);
+        int jumpFrameWidth = jumpSheet.getWidth() / framesPerAnimation[2];
+        int jumpFrameHeight = jumpSheet.getHeight();
+        jumpAnimation = createAnimation(jumpSheet, jumpFrameWidth, jumpFrameHeight,
+            framesPerAnimation[2], 0.1f);
+
+        Texture attackSheet = new Texture(texturePaths[3]);
+        int attackFrameWidth = attackSheet.getWidth() / framesPerAnimation[3];
+        int attackFrameHeight = attackSheet.getHeight();
+        attackAnimation = createAnimation(attackSheet, attackFrameWidth, attackFrameHeight,
+            framesPerAnimation[3], 0.07f);
+
+        Texture dodgeSheet = new Texture(texturePaths[4]);
+        int dodgeFrameWidth = dodgeSheet.getWidth() / framesPerAnimation[4];
+        int dodgeFrameHeight = dodgeSheet.getHeight();
+        dodgeAnimation = createAnimation(dodgeSheet, dodgeFrameWidth, dodgeFrameHeight,
+            framesPerAnimation[4], 0.1f);
+
+        Texture hitSheet = new Texture(texturePaths[5]);
+        int hitFrameWidth = hitSheet.getWidth() / framesPerAnimation[5];
+        int hitFrameHeight = hitSheet.getHeight();
+        hitAnimation = createAnimation(hitSheet, hitFrameWidth, hitFrameHeight,
+            framesPerAnimation[5], 0.1f);
+    }
+
+    private Animation<TextureRegion> createAnimation(Texture texture, int frameWidth, int frameHeight, int frameCount, float frameDuration) {
+        TextureRegion[] frames = new TextureRegion[frameCount];
+
+        for (int i = 0; i < frameCount; i++) {
+            frames[i] = new TextureRegion(texture, i * frameWidth, 0, frameWidth, frameHeight);
+        }
+
+        return new Animation<>(frameDuration, frames);
+    }
+
     public void update(float delta) {
+        stateTime += delta;
         if (isDodging) {
             dodgeTimer += delta;
             if (dodgeTimer >= GameSettings.DODGE_DURATION) {
@@ -79,16 +144,71 @@ public class PlayerObject extends GameObject {
         if (attackCooldown < 0) attackCooldown = 0;
         if (headHitCooldown < 0) headHitCooldown = 0;
 
-
         checkGroundStatus(delta);
         updateFacingDirection();
     }
+
+    @Override
+    public void draw(SpriteBatch batch) {
+        Animation<TextureRegion> currentAnim = idleAnimation;
+        TextureRegion currentFrame = null;
+
+        if (isAttacking) {
+            currentAnim = attackAnimation;
+            currentFrame = attackAnimation.getKeyFrame(stateTime, false);
+            if (attackAnimation.isAnimationFinished(stateTime)) {
+                isAttacking = false;
+                stateTime = 0;
+                currentAnim = idleAnimation;
+            }
+        } else if (isDodging) {
+            currentAnim = dodgeAnimation;
+        } else if (isInHitStun) {
+            currentAnim = hitAnimation;
+        } else if (!isOnGround) {
+            currentAnim = jumpAnimation;
+            if (jumpAnimation.isAnimationFinished(stateTime)) {
+                TextureRegion[] frames = jumpAnimation.getKeyFrames();
+                currentFrame = frames[frames.length - 1];
+            }
+        } else if (Math.abs(body.getLinearVelocity().x) > 0.1f) {
+            currentAnim = runAnimation;
+        }
+
+        if (currentFrame == null) {
+            currentFrame = currentAnim.getKeyFrame(stateTime, true);
+        }
+
+        float frameWidth = currentFrame.getRegionWidth() * visualScale;
+        float frameHeight = currentFrame.getRegionHeight() * visualScale;
+
+        float hitboxCenterX = getX() + width / 2;
+        float hitboxCenterY = getY() + height / 2;
+
+        float drawX, drawY;
+
+        if (facingRight) {
+            drawX = hitboxCenterX - frameWidth / 2 + pivotOffsetX;
+        } else {
+            drawX = hitboxCenterX - frameWidth / 2 - pivotOffsetX;
+        }
+
+        drawY = hitboxCenterY - frameHeight / 2 + pivotOffsetY;
+
+        batch.draw(currentFrame,
+            drawX, drawY,
+            frameWidth / 2, frameHeight / 2,
+            frameWidth, frameHeight,
+            facingRight ? 1.0f : -1.0f, 1.0f, 0);
+    }
+
     public void applyHitStun(float duration) {
         if (hitImmunityTimer > 0) return;
 
         isInHitStun = true;
         hitStunTimer = duration;
         hitImmunityTimer = GameSettings.HIT_IMMUNITY_DURATION;
+        stateTime = 0;
     }
     private void endHitStun() {
         isInHitStun = false;
@@ -113,6 +233,7 @@ public class PlayerObject extends GameObject {
 
         isAttacking = true;
         attackTimer = 0f;
+        stateTime = 0;
         attackCooldown = GameSettings.ATTACK_COOLDOWN;
         currentAttackDirection = direction;
 
@@ -127,14 +248,14 @@ public class PlayerObject extends GameObject {
 
         switch (currentAttackDirection) {
             case SIDE:
-                hitboxWidth = width + width / 2f;
+                hitboxWidth = width + width;
                 hitboxHeight = height;
                 if (facingRight) {
                     hitboxX = getX();
                     hitboxY = getY();
                 }
                 else {
-                    hitboxX = getX() - width / 2f;
+                    hitboxX = getX() - width;
                     hitboxY = getY();
                 }
                 break;
@@ -158,7 +279,7 @@ public class PlayerObject extends GameObject {
     }
 
     public boolean checkHit(PlayerObject target) {
-        if (!isAttacking || target.hasHitImmunity()) return false;
+        if (!isAttacking || target.hasHitImmunity() || attackAnimation.getKeyFrameIndex(stateTime) < attackAnimation.getKeyFrames().length - 2) return false;
 
         updateAttackHitbox();
 
@@ -264,6 +385,7 @@ public class PlayerObject extends GameObject {
             body.setLinearVelocity(currentVelocity.x, 0);
             body.applyLinearImpulse(new Vector2(0, force), body.getWorldCenter(), true);
             jumpsRemaining--;
+            stateTime = 0;
             return true;
         }
         return false;
@@ -276,6 +398,7 @@ public class PlayerObject extends GameObject {
 
         isDodging = true;
         dodgeTimer = 0f;
+        stateTime = 0;
         dodgeCooldown = GameSettings.DODGE_COOLDOWN;
 
         if (directionX != 0) {
@@ -430,6 +553,26 @@ public class PlayerObject extends GameObject {
     public Rectangle getAttackHitbox() {
         updateAttackHitbox();
         return attackHitbox;
+    }
+
+    public void setPivotOffsetX(float offset) {
+        this.pivotOffsetX = offset;
+    }
+
+    public void setPivotOffsetY(float offset) {
+        this.pivotOffsetY = offset;
+    }
+
+    public void setVisualScale(float scale) {
+        this.visualScale = scale;
+    }
+
+    public float getPivotOffsetX() {
+        return pivotOffsetX;
+    }
+
+    public float getPivotOffsetY() {
+        return pivotOffsetY;
     }
 
     public void setJumpsRemaining(int jumps) { this.jumpsRemaining = jumps; }
