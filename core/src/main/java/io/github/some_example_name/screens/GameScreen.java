@@ -30,23 +30,20 @@ public class GameScreen extends ScreenAdapter {
     private boolean jumpWasPressed = false, connected = false;
     private GameState.GameStatus gameStatus = GameState.GameStatus.WAITING;
     private float countdown = 3.0f, timeAccumulator = 0, resultDisplayTimer = 0f;
-    private TextView waitingText, countdownText, resultText, ipAddressText;
+    private TextView waitingText, countdownText, resultText;
 
     public GameScreen(MyGdxGame game) {
         this.myGdxGame = game;
         this.batch = game.batch;
         waitingText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2, "WAITING...");
-        ipAddressText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 + waitingText.getHeight() + 10, "YOUR IP: " + getIP());
         countdownText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 80, SCREEN_HEIGHT / 2, "");
         resultText = new TextView(game.titleFont, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100, "");
 
         waitingText.setCenterX(SCREEN_WIDTH / 2f);
-        ipAddressText.setCenterX(SCREEN_WIDTH / 2f);
         countdownText.setCenterX(SCREEN_WIDTH / 2f);
         resultText.setCenterX(SCREEN_WIDTH / 2f);
 
         waitingText.setCenterY(SCREEN_HEIGHT / 2f - 10);
-        ipAddressText.setCenterY(SCREEN_HEIGHT / 2 + waitingText.getHeight() + 20);
         countdownText.setCenterY(SCREEN_HEIGHT / 2f - 10);
         resultText.setCenterY(SCREEN_HEIGHT / 2f - 10);
 
@@ -261,9 +258,9 @@ public class GameScreen extends ScreenAdapter {
         gameStatus = GameState.GameStatus.FINISHED;
         String winner;
         if (topPanel.getPlayer1Lives() <= 0 && topPanel.getPlayer2Lives() > 0) {
-            winner = topPanel.getPlayer2Name() + " - WIN!";
-        } else if (topPanel.getPlayer2Lives() <= 0 && topPanel.getPlayer1Lives() > 0) {
             winner = topPanel.getPlayer1Name() + " - WIN!";
+        } else if (topPanel.getPlayer2Lives() <= 0 && topPanel.getPlayer1Lives() > 0) {
+            winner = topPanel.getPlayer2Name() + " - WIN!";
         } else {
             winner = "DRAW!";
         }
@@ -418,7 +415,6 @@ public class GameScreen extends ScreenAdapter {
 
         if (gameStatus == GameState.GameStatus.WAITING) {
             waitingText.draw(batch);
-            ipAddressText.draw(batch);
         } else if (gameStatus == GameState.GameStatus.COUNTDOWN) {
             countdownText.setText("START IN: " + (int)Math.ceil(countdown));
             countdownText.setCenterX(SCREEN_WIDTH / 2f);
@@ -429,34 +425,6 @@ public class GameScreen extends ScreenAdapter {
         }
 
         batch.end();
-    }
-
-    private String getIP() {
-        try {
-            java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface.getNetworkInterfaces();
-
-            while (interfaces.hasMoreElements()) {
-                java.net.NetworkInterface network = interfaces.nextElement();
-                if (network.isUp() && !network.isLoopback()) {
-                    java.util.Enumeration<java.net.InetAddress> addresses =
-                        network.getInetAddresses();
-
-                    while (addresses.hasMoreElements()) {
-                        java.net.InetAddress addr = addresses.nextElement();
-                        if (addr.getAddress().length == 4) {
-                            String ip = addr.getHostAddress();
-                            if (!ip.startsWith("127.")) {
-                                return ip;
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return "127.0.0.1";
     }
 
     public void disconnect() {
