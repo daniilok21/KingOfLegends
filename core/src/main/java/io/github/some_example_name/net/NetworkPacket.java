@@ -17,6 +17,7 @@ public class NetworkPacket implements Serializable {
     public boolean sFacingRight;
     public boolean sIsAttacking;
     public AttackDirection sAttackDir;
+    public boolean sInHitStun;
     public boolean sIsOut;
     public boolean sNeedRespawn;
 

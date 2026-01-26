@@ -152,7 +152,6 @@ public class PlayerObject extends GameObject {
     public void draw(SpriteBatch batch) {
         Animation<TextureRegion> currentAnim = idleAnimation;
         TextureRegion currentFrame = null;
-
         if (isAttacking) {
             currentAnim = attackAnimation;
             currentFrame = attackAnimation.getKeyFrame(stateTime, false);
@@ -517,6 +516,13 @@ public class PlayerObject extends GameObject {
 
     public boolean isInHitStun() {
         return isInHitStun;
+    }
+
+    public void setInHitStun(boolean hitStun) {
+        if (this.isInHitStun != hitStun) {
+            this.isInHitStun = hitStun;
+            if (hitStun) stateTime = 0;
+        }
     }
 
     public boolean hasHitImmunity() {

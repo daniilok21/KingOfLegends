@@ -159,7 +159,7 @@ public class GameScreen extends ScreenAdapter {
                 endMatchWithWinner(topPanel.getPlayer1Name() + " WIN (Opponent left)");
                 return;
             } else if (!myGdxGame.isHost && (client == null || !client.isConnected())) {
-                endMatchWithWinner("Disconnected from server");
+                endMatchWithWinner(topPanel.getPlayer2Name() + " WIN (Host left)");
                 return;
             }
         }
@@ -238,6 +238,7 @@ public class GameScreen extends ScreenAdapter {
             packet.sFacingRight = serverPlayer.getFacingRight();
             packet.sIsAttacking = serverPlayer.isAttacking();
             packet.sAttackDir = serverPlayer.getCurrentAttackDirection();
+            packet.sInHitStun = serverPlayer.isInHitStun();
             packet.sIsOut = topPanel.isPlayer1OutOfBounds();
 
             packet.cX = clientPlayer.getBody().getPosition().x;
@@ -270,12 +271,14 @@ public class GameScreen extends ScreenAdapter {
                 serverPlayer.getBody().setLinearVelocity(packet.sVX, packet.sVY);
                 serverPlayer.setHealth(packet.sHealth);
                 serverPlayer.setFacingRight(packet.sFacingRight);
+                serverPlayer.setInHitStun(packet.sInHitStun);
+
                 if (packet.sIsAttacking && !serverPlayer.isAttacking()) {
                     serverPlayer.startAttack(packet.sAttackDir);
                 }
 
                 clientPlayer.setHealth(packet.cHealth);
-
+                clientPlayer.setInHitStun(packet.cInHitStun);
                 if (packet.cNeedRespawn) {
                     clientPlayer.getBody().setTransform(packet.cX, packet.cY, 0);
                     clientPlayer.getBody().setLinearVelocity(0, 0);
@@ -417,6 +420,8 @@ public class GameScreen extends ScreenAdapter {
 
         if (gameStatus == GameState.GameStatus.WAITING) {
             waitingText.draw(batch);
+            ipAddressText.setText("YOUR IP: " + getIP());
+            ipAddressText.setCenterX(SCREEN_WIDTH / 2f);
             ipAddressText.draw(batch);
         } else if (gameStatus == GameState.GameStatus.COUNTDOWN) {
             countdownText.setText("START IN: " + (int)Math.ceil(countdown));
