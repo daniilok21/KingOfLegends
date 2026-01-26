@@ -7,9 +7,9 @@ public class GameSettings {
 
     // Настройки игрока
     public static final int PLAYER_WIDTH = 64;
-    public static final int PLAYER_HEIGHT = 64;
+    public static final int PLAYER_HEIGHT = 100;
     public static final float PLAYER_MOVE_FORCE = 500f;
-    public static final float PLAYER_JUMP_FORCE = 35f;
+    public static final float PLAYER_JUMP_FORCE = 60f;
     public static final float PLAYER_MAX_VELOCITY = 20f;
     public static final float PLAYER_MAX_KNOCKBACK_VELOCITY = 60f;
     public static final float HIT_STUN_DURATION = 0.3f;
