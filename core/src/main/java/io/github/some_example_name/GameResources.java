@@ -8,7 +8,9 @@ public class GameResources {
     public static final String BUTTON_JUMP = "textures/jump_button.png";
     public static final String BUTTON_DODGE = "textures/dodge_button.png";
     public static final String BUTTON_ATTACK = "textures/attack_button.png";
-    public static final String BUTTON_MENU = "textures/button_background_long.png";
+    public static final String BUTTON_LONG_MENU = "textures/button_background_long.png";
+    public static final String BUTTON_SHORT_MENU = "textures/button_background_short.png";
+
 
 
     public static final String FONT_PATH = "fonts/Kenney Future.ttf";
