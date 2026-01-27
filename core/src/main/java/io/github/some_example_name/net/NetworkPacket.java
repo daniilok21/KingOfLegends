@@ -14,10 +14,13 @@ public class NetworkPacket implements Serializable {
     public float sVX, sVY;
     public int sHealth;
     public int sLives;
+    public int sJumps;
     public boolean sFacingRight;
     public boolean sIsAttacking;
     public AttackDirection sAttackDir;
     public boolean sInHitStun;
+    public boolean sIsDodging;
+    public boolean sOnGround;
     public boolean sIsOut;
     public boolean sNeedRespawn;
 
@@ -25,11 +28,13 @@ public class NetworkPacket implements Serializable {
     public float cVX, cVY;
     public int cHealth;
     public int cLives;
+    public int cJumps;
     public boolean cFacingRight;
     public boolean cIsAttacking;
     public AttackDirection cAttackDir;
     public boolean cIsDodging;
     public boolean cInHitStun;
+    public boolean cOnGround;
     public boolean cIsOut;
     public boolean cNeedRespawn;
 

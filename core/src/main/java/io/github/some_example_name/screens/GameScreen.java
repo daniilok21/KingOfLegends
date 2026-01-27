@@ -178,9 +178,6 @@ public class GameScreen extends ScreenAdapter {
             PlayerInput remoteInput = (server != null) ? server.getClientInput() : null;
             updateServerState(delta);
 
-            applyPlayerInput(serverPlayer, localInput);
-            serverPlayer.update(delta);
-
             if (remoteInput != null && (remoteInput.x != 0 || remoteInput.y != 0)) {
                 if (!clientPlayer.isInHitStun() && !clientPlayer.isDodging()) {
                     clientPlayer.getBody().setTransform(remoteInput.x, remoteInput.y, 0);
@@ -188,6 +185,9 @@ public class GameScreen extends ScreenAdapter {
                 }
                 clientPlayer.setHealth(remoteInput.health);
                 clientPlayer.setFacingRight(remoteInput.facingRight);
+                clientPlayer.setIsDodging(remoteInput.isDodging);
+                clientPlayer.setIsOnGround(remoteInput.isOnGround);
+                clientPlayer.setJumpsRemaining(remoteInput.jumpsRemaining);
                 if (remoteInput.isAttacking && !clientPlayer.isAttacking()) {
                     clientPlayer.startAttack(remoteInput.attackDir);
                 }
@@ -222,6 +222,9 @@ public class GameScreen extends ScreenAdapter {
                 cRespawn = true;
             }
 
+            applyPlayerInput(serverPlayer, localInput);
+            serverPlayer.update(delta);
+
             NetworkPacket packet = new NetworkPacket();
             packet.status = gameStatus;
             packet.countdown = countdown;
@@ -239,6 +242,9 @@ public class GameScreen extends ScreenAdapter {
             packet.sIsAttacking = serverPlayer.isAttacking();
             packet.sAttackDir = serverPlayer.getCurrentAttackDirection();
             packet.sInHitStun = serverPlayer.isInHitStun();
+            packet.sIsDodging = serverPlayer.isDodging();
+            packet.sOnGround = serverPlayer.isOnGround();
+            packet.sJumps = serverPlayer.getJumpsRemaining();
             packet.sIsOut = topPanel.isPlayer1OutOfBounds();
 
             packet.cX = clientPlayer.getBody().getPosition().x;
@@ -249,14 +255,14 @@ public class GameScreen extends ScreenAdapter {
             packet.cLives = topPanel.getPlayer2Lives();
             packet.cIsDodging = clientPlayer.isDodging();
             packet.cInHitStun = clientPlayer.isInHitStun();
+            packet.cOnGround = clientPlayer.isOnGround();
+            packet.cJumps = clientPlayer.getJumpsRemaining();
             packet.cIsOut = topPanel.isPlayer2OutOfBounds();
 
             if (server != null) server.sendState(packet);
         }
         else {
             NetworkPacket packet = (client != null) ? client.latestPacket : null;
-            applyPlayerInput(clientPlayer, localInput);
-            clientPlayer.update(delta);
 
             if (packet != null) {
                 gameStatus = packet.status;
@@ -272,6 +278,9 @@ public class GameScreen extends ScreenAdapter {
                 serverPlayer.setHealth(packet.sHealth);
                 serverPlayer.setFacingRight(packet.sFacingRight);
                 serverPlayer.setInHitStun(packet.sInHitStun);
+                serverPlayer.setIsDodging(packet.sIsDodging);
+                serverPlayer.setIsOnGround(packet.sOnGround);
+                serverPlayer.setJumpsRemaining(packet.sJumps);
 
                 if (packet.sIsAttacking && !serverPlayer.isAttacking()) {
                     serverPlayer.startAttack(packet.sAttackDir);
@@ -288,6 +297,9 @@ public class GameScreen extends ScreenAdapter {
                 }
             }
 
+            applyPlayerInput(clientPlayer, localInput);
+            clientPlayer.update(delta);
+
             if (gameStatus == GameState.GameStatus.PLAYING) {
                 topPanel.update(delta);
             }
@@ -300,6 +312,9 @@ public class GameScreen extends ScreenAdapter {
             localInput.facingRight = clientPlayer.getFacingRight();
             localInput.isAttacking = clientPlayer.isAttacking();
             localInput.attackDir = clientPlayer.getCurrentAttackDirection();
+            localInput.isDodging = clientPlayer.isDodging();
+            localInput.isOnGround = clientPlayer.isOnGround();
+            localInput.jumpsRemaining = clientPlayer.getJumpsRemaining();
 
             if (client != null) client.sendInput(localInput);
             serverPlayer.update(delta);
@@ -340,7 +355,7 @@ public class GameScreen extends ScreenAdapter {
         localInput.moveRight = Gdx.input.isKeyPressed(Input.Keys.D) || (joystick.isCaptured() && joystick.isRight());
         localInput.wantToGoDown = Gdx.input.isKeyPressed(Input.Keys.S) || (joystick.isCaptured() && joystick.isDown());
 
-        boolean isJumpButtonDown = Gdx.input.isKeyPressed(Input.Keys.SPACE) || jumpButton.isPressed();
+        boolean isJumpButtonDown = Gdx.input.isKeyPressed(Input.Keys.SPACE) || jumpButton.isPressed();;
         localInput.jump = isJumpButtonDown && !jumpWasPressed;
         jumpWasPressed = isJumpButtonDown;
 

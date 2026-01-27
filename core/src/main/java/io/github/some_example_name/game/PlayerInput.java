@@ -11,4 +11,7 @@ public class PlayerInput implements Serializable {
     public boolean facingRight;
     public boolean isAttacking;
     public AttackDirection attackDir;
+    public boolean isDodging;
+    public boolean isOnGround;
+    public int jumpsRemaining;
 }
