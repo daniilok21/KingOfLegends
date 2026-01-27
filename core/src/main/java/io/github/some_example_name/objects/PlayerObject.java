@@ -114,12 +114,10 @@ public class PlayerObject extends GameObject {
 
     public void update(float delta) {
         stateTime += delta;
-        if (isDodging) {
+        if (isDodging && dodgeTimer > 0) {
             dodgeTimer += delta;
             if (dodgeTimer >= GameSettings.DODGE_DURATION) {
-                isDodging = false;
-                endDodge();
-                dodgeTimer = 0f;
+                setIsDodging(false);
             }
         }
         if (isAttacking) {
@@ -129,10 +127,10 @@ public class PlayerObject extends GameObject {
                 attackTimer = 0f;
             }
         }
-        if (isInHitStun) {
+        if (isInHitStun && hitStunTimer > 0) {
             hitStunTimer -= delta;
             if (hitStunTimer <= 0) {
-                endHitStun();
+                setInHitStun(false);
             }
         }
         dodgeCooldown -= delta;
@@ -152,7 +150,6 @@ public class PlayerObject extends GameObject {
     public void draw(SpriteBatch batch) {
         Animation<TextureRegion> currentAnim = idleAnimation;
         TextureRegion currentFrame = null;
-
         if (isAttacking) {
             currentAnim = attackAnimation;
             currentFrame = attackAnimation.getKeyFrame(stateTime, false);
@@ -205,13 +202,12 @@ public class PlayerObject extends GameObject {
     public void applyHitStun(float duration) {
         if (hitImmunityTimer > 0) return;
 
-        isInHitStun = true;
+        setInHitStun(true);
         hitStunTimer = duration;
         hitImmunityTimer = GameSettings.HIT_IMMUNITY_DURATION;
-        stateTime = 0;
     }
     private void endHitStun() {
-        isInHitStun = false;
+        setInHitStun(false);
         hitStunTimer = 0f;
     }
 
@@ -376,8 +372,7 @@ public class PlayerObject extends GameObject {
     public boolean jump(float force) {
         if (jumpsRemaining > 0 && canControl) {
             if (isDodging) {
-                isDodging = false;
-                dodgeTimer = 0f;
+                setIsDodging(false);
                 endDodge();
             }
 
@@ -386,6 +381,8 @@ public class PlayerObject extends GameObject {
             body.applyLinearImpulse(new Vector2(0, force), body.getWorldCenter(), true);
             jumpsRemaining--;
             stateTime = 0;
+            isOnGround = false;
+            System.out.println(jumpsRemaining);
             return true;
         }
         return false;
@@ -396,9 +393,8 @@ public class PlayerObject extends GameObject {
             return false;
         }
 
-        isDodging = true;
-        dodgeTimer = 0f;
-        stateTime = 0;
+        setIsDodging(true);
+        dodgeTimer = 0.001f;
         dodgeCooldown = GameSettings.DODGE_COOLDOWN;
 
         if (directionX != 0) {
@@ -475,6 +471,7 @@ public class PlayerObject extends GameObject {
 
     private void endDodge() {
         body.setGravityScale(1.0f);
+        dodgeTimer = 0f;
     }
 
     public int getJumpsRemaining() {
@@ -508,7 +505,10 @@ public class PlayerObject extends GameObject {
     }
 
     public void setAttacking(boolean attacking) {
-        this.isAttacking = attacking;
+        if (this.isAttacking != attacking) {
+            this.isAttacking = attacking;
+            if (attacking) stateTime = 0;
+        }
     }
 
     public boolean isAttacking() {
@@ -517,6 +517,36 @@ public class PlayerObject extends GameObject {
 
     public boolean isInHitStun() {
         return isInHitStun;
+    }
+
+    public void setInHitStun(boolean hitStun) {
+        if (this.isInHitStun != hitStun) {
+            this.isInHitStun = hitStun;
+            if (hitStun) {
+                stateTime = 0;
+            } else {
+                hitStunTimer = 0;
+            }
+        }
+    }
+
+    public void setIsDodging(boolean dodging) {
+        if (this.isDodging != dodging) {
+            this.isDodging = dodging;
+            if (dodging) {
+                stateTime = 0;
+            } else {
+                dodgeTimer = 0;
+                endDodge();
+            }
+        }
+    }
+
+    public void setIsOnGround(boolean onGround) {
+        if (this.isOnGround != onGround) {
+            this.isOnGround = onGround;
+            if (!onGround) stateTime = 0;
+        }
     }
 
     public boolean hasHitImmunity() {
@@ -575,8 +605,13 @@ public class PlayerObject extends GameObject {
         return pivotOffsetY;
     }
 
-    public void setJumpsRemaining(int jumps) { this.jumpsRemaining = jumps; }
-    public void setIsOnGround(boolean onGround) { this.isOnGround = onGround; }
+    public void setJumpsRemaining(int jumps) {
+        if (this.jumpsRemaining > jumps) {
+            stateTime = 0;
+            isOnGround = false;
+        }
+        this.jumpsRemaining = jumps;
+    }
 
     public Rectangle getPlayerHitbox() {
         return new Rectangle(getX(), getY(), width, height);
@@ -586,8 +621,7 @@ public class PlayerObject extends GameObject {
     @Override
     public void hit() {
         if (isDodging) {
-            isDodging = false;
-            dodgeTimer = 0f;
+            setIsDodging(false);
             body.setGravityScale(1.0f);
         }
     }
