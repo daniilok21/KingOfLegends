@@ -85,6 +85,7 @@ public class JoinScreen extends ScreenAdapter {
         game.batch.setProjectionMatrix(game.camera.combined);
         ScreenUtils.clear(new Color(0.2f, 0.2f, 0.3f, 1));
 
+
         game.batch.begin();
 
         titleView.draw(game.batch);
@@ -101,7 +102,7 @@ public class JoinScreen extends ScreenAdapter {
         }
         game.batch.end();
 
-
+0
         inputStage.act(delta);
         inputStage.draw();
 
