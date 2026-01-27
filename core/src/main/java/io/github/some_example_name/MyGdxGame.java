@@ -7,12 +7,15 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Box2D;
 import com.badlogic.gdx.physics.box2d.World;
 import io.github.some_example_name.managers.AudioManager;
 import io.github.some_example_name.managers.ContactManager;
 import io.github.some_example_name.screens.GameScreen;
+import io.github.some_example_name.screens.JoinScreen;
 import io.github.some_example_name.screens.MenuScreen;
+import io.github.some_example_name.screens.SettingsScreen;
 
 import static io.github.some_example_name.GameSettings.*;
 
@@ -26,11 +29,14 @@ public class MyGdxGame extends Game {
 
     public MenuScreen menuScreen;
     public GameScreen gameScreen;
+    public JoinScreen joinScreen;
+    public SettingsScreen settingsScreen;
 
     public BitmapFont defaultFont, largeFont, smallFont, titleFont, timerFont;
 
     public boolean isHost = false;
     public String hostIp = "";
+
     float accumulator = 0;
 
     @Override
@@ -50,6 +56,8 @@ public class MyGdxGame extends Game {
 
         menuScreen = new MenuScreen(this);
         gameScreen = new GameScreen(this);
+        joinScreen = new JoinScreen(this);
+        settingsScreen = new SettingsScreen(this);
 
         setScreen(menuScreen);
     }
