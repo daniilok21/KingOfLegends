@@ -92,16 +92,18 @@ public class GameScreen extends ScreenAdapter {
                 GameResources.BLUE_PLAYER_JUMP_SHEET,
                 GameResources.BLUE_PLAYER_ATTACK_SHEET,
                 GameResources.BLUE_PLAYER_DODGE_SHEET,
-                GameResources.BLUE_PLAYER_HIT_SHEET
-            }, new int[] {4, 7, 6, 5, 5, 2}, myGdxGame.world);
+                GameResources.BLUE_PLAYER_HIT_SHEET,
+                GameResources.BLUE_PLAYER_INVOCATION_SHEET
+            }, new int[] {4, 7, 6, 5, 5, 2, 5}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f}, myGdxGame.world);
         clientPlayer = new PlayerObject(START_PLAYER_CLIENT_X, START_PLAYER_CLIENT_Y, PLAYER_WIDTH, PLAYER_HEIGHT,new String[]{
             GameResources.RED_PLAYER_IDLE_SHEET,
             GameResources.RED_PLAYER_RUN_SHEET,
             GameResources.RED_PLAYER_JUMP_SHEET,
             GameResources.RED_PLAYER_ATTACK_SHEET,
             GameResources.RED_PLAYER_DODGE_SHEET,
-            GameResources.RED_PLAYER_HIT_SHEET
-        }, new int[] {4, 7, 6, 5, 5, 2}, myGdxGame.world);
+            GameResources.RED_PLAYER_HIT_SHEET,
+            GameResources.RED_PLAYER_INVOCATION_SHEET
+        }, new int[] {4, 7, 6, 5, 5, 2, 5}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f}, myGdxGame.world);
         clientPlayer.setFacingRight(false);
         joystick = new JoystickView(50, 30, GameResources.JOYSTICK_BG, GameResources.JOYSTICK_HANDLE);
         jumpButton = new ButtonView(SCREEN_WIDTH - 130 - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_JUMP);
@@ -201,6 +203,9 @@ public class GameScreen extends ScreenAdapter {
                 topPanel.checkOutOfBounds(serverPlayer.getX(), serverPlayer.getY(), true);
                 topPanel.checkOutOfBounds(clientPlayer.getX(), clientPlayer.getY(), false);
                 topPanel.update(delta);
+
+                if (serverPlayer.isInvoking() && serverPlayer.isInvocationFinished()) serverPlayer.setIsInvoking(false);
+                if (clientPlayer.isInvoking() && clientPlayer.isInvocationFinished()) clientPlayer.setIsInvoking(false);
             }
 
 
@@ -246,6 +251,8 @@ public class GameScreen extends ScreenAdapter {
             packet.sOnGround = serverPlayer.isOnGround();
             packet.sJumps = serverPlayer.getJumpsRemaining();
             packet.sIsOut = topPanel.isPlayer1OutOfBounds();
+            packet.sIsInvoking = serverPlayer.isInvoking();
+            packet.sInvocationDuration = serverPlayer.getInvocationDuration();
 
             packet.cX = clientPlayer.getBody().getPosition().x;
             packet.cY = clientPlayer.getBody().getPosition().y;
@@ -258,6 +265,8 @@ public class GameScreen extends ScreenAdapter {
             packet.cOnGround = clientPlayer.isOnGround();
             packet.cJumps = clientPlayer.getJumpsRemaining();
             packet.cIsOut = topPanel.isPlayer2OutOfBounds();
+            packet.cIsInvoking = clientPlayer.isInvoking();
+            packet.cInvocationDuration = clientPlayer.getInvocationDuration();
 
             if (server != null) server.sendState(packet);
         }
@@ -282,12 +291,29 @@ public class GameScreen extends ScreenAdapter {
                 serverPlayer.setIsOnGround(packet.sOnGround);
                 serverPlayer.setJumpsRemaining(packet.sJumps);
 
+                if (!serverPlayer.isInvoking() && packet.sIsInvoking) {
+                    serverPlayer.startInvocation(packet.sInvocationDuration);
+                }
+                serverPlayer.setIsInvoking(packet.sIsInvoking, packet.sInvocationDuration);
+                if (gameStatus == GameState.GameStatus.COUNTDOWN && packet.sIsInvoking) {
+                    serverPlayer.setStateTime(3.0f - packet.countdown);
+                }
+
                 if (packet.sIsAttacking && !serverPlayer.isAttacking()) {
                     serverPlayer.startAttack(packet.sAttackDir);
                 }
 
                 clientPlayer.setHealth(packet.cHealth);
                 clientPlayer.setInHitStun(packet.cInHitStun);
+
+                if (!clientPlayer.isInvoking() && packet.cIsInvoking) {
+                    clientPlayer.startInvocation(packet.cInvocationDuration);
+                }
+                clientPlayer.setIsInvoking(packet.cIsInvoking, packet.cInvocationDuration);
+                if (gameStatus == GameState.GameStatus.COUNTDOWN && packet.cIsInvoking) {
+                    clientPlayer.setStateTime(3.0f - packet.countdown);
+                }
+
                 if (packet.cNeedRespawn) {
                     clientPlayer.getBody().setTransform(packet.cX, packet.cY, 0);
                     clientPlayer.getBody().setLinearVelocity(0, 0);
@@ -342,6 +368,26 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void handleInput() {
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) {
+            serverPlayer.setPivotOffsetX(serverPlayer.getPivotOffsetX() - 0.5f);
+            clientPlayer.setPivotOffsetX(clientPlayer.getPivotOffsetX() - 0.5f);
+            System.out.println("Pivot X: " + serverPlayer.getPivotOffsetX());
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_2)) {
+            serverPlayer.setPivotOffsetX(serverPlayer.getPivotOffsetX() + 0.5f);
+            clientPlayer.setPivotOffsetX(clientPlayer.getPivotOffsetX() + 0.5f);
+            System.out.println("Pivot X: " + serverPlayer.getPivotOffsetX());
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_3)) {
+            serverPlayer.setPivotOffsetY(serverPlayer.getPivotOffsetY() - 0.5f);
+            clientPlayer.setPivotOffsetY(clientPlayer.getPivotOffsetY() - 0.5f);
+            System.out.println("Pivot Y: " + serverPlayer.getPivotOffsetY());
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_4)) {
+            serverPlayer.setPivotOffsetY(serverPlayer.getPivotOffsetY() + 0.5f);
+            clientPlayer.setPivotOffsetY(clientPlayer.getPivotOffsetY() + 0.5f);
+            System.out.println("Pivot Y: " + serverPlayer.getPivotOffsetY());
+        }
         localInput.moveLeft = false;
         localInput.moveRight = false;
         localInput.wantToGoDown = false;
@@ -384,9 +430,15 @@ public class GameScreen extends ScreenAdapter {
         if (gameStatus == GameState.GameStatus.WAITING && server != null && server.isConnected()) {
             gameStatus = GameState.GameStatus.COUNTDOWN;
             countdown = 3f;
+            serverPlayer.startInvocation(3.0f);
+            clientPlayer.startInvocation(3.0f);
         } else if (gameStatus == GameState.GameStatus.COUNTDOWN) {
             countdown -= delta;
-            if (countdown <= 0) gameStatus = GameState.GameStatus.PLAYING;
+            if (countdown <= 0) {
+                gameStatus = GameState.GameStatus.PLAYING;
+                serverPlayer.setIsInvoking(false);
+                clientPlayer.setIsInvoking(false);
+            }
         }
     }
 
@@ -431,7 +483,7 @@ public class GameScreen extends ScreenAdapter {
         jumpButton.draw(batch);
         dodgeButton.draw(batch);
         attackButton.draw(batch);
-        drawAttackHitboxes();
+        drawPlayerHitboxes();
 
         if (gameStatus == GameState.GameStatus.WAITING) {
             waitingText.draw(batch);
