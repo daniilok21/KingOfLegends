@@ -22,10 +22,12 @@ public class PlayerObject extends GameObject {
     private Animation<TextureRegion> attackAnimation;
     private Animation<TextureRegion> dodgeAnimation;
     private Animation<TextureRegion> hitAnimation;
+    private Animation<TextureRegion> invocationAnimation;
 
     private float stateTime = 0;
     private float pivotOffsetX = 48f;
     private float pivotOffsetY = 51f;
+    private float[] ArrayPivotOffsetX;
     private float visualScale = 1.6f;
 
     private int jumpsRemaining = 2;
@@ -37,6 +39,8 @@ public class PlayerObject extends GameObject {
     private float hitImmunityTimer = 0f;
     private boolean isInHitStun = false;
     private boolean isAttacking = false;
+    private boolean isInvoking = false;
+    private float invocationDuration = 1.0f;
     private float attackTimer = 0f;
     private float attackCooldown = 0f;
     private AttackDirection currentAttackDirection = AttackDirection.SIDE;
@@ -51,10 +55,11 @@ public class PlayerObject extends GameObject {
     private boolean wasMovingUpBeforeHit = false;
     private float headHitCooldown = 0.15f;
 
-    public PlayerObject(int x, int y, int width, int height, String[] texturePaths, int[] framesPerAnimation, World world) {
+    public PlayerObject(int x, int y, int width, int height, String[] texturePaths, int[] framesPerAnimation, float[] ArrayPivotOffsetX, World world) {
         super(null, x, y, width, height, GameSettings.PLAYER_BIT, world, true, BodyDef.BodyType.DynamicBody);
 
         loadAnimations(texturePaths, framesPerAnimation);
+        this.ArrayPivotOffsetX = ArrayPivotOffsetX;
 
         if (body != null && body.getFixtureList().size > 0) {
             Fixture fixture = body.getFixtureList().first();
@@ -75,7 +80,7 @@ public class PlayerObject extends GameObject {
         int runFrameWidth = runSheet.getWidth() / framesPerAnimation[1];
         int runFrameHeight = runSheet.getHeight();
         runAnimation = createAnimation(runSheet, runFrameWidth, runFrameHeight,
-            framesPerAnimation[1], 0.08f);
+            framesPerAnimation[1], 0.1f);
 
         Texture jumpSheet = new Texture(texturePaths[2]);
         int jumpFrameWidth = jumpSheet.getWidth() / framesPerAnimation[2];
@@ -100,6 +105,12 @@ public class PlayerObject extends GameObject {
         int hitFrameHeight = hitSheet.getHeight();
         hitAnimation = createAnimation(hitSheet, hitFrameWidth, hitFrameHeight,
             framesPerAnimation[5], 0.1f);
+
+        Texture invocationSheet = new Texture(texturePaths[6]);
+        int invocationWidth = invocationSheet.getWidth() / framesPerAnimation[6];
+        int invocationHeight = invocationSheet.getHeight();
+        invocationAnimation = createAnimation(invocationSheet, invocationWidth, invocationHeight,
+            framesPerAnimation[6], 0.2f);
     }
 
     private Animation<TextureRegion> createAnimation(Texture texture, int frameWidth, int frameHeight, int frameCount, float frameDuration) {
@@ -114,6 +125,10 @@ public class PlayerObject extends GameObject {
 
     public void update(float delta) {
         stateTime += delta;
+        if (isInvoking && stateTime >= invocationDuration) {
+            isInvoking = false;
+            stateTime = 0;
+        }
         if (isDodging && dodgeTimer > 0) {
             dodgeTimer += delta;
             if (dodgeTimer >= GameSettings.DODGE_DURATION) {
@@ -150,7 +165,36 @@ public class PlayerObject extends GameObject {
     public void draw(SpriteBatch batch) {
         Animation<TextureRegion> currentAnim = idleAnimation;
         TextureRegion currentFrame = null;
-        if (isAttacking) {
+        if (isInvoking) {
+            pivotOffsetX = ArrayPivotOffsetX[6];
+
+            float animDur = invocationAnimation.getAnimationDuration();
+            float prepTime = 0.3f;
+            float targetEndTime = invocationDuration - prepTime;
+            float reverseStartTime = Math.max(animDur, targetEndTime - animDur);
+            float frameTime;
+
+            if (stateTime < animDur) {
+                // Фаза 1: Проигрывание вперед
+                frameTime = stateTime;
+            } else if (stateTime < reverseStartTime) {
+                // Фаза 2: Удержание поднятого меча (последний кадр)
+                frameTime = animDur - 0.01f;
+            } else if (stateTime < targetEndTime) {
+                // Фаза 3: Обратное проигрывание
+                float elapsedInReverse = stateTime - reverseStartTime;
+                float reverseDuration = targetEndTime - reverseStartTime;
+                // Интерполируем от animDur до 0
+                frameTime = animDur * (1.0f - (elapsedInReverse / reverseDuration));
+            } else {
+                // Фаза 4: За 0.3 сек до начала - замираем в исходной стойке (первый кадр)
+                frameTime = 0;
+            }
+
+            frameTime = Math.max(0, Math.min(frameTime, animDur - 0.01f));
+            currentFrame = invocationAnimation.getKeyFrame(frameTime, false);
+        } else if (isAttacking) {
+            pivotOffsetX = ArrayPivotOffsetX[3];
             currentAnim = attackAnimation;
             currentFrame = attackAnimation.getKeyFrame(stateTime, false);
             if (attackAnimation.isAnimationFinished(stateTime)) {
@@ -159,20 +203,25 @@ public class PlayerObject extends GameObject {
                 currentAnim = idleAnimation;
             }
         } else if (isDodging) {
+            pivotOffsetX = ArrayPivotOffsetX[4];
             currentAnim = dodgeAnimation;
         } else if (isInHitStun) {
+            pivotOffsetX = ArrayPivotOffsetX[5];
             currentAnim = hitAnimation;
         } else if (!isOnGround) {
             currentAnim = jumpAnimation;
+            pivotOffsetX = ArrayPivotOffsetX[2];
             if (jumpAnimation.isAnimationFinished(stateTime)) {
                 TextureRegion[] frames = jumpAnimation.getKeyFrames();
                 currentFrame = frames[frames.length - 1];
             }
         } else if (Math.abs(body.getLinearVelocity().x) > 0.1f) {
+            pivotOffsetX = ArrayPivotOffsetX[1];
             currentAnim = runAnimation;
         }
 
         if (currentFrame == null) {
+            pivotOffsetX = ArrayPivotOffsetX[0];
             currentFrame = currentAnim.getKeyFrame(stateTime, true);
         }
 
@@ -222,7 +271,15 @@ public class PlayerObject extends GameObject {
         }
     }
 
+    public void startInvocation() {
+        startInvocation(1.0f);
+    }
 
+    public void startInvocation(float duration) {
+        isInvoking = true;
+        stateTime = 0;
+        this.invocationDuration = duration;
+    }
 
     public void startAttack(AttackDirection direction) {
         if (!canAttack()) return;
@@ -515,6 +572,51 @@ public class PlayerObject extends GameObject {
         return isAttacking;
     }
 
+    public boolean isInvoking() {
+        return isInvoking;
+    }
+
+    public boolean isInvocationFinished() {
+        return stateTime >= invocationDuration;
+    }
+
+    public void setIsInvoking(boolean invoking) {
+        if (this.isInvoking && !invoking) {
+            stateTime = 0;
+        }
+        if (invoking && !this.isInvoking) {
+            stateTime = 0;
+        }
+        this.isInvoking = invoking;
+    }
+
+    public void setIsInvoking(boolean invoking, float duration) {
+        if (this.isInvoking && !invoking) {
+            stateTime = 0;
+        }
+        if (invoking && !this.isInvoking) {
+            stateTime = 0;
+        }
+        this.isInvoking = invoking;
+        this.invocationDuration = duration;
+    }
+
+    public void setInvocationDuration(float duration) {
+        this.invocationDuration = duration;
+    }
+
+    public float getInvocationDuration() {
+        return invocationDuration;
+    }
+
+    public void setStateTime(float time) {
+        this.stateTime = time;
+    }
+
+    public float getStateTime() {
+        return stateTime;
+    }
+
     public boolean isInHitStun() {
         return isInHitStun;
     }
@@ -554,26 +656,26 @@ public class PlayerObject extends GameObject {
     }
 
     public boolean canMove() {
-        return canControl && !isInHitStun && !isDodging && !isAttacking;
+        return canControl && !isInHitStun && !isDodging && !isAttacking && !isInvoking;
     }
     public void setHitImmunityTimer(float hitImmunityTimer) {
         this.hitImmunityTimer = hitImmunityTimer;
     }
 
     public boolean canJump() {
-        return !isAttacking && !isInHitStun && jumpsRemaining > 0;
+        return !isAttacking && !isInHitStun && jumpsRemaining > 0 && !isInvoking;
     }
 
     public boolean canAttack() {
-        return canControl && !isInHitStun && !isAttacking && attackCooldown == 0;
+        return canControl && !isInHitStun && !isAttacking && attackCooldown == 0 && !isInvoking;
     }
 
     public boolean canDodge() {
-        return !isAttacking && canControl && !isInHitStun && dodgeCooldown <= 0 && !isDodging;
+        return !isAttacking && canControl && !isInHitStun && dodgeCooldown <= 0 && !isDodging && !isInvoking;
     }
 
     public boolean canReceiveInput() {
-        return canControl && !isInHitStun;
+        return canControl && !isInHitStun && !isInvoking;
     }
 
     public AttackDirection getCurrentAttackDirection() {

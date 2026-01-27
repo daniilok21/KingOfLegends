@@ -23,6 +23,8 @@ public class NetworkPacket implements Serializable {
     public boolean sOnGround;
     public boolean sIsOut;
     public boolean sNeedRespawn;
+    public boolean sIsInvoking;
+    public float sInvocationDuration;
 
     public float cX, cY;
     public float cVX, cVY;
@@ -37,6 +39,8 @@ public class NetworkPacket implements Serializable {
     public boolean cOnGround;
     public boolean cIsOut;
     public boolean cNeedRespawn;
+    public boolean cIsInvoking;
+    public float cInvocationDuration;
 
     public float matchTimer;
 }
