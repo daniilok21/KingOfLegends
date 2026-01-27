@@ -30,7 +30,7 @@ public class MyGdxGame extends Game {
     public BitmapFont defaultFont, largeFont, smallFont, titleFont, timerFont;
 
     public boolean isHost = false;
-    public String hostIp = "192.168.0.14";
+    public String hostIp = "";
     float accumulator = 0;
 
     @Override
