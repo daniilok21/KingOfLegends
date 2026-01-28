@@ -13,6 +13,7 @@ public class AudioManager {
     private Music gameMusic1;
     private Music gameMusic2;
     private Music currentGameMusic;
+    private Sound victoryMusic;
     private Sound hitSound;
 
     private Random random = new Random();
@@ -23,6 +24,7 @@ public class AudioManager {
         gameMusic1 = Gdx.audio.newMusic(Gdx.files.internal(GameResources.GAME_BACKGROUND_1_MUSIC_PATH));
         gameMusic2 = Gdx.audio.newMusic(Gdx.files.internal(GameResources.GAME_BACKGROUND_2_MUSIC_PATH));
         hitSound = Gdx.audio.newSound(Gdx.files.internal(GameResources.HIT_SOUND_PATH));
+        victoryMusic = Gdx.audio.newSound(Gdx.files.internal(GameResources.GAME_VICRORY_MUSIC_PATH));
 
         menuMusic.setLooping(true);
         menuMusic.setVolume(0.3f);
@@ -83,6 +85,10 @@ public class AudioManager {
 
     public void playHitSound() {
         hitSound.play(0.5f);
+    }
+
+    public void playVictorySound() {
+        victoryMusic.play(0.5f);
     }
 
     public void dispose() {

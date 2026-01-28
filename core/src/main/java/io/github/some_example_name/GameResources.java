@@ -49,6 +49,7 @@ public class GameResources {
     public static final String MENU_BACKGROUND_WAITING_MUSIC_PATH = "audio/waiting_background_music.mp3";
     public static final String GAME_BACKGROUND_1_MUSIC_PATH = "audio/game_background_1_music.mp3";
     public static final String GAME_BACKGROUND_2_MUSIC_PATH = "audio/game_background_2_music.mp3";
+    public static final String GAME_VICRORY_MUSIC_PATH = "audio/victory.mp3";
 
     // СаундТреки
     public static final String HIT_SOUND_PATH = "audio/shoot_sound.mp3";

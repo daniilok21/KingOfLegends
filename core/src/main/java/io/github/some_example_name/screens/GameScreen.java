@@ -398,6 +398,8 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void endMatch() {
+        myGdxGame.audioManager.playVictorySound();
+        myGdxGame.audioManager.stopGameMusic();
         String winner = "DRAW!";
         if (topPanel.getPlayer1Lives() <= 0) winner = topPanel.getPlayer2Name() + " - WIN!";
         else if (topPanel.getPlayer2Lives() <= 0) winner = topPanel.getPlayer1Name() + " - WIN!";
@@ -407,7 +409,7 @@ public class GameScreen extends ScreenAdapter {
     private void endMatchWithWinner(String message) {
         gameStatus = GameState.GameStatus.FINISHED;
         resultText.setText(message);
-        resultDisplayTimer = 3.0f;
+        resultDisplayTimer = 7.0f;
     }
 
     private void setPivotOffset() {
