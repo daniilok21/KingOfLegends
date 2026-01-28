@@ -24,6 +24,7 @@ public class NetworkPacket implements Serializable {
     public boolean sIsOut;
     public boolean sNeedRespawn;
     public boolean sIsInvoking;
+    public boolean sIsClimbing;
     public float sInvocationDuration;
 
     public float cX, cY;
@@ -40,7 +41,9 @@ public class NetworkPacket implements Serializable {
     public boolean cIsOut;
     public boolean cNeedRespawn;
     public boolean cIsInvoking;
+    public boolean cIsClimbing;
     public float cInvocationDuration;
 
     public float matchTimer;
+    public int musicIndex;
 }

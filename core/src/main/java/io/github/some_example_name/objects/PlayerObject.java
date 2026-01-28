@@ -23,11 +23,13 @@ public class PlayerObject extends GameObject {
     private Animation<TextureRegion> dodgeAnimation;
     private Animation<TextureRegion> hitAnimation;
     private Animation<TextureRegion> invocationAnimation;
+    private Animation<TextureRegion> climbAnimation;
 
     private float stateTime = 0;
     private float pivotOffsetX = 48f;
     private float pivotOffsetY = 51f;
     private float[] ArrayPivotOffsetX;
+    private float[] ArrayPivotOffsetY;
     private float visualScale = 1.6f;
 
     private int jumpsRemaining = 2;
@@ -40,6 +42,7 @@ public class PlayerObject extends GameObject {
     private boolean isInHitStun = false;
     private boolean isAttacking = false;
     private boolean isInvoking = false;
+    private boolean isClimbing = false;
     private float invocationDuration = 1.0f;
     private float attackTimer = 0f;
     private float attackCooldown = 0f;
@@ -55,11 +58,12 @@ public class PlayerObject extends GameObject {
     private boolean wasMovingUpBeforeHit = false;
     private float headHitCooldown = 0.15f;
 
-    public PlayerObject(int x, int y, int width, int height, String[] texturePaths, int[] framesPerAnimation, float[] ArrayPivotOffsetX, World world) {
+    public PlayerObject(int x, int y, int width, int height, String[] texturePaths, int[] framesPerAnimation, float[] ArrayPivotOffsetX, float[] ArrayPivotOffsetY, World world) {
         super(null, x, y, width, height, GameSettings.PLAYER_BIT, world, true, BodyDef.BodyType.DynamicBody);
 
         loadAnimations(texturePaths, framesPerAnimation);
         this.ArrayPivotOffsetX = ArrayPivotOffsetX;
+        this.ArrayPivotOffsetY = ArrayPivotOffsetY;
 
         if (body != null && body.getFixtureList().size > 0) {
             Fixture fixture = body.getFixtureList().first();
@@ -111,6 +115,12 @@ public class PlayerObject extends GameObject {
         int invocationHeight = invocationSheet.getHeight();
         invocationAnimation = createAnimation(invocationSheet, invocationWidth, invocationHeight,
             framesPerAnimation[6], 0.2f);
+
+        Texture climbingSheet = new Texture(texturePaths[7]);
+        int climbingWidth = invocationSheet.getWidth() / framesPerAnimation[7];
+        int climbingHeight = invocationSheet.getHeight();
+        climbAnimation = createAnimation(climbingSheet, climbingWidth, climbingHeight,
+            framesPerAnimation[7], 0.1f);
     }
 
     private Animation<TextureRegion> createAnimation(Texture texture, int frameWidth, int frameHeight, int frameCount, float frameDuration) {
@@ -167,6 +177,7 @@ public class PlayerObject extends GameObject {
         TextureRegion currentFrame = null;
         if (isInvoking) {
             pivotOffsetX = ArrayPivotOffsetX[6];
+            pivotOffsetY = ArrayPivotOffsetY[6];
 
             float animDur = invocationAnimation.getAnimationDuration();
             float prepTime = 0.3f;
@@ -175,26 +186,28 @@ public class PlayerObject extends GameObject {
             float frameTime;
 
             if (stateTime < animDur) {
-                // Фаза 1: Проигрывание вперед
                 frameTime = stateTime;
             } else if (stateTime < reverseStartTime) {
-                // Фаза 2: Удержание поднятого меча (последний кадр)
                 frameTime = animDur - 0.01f;
             } else if (stateTime < targetEndTime) {
-                // Фаза 3: Обратное проигрывание
                 float elapsedInReverse = stateTime - reverseStartTime;
                 float reverseDuration = targetEndTime - reverseStartTime;
-                // Интерполируем от animDur до 0
                 frameTime = animDur * (1.0f - (elapsedInReverse / reverseDuration));
             } else {
-                // Фаза 4: За 0.3 сек до начала - замираем в исходной стойке (первый кадр)
                 frameTime = 0;
             }
 
             frameTime = Math.max(0, Math.min(frameTime, animDur - 0.01f));
             currentFrame = invocationAnimation.getKeyFrame(frameTime, false);
-        } else if (isAttacking) {
+        } else if (isClimbing) {
+            pivotOffsetX = ArrayPivotOffsetX[7];
+            pivotOffsetY = ArrayPivotOffsetY[7];
+            currentAnim = climbAnimation;
+            currentFrame = climbAnimation.getKeyFrames()[0];
+        }
+        else if (isAttacking) {
             pivotOffsetX = ArrayPivotOffsetX[3];
+            pivotOffsetY = ArrayPivotOffsetY[3];
             currentAnim = attackAnimation;
             currentFrame = attackAnimation.getKeyFrame(stateTime, false);
             if (attackAnimation.isAnimationFinished(stateTime)) {
@@ -204,24 +217,30 @@ public class PlayerObject extends GameObject {
             }
         } else if (isDodging) {
             pivotOffsetX = ArrayPivotOffsetX[4];
+            pivotOffsetY = ArrayPivotOffsetY[4];
             currentAnim = dodgeAnimation;
         } else if (isInHitStun) {
             pivotOffsetX = ArrayPivotOffsetX[5];
+            pivotOffsetY = ArrayPivotOffsetY[5];
             currentAnim = hitAnimation;
-        } else if (!isOnGround) {
+        }
+        else if (!isOnGround) {
             currentAnim = jumpAnimation;
             pivotOffsetX = ArrayPivotOffsetX[2];
+            pivotOffsetY = ArrayPivotOffsetY[2];
             if (jumpAnimation.isAnimationFinished(stateTime)) {
                 TextureRegion[] frames = jumpAnimation.getKeyFrames();
                 currentFrame = frames[frames.length - 1];
             }
         } else if (Math.abs(body.getLinearVelocity().x) > 0.1f) {
             pivotOffsetX = ArrayPivotOffsetX[1];
+            pivotOffsetY = ArrayPivotOffsetY[1];
             currentAnim = runAnimation;
         }
 
         if (currentFrame == null) {
             pivotOffsetX = ArrayPivotOffsetX[0];
+            pivotOffsetY = ArrayPivotOffsetY[0];
             currentFrame = currentAnim.getKeyFrame(stateTime, true);
         }
 
@@ -241,11 +260,7 @@ public class PlayerObject extends GameObject {
 
         drawY = hitboxCenterY - frameHeight / 2 + pivotOffsetY;
 
-        batch.draw(currentFrame,
-            drawX, drawY,
-            frameWidth / 2, frameHeight / 2,
-            frameWidth, frameHeight,
-            facingRight ? 1.0f : -1.0f, 1.0f, 0);
+        batch.draw(currentFrame, drawX, drawY, frameWidth / 2, frameHeight / 2, frameWidth, frameHeight, facingRight ? 1.0f : -1.0f, 1.0f, 0);
     }
 
     public void applyHitStun(float duration) {
@@ -619,6 +634,14 @@ public class PlayerObject extends GameObject {
 
     public boolean isInHitStun() {
         return isInHitStun;
+    }
+
+    public boolean isClimbing() {
+        return isClimbing;
+    }
+
+    public void setIsClimbing(boolean isClimbing) {
+        this.isClimbing = isClimbing;
     }
 
     public void setInHitStun(boolean hitStun) {

@@ -34,9 +34,11 @@ public class GameScreen extends ScreenAdapter {
     private TopPanelView topPanel;
     private PlayerInput localInput = new PlayerInput();
     private boolean jumpWasPressed = false, connected = false;
+    private boolean musicStarted = false, musicWainigStarted = false;
     private GameState.GameStatus gameStatus = GameState.GameStatus.WAITING;
     private float countdown = 3.0f, timeAccumulator = 0, resultDisplayTimer = 0f;
     private TextView waitingText, countdownText, resultText, ipAddressText;
+    private int selectedMusicIndex = 0;
 
     public GameScreen(MyGdxGame game) {
         this.myGdxGame = game;
@@ -93,17 +95,19 @@ public class GameScreen extends ScreenAdapter {
                 GameResources.BLUE_PLAYER_ATTACK_SHEET,
                 GameResources.BLUE_PLAYER_DODGE_SHEET,
                 GameResources.BLUE_PLAYER_HIT_SHEET,
-                GameResources.BLUE_PLAYER_INVOCATION_SHEET
-            }, new int[] {4, 7, 6, 5, 5, 2, 5}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f}, myGdxGame.world);
+                GameResources.BLUE_PLAYER_INVOCATION_SHEET,
+                GameResources.BLUE_PLAYER_CLIMB_SHEET
+            }, new int[] {4, 7, 6, 5, 5, 2, 5, 1}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f, 453.5f}, new float[] {51f, 51f, 51f, 51f, 51f, 51f, 51f, 5f}, myGdxGame.world);
         clientPlayer = new PlayerObject(START_PLAYER_CLIENT_X, START_PLAYER_CLIENT_Y, PLAYER_WIDTH, PLAYER_HEIGHT,new String[]{
-            GameResources.RED_PLAYER_IDLE_SHEET,
-            GameResources.RED_PLAYER_RUN_SHEET,
-            GameResources.RED_PLAYER_JUMP_SHEET,
-            GameResources.RED_PLAYER_ATTACK_SHEET,
-            GameResources.RED_PLAYER_DODGE_SHEET,
-            GameResources.RED_PLAYER_HIT_SHEET,
-            GameResources.RED_PLAYER_INVOCATION_SHEET
-        }, new int[] {4, 7, 6, 5, 5, 2, 5}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f}, myGdxGame.world);
+                GameResources.RED_PLAYER_IDLE_SHEET,
+                GameResources.RED_PLAYER_RUN_SHEET,
+                GameResources.RED_PLAYER_JUMP_SHEET,
+                GameResources.RED_PLAYER_ATTACK_SHEET,
+                GameResources.RED_PLAYER_DODGE_SHEET,
+                GameResources.RED_PLAYER_HIT_SHEET,
+                GameResources.RED_PLAYER_INVOCATION_SHEET,
+                GameResources.RED_PLAYER_CLIMB_SHEET
+            }, new int[] {4, 7, 6, 5, 5, 2, 5, 1}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f, 453.5f}, new float[] {51f, 51f, 51f, 51f, 51f, 51f, 51f, 5f}, myGdxGame.world);
         clientPlayer.setFacingRight(false);
         joystick = new JoystickView(50, 30, GameResources.JOYSTICK_BG, GameResources.JOYSTICK_HANDLE);
         jumpButton = new ButtonView(SCREEN_WIDTH - 130 - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_JUMP);
@@ -165,7 +169,30 @@ public class GameScreen extends ScreenAdapter {
                 return;
             }
         }
-
+        if (gameStatus == GameState.GameStatus.COUNTDOWN) {
+            if (musicWainigStarted) {
+                myGdxGame.audioManager.stopWaitingMusic();
+                musicWainigStarted = false;
+            }
+        }
+        else if (gameStatus == GameState.GameStatus.WAITING) {
+            if (!musicWainigStarted) {
+                myGdxGame.audioManager.playWaitingMusic();
+                musicWainigStarted = true;
+            }
+        }
+        else if (gameStatus == GameState.GameStatus.PLAYING) {
+            if (!musicStarted) {
+                myGdxGame.audioManager.playGameMusic(selectedMusicIndex);
+                musicStarted = true;
+            }
+        }
+        if (gameStatus == GameState.GameStatus.WAITING) {
+            if (!musicWainigStarted) {
+                myGdxGame.audioManager.playWaitingMusic();
+                musicWainigStarted = true;
+            }
+        }
         checkMatchEndConditions();
 
         if (gameStatus == GameState.GameStatus.FINISHED) {
@@ -190,14 +217,15 @@ public class GameScreen extends ScreenAdapter {
                 clientPlayer.setIsDodging(remoteInput.isDodging);
                 clientPlayer.setIsOnGround(remoteInput.isOnGround);
                 clientPlayer.setJumpsRemaining(remoteInput.jumpsRemaining);
+                clientPlayer.setIsClimbing(remoteInput.isClimbing);
                 if (remoteInput.isAttacking && !clientPlayer.isAttacking()) {
                     clientPlayer.startAttack(remoteInput.attackDir);
                 }
             }
             clientPlayer.update(delta);
 
-            if (serverPlayer.isAttacking()) serverPlayer.checkHit(clientPlayer);
-            if (clientPlayer.isAttacking()) clientPlayer.checkHit(serverPlayer);
+            if (serverPlayer.isAttacking()) if (serverPlayer.checkHit(clientPlayer)) myGdxGame.audioManager.playHitSound();
+            if (clientPlayer.isAttacking()) if (clientPlayer.checkHit(serverPlayer)) myGdxGame.audioManager.playHitSound();
 
             if (gameStatus == GameState.GameStatus.PLAYING) {
                 topPanel.checkOutOfBounds(serverPlayer.getX(), serverPlayer.getY(), true);
@@ -236,6 +264,7 @@ public class GameScreen extends ScreenAdapter {
             packet.matchTimer = topPanel.getMatchTimer();
             packet.sNeedRespawn = sRespawn;
             packet.cNeedRespawn = cRespawn;
+            packet.musicIndex = selectedMusicIndex;
 
             packet.sX = serverPlayer.getBody().getPosition().x;
             packet.sY = serverPlayer.getBody().getPosition().y;
@@ -253,6 +282,7 @@ public class GameScreen extends ScreenAdapter {
             packet.sIsOut = topPanel.isPlayer1OutOfBounds();
             packet.sIsInvoking = serverPlayer.isInvoking();
             packet.sInvocationDuration = serverPlayer.getInvocationDuration();
+            packet.sIsClimbing = serverPlayer.isClimbing();
 
             packet.cX = clientPlayer.getBody().getPosition().x;
             packet.cY = clientPlayer.getBody().getPosition().y;
@@ -267,6 +297,7 @@ public class GameScreen extends ScreenAdapter {
             packet.cIsOut = topPanel.isPlayer2OutOfBounds();
             packet.cIsInvoking = clientPlayer.isInvoking();
             packet.cInvocationDuration = clientPlayer.getInvocationDuration();
+            packet.cIsClimbing = clientPlayer.isClimbing();
 
             if (server != null) server.sendState(packet);
         }
@@ -281,7 +312,10 @@ public class GameScreen extends ScreenAdapter {
                 topPanel.setPlayer2Lives(packet.cLives);
                 topPanel.setPlayer1Out(packet.sIsOut);
                 topPanel.setPlayer2Out(packet.cIsOut);
+                selectedMusicIndex = packet.musicIndex;
 
+                int oldClientHealth = clientPlayer.getHealth();
+                int oldServerHealth = serverPlayer.getHealth();
                 serverPlayer.getBody().setTransform(packet.sX, packet.sY, 0);
                 serverPlayer.getBody().setLinearVelocity(packet.sVX, packet.sVY);
                 serverPlayer.setHealth(packet.sHealth);
@@ -290,6 +324,7 @@ public class GameScreen extends ScreenAdapter {
                 serverPlayer.setIsDodging(packet.sIsDodging);
                 serverPlayer.setIsOnGround(packet.sOnGround);
                 serverPlayer.setJumpsRemaining(packet.sJumps);
+                serverPlayer.setIsClimbing(packet.sIsClimbing);
 
                 if (!serverPlayer.isInvoking() && packet.sIsInvoking) {
                     serverPlayer.startInvocation(packet.sInvocationDuration);
@@ -305,6 +340,13 @@ public class GameScreen extends ScreenAdapter {
 
                 clientPlayer.setHealth(packet.cHealth);
                 clientPlayer.setInHitStun(packet.cInHitStun);
+                clientPlayer.setIsClimbing(packet.cIsClimbing);
+
+                if (packet.cHealth < oldClientHealth && myGdxGame.audioManager != null) {
+                    myGdxGame.audioManager.playHitSound();
+                } else if (packet.sHealth < oldServerHealth && myGdxGame.audioManager != null) {
+                    myGdxGame.audioManager.playHitSound();
+                }
 
                 if (!clientPlayer.isInvoking() && packet.cIsInvoking) {
                     clientPlayer.startInvocation(packet.cInvocationDuration);
@@ -341,6 +383,7 @@ public class GameScreen extends ScreenAdapter {
             localInput.isDodging = clientPlayer.isDodging();
             localInput.isOnGround = clientPlayer.isOnGround();
             localInput.jumpsRemaining = clientPlayer.getJumpsRemaining();
+            localInput.isClimbing = clientPlayer.isClimbing();
 
             if (client != null) client.sendInput(localInput);
             serverPlayer.update(delta);
@@ -355,6 +398,8 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void endMatch() {
+        myGdxGame.audioManager.playVictorySound();
+        myGdxGame.audioManager.stopGameMusic();
         String winner = "DRAW!";
         if (topPanel.getPlayer1Lives() <= 0) winner = topPanel.getPlayer2Name() + " - WIN!";
         else if (topPanel.getPlayer2Lives() <= 0) winner = topPanel.getPlayer1Name() + " - WIN!";
@@ -364,30 +409,30 @@ public class GameScreen extends ScreenAdapter {
     private void endMatchWithWinner(String message) {
         gameStatus = GameState.GameStatus.FINISHED;
         resultText.setText(message);
-        resultDisplayTimer = 3.0f;
+        resultDisplayTimer = 7.0f;
     }
 
-    private void handleInput() {
+    private void setPivotOffset() {
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) {
             serverPlayer.setPivotOffsetX(serverPlayer.getPivotOffsetX() - 0.5f);
             clientPlayer.setPivotOffsetX(clientPlayer.getPivotOffsetX() - 0.5f);
-            System.out.println("Pivot X: " + serverPlayer.getPivotOffsetX());
         }
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_2)) {
             serverPlayer.setPivotOffsetX(serverPlayer.getPivotOffsetX() + 0.5f);
             clientPlayer.setPivotOffsetX(clientPlayer.getPivotOffsetX() + 0.5f);
-            System.out.println("Pivot X: " + serverPlayer.getPivotOffsetX());
         }
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_3)) {
             serverPlayer.setPivotOffsetY(serverPlayer.getPivotOffsetY() - 0.5f);
             clientPlayer.setPivotOffsetY(clientPlayer.getPivotOffsetY() - 0.5f);
-            System.out.println("Pivot Y: " + serverPlayer.getPivotOffsetY());
         }
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_4)) {
             serverPlayer.setPivotOffsetY(serverPlayer.getPivotOffsetY() + 0.5f);
             clientPlayer.setPivotOffsetY(clientPlayer.getPivotOffsetY() + 0.5f);
-            System.out.println("Pivot Y: " + serverPlayer.getPivotOffsetY());
         }
+        System.out.println("Pivot X: " + serverPlayer.getPivotOffsetX() + "; Pivot Y: " + serverPlayer.getPivotOffsetY());
+    }
+
+    private void handleInput() {
         localInput.moveLeft = false;
         localInput.moveRight = false;
         localInput.wantToGoDown = false;
@@ -401,7 +446,7 @@ public class GameScreen extends ScreenAdapter {
         localInput.moveRight = Gdx.input.isKeyPressed(Input.Keys.D) || (joystick.isCaptured() && joystick.isRight());
         localInput.wantToGoDown = Gdx.input.isKeyPressed(Input.Keys.S) || (joystick.isCaptured() && joystick.isDown());
 
-        boolean isJumpButtonDown = Gdx.input.isKeyPressed(Input.Keys.SPACE) || jumpButton.isPressed();;
+        boolean isJumpButtonDown = Gdx.input.isKeyPressed(Input.Keys.SPACE) || jumpButton.isPressed();
         localInput.jump = isJumpButtonDown && !jumpWasPressed;
         jumpWasPressed = isJumpButtonDown;
 
@@ -420,6 +465,7 @@ public class GameScreen extends ScreenAdapter {
         else targetX = vel.x * 0.8f;
 
         if (!p.isInHitStun() && !p.isDodging()) p.getBody().setLinearVelocity(targetX, vel.y);
+        p.setIsClimbing(p.canMove() && p.isOnGround() && (in.moveLeft || in.moveRight) && Math.abs(vel.x) < 0.1f && Math.abs(vel.y) < 0.1f);
         if (in.jump && p.canJump()) p.jump(PLAYER_JUMP_FORCE);
         if (in.dodge && p.canDodge()) p.dodge(in.moveLeft ? -1 : (in.moveRight ? 1 : 0));
         p.setWantsToGoDown(in.wantToGoDown);
@@ -432,8 +478,11 @@ public class GameScreen extends ScreenAdapter {
             countdown = 3f;
             serverPlayer.startInvocation(3.0f);
             clientPlayer.startInvocation(3.0f);
+            musicStarted = false;
+            selectedMusicIndex = myGdxGame.audioManager.getRandomMusicIndex();
         } else if (gameStatus == GameState.GameStatus.COUNTDOWN) {
             countdown -= delta;
+            musicStarted = false;
             if (countdown <= 0) {
                 gameStatus = GameState.GameStatus.PLAYING;
                 serverPlayer.setIsInvoking(false);
@@ -483,7 +532,6 @@ public class GameScreen extends ScreenAdapter {
         jumpButton.draw(batch);
         dodgeButton.draw(batch);
         attackButton.draw(batch);
-        drawPlayerHitboxes();
 
         if (gameStatus == GameState.GameStatus.WAITING) {
             waitingText.draw(batch);

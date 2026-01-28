@@ -94,6 +94,8 @@ public class MyGdxGame extends Game {
         titleFont.dispose();
         timerFont.dispose();
 
+        audioManager.dispose();
+
         if (menuScreen != null) {
             menuScreen.dispose();
         }
@@ -108,6 +110,7 @@ public class MyGdxGame extends Game {
         if (ip != null && !ip.isEmpty()) {
             this.hostIp = ip;
         }
+        audioManager.stopMenuMusic();
         setScreen(gameScreen);
     }
 
@@ -115,6 +118,7 @@ public class MyGdxGame extends Game {
         if (gameScreen != null) {
             gameScreen.disconnect();
         }
+        audioManager.stopGameMusic();
         setScreen(menuScreen);
     }
 }
