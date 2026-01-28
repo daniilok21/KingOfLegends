@@ -19,6 +19,9 @@ public class ImageView extends View {
         this.width = width;
         this.height = height;
     }
+    public void setCenterX(float x) {
+        this.x = x - width / 2;
+    }
 
     @Override
     public void draw(SpriteBatch batch) {

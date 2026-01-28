@@ -15,6 +15,8 @@ import com.badlogic.gdx.Application;
 import io.github.some_example_name.MyGdxGame;
 import io.github.some_example_name.GameResources;
 import io.github.some_example_name.components.ButtonView;
+import io.github.some_example_name.components.ImageView;
+import io.github.some_example_name.components.MovingBackgroundView;
 import io.github.some_example_name.components.TextView;
 
 import static io.github.some_example_name.GameSettings.SCREEN_WIDTH;
@@ -23,27 +25,41 @@ import static io.github.some_example_name.GameSettings.SCREEN_HEIGHT;
 public class JoinScreen extends ScreenAdapter {
 
     private final MyGdxGame game;
+    private MovingBackgroundView backgroundJoin;
     private TextView titleView;
     private ButtonView connectButton;
     private ButtonView backButton;
     private Stage inputStage;
     private TextField ipField;
+    private ImageView boardJoin;
+    private ImageView ipEnterPlace;
     private String errorMessage = "";
 
     public JoinScreen(MyGdxGame game) {
         this.game = game;
 
         float buttonY = SCREEN_HEIGHT / 2f - 100;
-        connectButton = new ButtonView(
-            SCREEN_WIDTH / 2f - 220, buttonY, 440, 70,
-            game.defaultMenuFont, GameResources.BUTTON_MENU, "Connect"
-        );
-        backButton = new ButtonView(
-            SCREEN_WIDTH / 2f - 220, buttonY - 90, 440, 70,
-            game.defaultMenuFont, GameResources.BUTTON_MENU, "Back"
-        );
+
         titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 90, "JOIN GAME");
         titleView.setCenterX(SCREEN_WIDTH / 2f);
+
+        backgroundJoin = new MovingBackgroundView(GameResources.BACKGROUND_JOIN);
+
+        connectButton = new ButtonView(
+            SCREEN_WIDTH / 2f - 220, buttonY, 440, 80,
+            game.defaultMenuFont, GameResources.BUTTON_MENU, "Connect"
+        );
+
+        backButton = new ButtonView(
+            SCREEN_WIDTH / 2f - 220, buttonY - 90, 440, 80,
+            game.defaultMenuFont, GameResources.BUTTON_MENU, "Back"
+        );
+
+        boardJoin = new ImageView(SCREEN_WIDTH / 2f,SCREEN_HEIGHT - 650f,600,500,GameResources.BOARD);
+        boardJoin.setCenterX(SCREEN_WIDTH / 2f);
+
+        ipEnterPlace = new ImageView(SCREEN_WIDTH / 2f, Gdx.graphics.getHeight() / 2f,440,80,GameResources.BUTTON_MENU);
+        ipEnterPlace.setCenterX(SCREEN_WIDTH / 2f);
     }
 
     @Override
@@ -54,13 +70,13 @@ public class JoinScreen extends ScreenAdapter {
 
 
         TextField.TextFieldStyle style = new TextField.TextFieldStyle();
-        style.font = game.defaultFont;
-        style.fontColor = Color.WHITE;
+        style.font = game.defaultMenuFont;
+        style.fontColor = Color.BROWN;
         skin.add("default", style);
 
         ipField = new TextField("", skin);
         ipField.setSize(400, 50);
-        ipField.setPosition(Gdx.graphics.getWidth() / 2f - 200, Gdx.graphics.getHeight() / 2f + 20);
+        ipField.setPosition(Gdx.graphics.getWidth() / 2f - 190, Gdx.graphics.getHeight() / 2f + 15);
         ipField.setMessageText("Enter IP...");
         ipField.setMaxLength(15);
         ipField.setTextFieldFilter((textField, c) -> Character.isDigit(c) || c == '.');
@@ -89,7 +105,10 @@ public class JoinScreen extends ScreenAdapter {
 
         game.batch.begin();
 
+        backgroundJoin.draw(game.batch);
         titleView.draw(game.batch);
+        boardJoin.draw(game.batch);
+        ipEnterPlace.draw(game.batch);
         connectButton.draw(game.batch);
         backButton.draw(game.batch);
 

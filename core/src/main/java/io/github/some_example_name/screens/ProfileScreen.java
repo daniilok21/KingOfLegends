@@ -1,7 +1,6 @@
 package io.github.some_example_name.screens;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector3;
@@ -41,7 +40,7 @@ public class ProfileScreen extends ScreenAdapter {
     public void show() {
         float buttonY = SCREEN_HEIGHT / 2f + 60;
 
-        titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f - 150, SCREEN_HEIGHT - 50, "PROFILE");
+        titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f - 150, SCREEN_HEIGHT - 90, "PROFILE");
         titleView.setCenterX(SCREEN_WIDTH / 2f);
 
         // Загружаем текущее имя из game.playerName (оно уже загружено из MemoryManager в MyGdxGame)

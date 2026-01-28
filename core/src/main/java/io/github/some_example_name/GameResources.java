@@ -10,7 +10,11 @@ public class GameResources {
     public static final String BUTTON_ATTACK = "textures/attack_button.png";
     public static final String BUTTON_LONG_MENU = "textures/button_background_long.png";
     public static final String BUTTON_MENU = "textures/button_menu.png";
-    public static final String BACKGROUND_MENU = "textures/background.jpg";
+    public static final String BACKGROUND_MENU = "textures/background_menu.jpg";
+    public static final String BACKGROUND_JOIN = "textures/background_join.jpg";
+    public static final String KNIFE_LEFT = "textures/knife_left.png";
+    public static final String KNIFE_RIGHT = "textures/knife_right.png";
+    public static final String BOARD = "textures/board.png";
 
 
     //FONT
