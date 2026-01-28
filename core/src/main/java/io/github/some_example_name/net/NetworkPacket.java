@@ -45,4 +45,5 @@ public class NetworkPacket implements Serializable {
     public float cInvocationDuration;
 
     public float matchTimer;
+    public int musicIndex;
 }

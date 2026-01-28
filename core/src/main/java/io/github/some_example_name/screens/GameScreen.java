@@ -34,10 +34,11 @@ public class GameScreen extends ScreenAdapter {
     private TopPanelView topPanel;
     private PlayerInput localInput = new PlayerInput();
     private boolean jumpWasPressed = false, connected = false;
-    private boolean musicStarted = false;
+    private boolean musicStarted = false, musicWainigStarted = false;
     private GameState.GameStatus gameStatus = GameState.GameStatus.WAITING;
     private float countdown = 3.0f, timeAccumulator = 0, resultDisplayTimer = 0f;
     private TextView waitingText, countdownText, resultText, ipAddressText;
+    private int selectedMusicIndex = 0;
 
     public GameScreen(MyGdxGame game) {
         this.myGdxGame = game;
@@ -168,10 +169,28 @@ public class GameScreen extends ScreenAdapter {
                 return;
             }
         }
-        if (gameStatus == GameState.GameStatus.PLAYING) {
+        if (gameStatus == GameState.GameStatus.COUNTDOWN) {
+            if (musicWainigStarted) {
+                myGdxGame.audioManager.stopWaitingMusic();
+                musicWainigStarted = false;
+            }
+        }
+        else if (gameStatus == GameState.GameStatus.WAITING) {
+            if (!musicWainigStarted) {
+                myGdxGame.audioManager.playWaitingMusic();
+                musicWainigStarted = true;
+            }
+        }
+        else if (gameStatus == GameState.GameStatus.PLAYING) {
             if (!musicStarted) {
-                myGdxGame.audioManager.playGameMusic();
+                myGdxGame.audioManager.playGameMusic(selectedMusicIndex);
                 musicStarted = true;
+            }
+        }
+        if (gameStatus == GameState.GameStatus.WAITING) {
+            if (!musicWainigStarted) {
+                myGdxGame.audioManager.playWaitingMusic();
+                musicWainigStarted = true;
             }
         }
         checkMatchEndConditions();
@@ -245,6 +264,7 @@ public class GameScreen extends ScreenAdapter {
             packet.matchTimer = topPanel.getMatchTimer();
             packet.sNeedRespawn = sRespawn;
             packet.cNeedRespawn = cRespawn;
+            packet.musicIndex = selectedMusicIndex;
 
             packet.sX = serverPlayer.getBody().getPosition().x;
             packet.sY = serverPlayer.getBody().getPosition().y;
@@ -292,6 +312,7 @@ public class GameScreen extends ScreenAdapter {
                 topPanel.setPlayer2Lives(packet.cLives);
                 topPanel.setPlayer1Out(packet.sIsOut);
                 topPanel.setPlayer2Out(packet.cIsOut);
+                selectedMusicIndex = packet.musicIndex;
 
                 int oldClientHealth = clientPlayer.getHealth();
                 int oldServerHealth = serverPlayer.getHealth();
@@ -456,6 +477,7 @@ public class GameScreen extends ScreenAdapter {
             serverPlayer.startInvocation(3.0f);
             clientPlayer.startInvocation(3.0f);
             musicStarted = false;
+            selectedMusicIndex = myGdxGame.audioManager.getRandomMusicIndex();
         } else if (gameStatus == GameState.GameStatus.COUNTDOWN) {
             countdown -= delta;
             musicStarted = false;
