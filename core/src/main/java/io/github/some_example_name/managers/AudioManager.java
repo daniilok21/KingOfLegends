@@ -27,7 +27,7 @@ public class AudioManager {
         victoryMusic = Gdx.audio.newSound(Gdx.files.internal(GameResources.GAME_VICRORY_MUSIC_PATH));
 
         menuMusic.setLooping(true);
-        menuMusic.setVolume(0.3f);
+        menuMusic.setVolume(0.15f);
         menuWaiting.setLooping(true);
         menuWaiting.setVolume(0.2f);
         gameMusic1.setLooping(true);

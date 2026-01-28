@@ -41,7 +41,7 @@ public class ProfileScreen extends ScreenAdapter {
     public void show() {
         float buttonY = SCREEN_HEIGHT / 2f + 60;
 
-        titleView = new TextView(game.titleFont, SCREEN_WIDTH / 2f - 150, SCREEN_HEIGHT - 50, "SETTINGS");
+        titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f - 150, SCREEN_HEIGHT - 50, "PROFILE");
         titleView.setCenterX(SCREEN_WIDTH / 2f);
 
         // Загружаем текущее имя из game.playerName (оно уже загружено из MemoryManager в MyGdxGame)
