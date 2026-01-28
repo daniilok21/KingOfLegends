@@ -36,13 +36,13 @@ public class JoinScreen extends ScreenAdapter {
         float buttonY = SCREEN_HEIGHT / 2f - 100;
         connectButton = new ButtonView(
             SCREEN_WIDTH / 2f - 220, buttonY, 440, 70,
-            game.defaultFont, GameResources.BUTTON_LONG_MENU, "Connect"
+            game.defaultMenuFont, GameResources.BUTTON_MENU, "Connect"
         );
         backButton = new ButtonView(
             SCREEN_WIDTH / 2f - 220, buttonY - 90, 440, 70,
-            game.defaultFont, GameResources.BUTTON_LONG_MENU, "Back"
+            game.defaultMenuFont, GameResources.BUTTON_MENU, "Back"
         );
-        titleView = new TextView(game.titleFont, SCREEN_WIDTH / 2f - 200, SCREEN_HEIGHT - 50, "JOIN GAME");
+        titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 90, "JOIN GAME");
         titleView.setCenterX(SCREEN_WIDTH / 2f);
     }
 
@@ -50,7 +50,8 @@ public class JoinScreen extends ScreenAdapter {
     public void show() {
         inputStage = new Stage(new ScreenViewport());
         Skin skin = new Skin();
-        skin.add("default", game.defaultFont);
+        skin.add("default", game.defaultMenuFont);
+
 
         TextField.TextFieldStyle style = new TextField.TextFieldStyle();
         style.font = game.defaultFont;
@@ -102,7 +103,7 @@ public class JoinScreen extends ScreenAdapter {
         }
         game.batch.end();
 
-0
+
         inputStage.act(delta);
         inputStage.draw();
 

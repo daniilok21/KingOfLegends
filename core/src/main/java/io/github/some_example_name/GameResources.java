@@ -9,11 +9,14 @@ public class GameResources {
     public static final String BUTTON_DODGE = "textures/dodge_button.png";
     public static final String BUTTON_ATTACK = "textures/attack_button.png";
     public static final String BUTTON_LONG_MENU = "textures/button_background_long.png";
-    public static final String BUTTON_SHORT_MENU = "textures/button_background_short.png";
+    public static final String BUTTON_MENU = "textures/button_menu.png";
+    public static final String BACKGROUND_MENU = "textures/background.jpg";
 
 
-
+    //FONT
     public static final String FONT_PATH = "fonts/Kenney Future.ttf";
+    public static final String DRAK_FONT_PATH = "fonts/Silkscreen-Bold.ttf";
+    public static final String MENU_FONT_PATH = "fonts/dark-whisper.ttf";
 
     public static final String RED_PLAYER_SPRITE_SHEET = "textures/red_player.png";
     public static final String BLUE_PLAYER_SPRITE_SHEET = "textures/blue_player.png";

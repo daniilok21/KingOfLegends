@@ -68,6 +68,9 @@ public class ButtonView extends View {
         this.isEnabled = enabled;
     }
     public void setPressed(boolean pressed) {this.isPressed = pressed;}
+    public void setText(String newText) {
+        this.text = newText;
+    }
 
     public boolean isEnabled() {
         return isEnabled;

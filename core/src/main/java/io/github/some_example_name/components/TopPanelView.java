@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 
 import io.github.some_example_name.GameSettings;
+import io.github.some_example_name.managers.MemoryManager;
 
 public class TopPanelView extends View {
     private Texture panelBackground;
@@ -40,7 +41,7 @@ public class TopPanelView extends View {
         super(x, y, width, height);
 
 
-        player1NameText = new TextView(font, x, y + height - 40, "Player1");
+        player1NameText = new TextView(font, x, y + height - 40, MemoryManager.loadProfileName());
         player1NameText.setCenterX(x + width / 4 - 10);
         player2NameText = new TextView(font, x + width - 100, y + height - 40, "Player2");
         player2NameText.setCenterX(x + width / 4 + 10);

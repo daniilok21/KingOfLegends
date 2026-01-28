@@ -1,21 +1,20 @@
 package io.github.some_example_name;
 
 import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Box2D;
 import com.badlogic.gdx.physics.box2d.World;
 import io.github.some_example_name.managers.AudioManager;
 import io.github.some_example_name.managers.ContactManager;
+import io.github.some_example_name.managers.MemoryManager;
 import io.github.some_example_name.screens.GameScreen;
 import io.github.some_example_name.screens.JoinScreen;
 import io.github.some_example_name.screens.MenuScreen;
-import io.github.some_example_name.screens.SettingsScreen;
+import io.github.some_example_name.screens.ProfileScreen;
 
 import static io.github.some_example_name.GameSettings.*;
 
@@ -30,12 +29,13 @@ public class MyGdxGame extends Game {
     public MenuScreen menuScreen;
     public GameScreen gameScreen;
     public JoinScreen joinScreen;
-    public SettingsScreen settingsScreen;
+    public ProfileScreen profileScreen;
 
-    public BitmapFont defaultFont, largeFont, smallFont, titleFont, timerFont;
+    public BitmapFont defaultFont, largeFont, smallFont, titleFont, timerFont, defaultMenuFont, titleMenuFont;
 
     public boolean isHost = false;
     public String hostIp = "";
+    public String playerName;
 
     float accumulator = 0;
 
@@ -48,16 +48,19 @@ public class MyGdxGame extends Game {
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
 
+        playerName = MemoryManager.loadProfileName();
         defaultFont = FontBuilder.generate(24, Color.WHITE, GameResources.FONT_PATH);
         largeFont = FontBuilder.generate(48, Color.WHITE, GameResources.FONT_PATH);
         smallFont = FontBuilder.generate(16, Color.WHITE, GameResources.FONT_PATH);
         titleFont = FontBuilder.generate(64, Color.WHITE, GameResources.FONT_PATH);
         timerFont = FontBuilder.generate(24, Color.RED, GameResources.FONT_PATH);
+        defaultMenuFont = FontBuilder.generate(30, Color.BROWN, GameResources.DRAK_FONT_PATH);
+        titleMenuFont = FontBuilder.generate(110, Color.WHITE, GameResources.MENU_FONT_PATH);
 
         menuScreen = new MenuScreen(this);
         gameScreen = new GameScreen(this);
         joinScreen = new JoinScreen(this);
-        settingsScreen = new SettingsScreen(this);
+        profileScreen = new ProfileScreen(this);
 
         setScreen(menuScreen);
     }
