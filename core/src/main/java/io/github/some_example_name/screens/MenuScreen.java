@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import io.github.some_example_name.MyGdxGame;
 import io.github.some_example_name.GameResources;
 import io.github.some_example_name.components.ButtonView;
+import io.github.some_example_name.components.ImageView;
 import io.github.some_example_name.components.MovingBackgroundView;
 import io.github.some_example_name.components.TextView;
 
@@ -23,33 +24,36 @@ public class MenuScreen extends ScreenAdapter {
     private ButtonView hostButton;
     private ButtonView joinButton;
     private ButtonView settingsButton;
-
+    private ImageView knifeLeft;
+    private ImageView knifeRight;
     private ButtonView exitButton;
     float buttonY = SCREEN_HEIGHT / 2f + 80;
 
     public MenuScreen(MyGdxGame game) {
         this.game = game;
 
-        titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 90, "KING OF LEGENDS");
+        titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 120, "KING OF LEGENDS");
         titleView.setCenterX(SCREEN_WIDTH / 2f);
         backgroundView = new MovingBackgroundView(GameResources.BACKGROUND_MENU);
 
         hostButton = new ButtonView(
-            SCREEN_WIDTH / 2f - 162.5f, buttonY, 325, 110,
+            SCREEN_WIDTH / 2f - 162.5f, buttonY, 325, 100,
             game.defaultMenuFont, GameResources.BUTTON_MENU, "Host Game"
         );
         joinButton = new ButtonView(
-            SCREEN_WIDTH / 2f - 162.5f, buttonY - 125, 325, 110,
+            SCREEN_WIDTH / 2f - 162.5f, buttonY - 115, 325, 100,
             game.defaultMenuFont, GameResources.BUTTON_MENU, "Join Game"
         );
         settingsButton = new ButtonView(
-            SCREEN_WIDTH / 2f - 162.5f, buttonY - 250, 325, 110,
-            game.defaultMenuFont, GameResources.BUTTON_MENU, "Settings"
+            SCREEN_WIDTH / 2f - 162.5f, buttonY - 240, 325, 100,
+            game.defaultMenuFont, GameResources.BUTTON_MENU, "Profile"
         );
         exitButton = new ButtonView(
-            SCREEN_WIDTH / 2f - 162.5f, buttonY - 375, 325, 110,
+            SCREEN_WIDTH / 2f - 162.5f, buttonY - 365, 325, 100,
             game.defaultMenuFont, GameResources.BUTTON_MENU, "Exit"
         );
+        knifeLeft = new ImageView(SCREEN_WIDTH / 2f - 320f - 100f, SCREEN_HEIGHT - 130,100,100,GameResources.KNIFE_LEFT);
+        knifeRight = new ImageView(SCREEN_WIDTH / 2f + 320f, SCREEN_HEIGHT - 130,100,100,GameResources.KNIFE_RIGHT);
     }
 
     @Override
@@ -68,6 +72,8 @@ public class MenuScreen extends ScreenAdapter {
 
         game.batch.begin();
         backgroundView.draw(game.batch);
+        knifeLeft.draw(game.batch);
+        knifeRight.draw(game.batch);
         titleView.draw(game.batch);
         hostButton.draw(game.batch);
         joinButton.draw(game.batch);
