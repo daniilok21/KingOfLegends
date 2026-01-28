@@ -25,6 +25,7 @@ public class GameResources {
     public static final String BLUE_PLAYER_DODGE_SHEET = "textures/players/blue/Defend.png";
     public static final String BLUE_PLAYER_HIT_SHEET = "textures/players/blue/Hurt.png";
     public static final String BLUE_PLAYER_INVOCATION_SHEET = "textures/players/blue/Invocation.png";
+    public static final String BLUE_PLAYER_CLIMB_SHEET = "textures/players/blue/Climb_one_frame.png";
 
     public static final String RED_PLAYER_IDLE_SHEET = "textures/players/red/Idle.png";
     public static final String RED_PLAYER_RUN_SHEET = "textures/players/red/Run.png";
@@ -33,7 +34,7 @@ public class GameResources {
     public static final String RED_PLAYER_DODGE_SHEET = "textures/players/red/Defend.png";
     public static final String RED_PLAYER_HIT_SHEET = "textures/players/red/Hurt.png";
     public static final String RED_PLAYER_INVOCATION_SHEET = "textures/players/red/Invocation.png";
-
+    public static final String RED_PLAYER_CLIMB_SHEET = "textures/players/red/Climb_one_frame.png";
 
     // Джойстик
     public static final String JOYSTICK_BG = "textures/Joystick.png";

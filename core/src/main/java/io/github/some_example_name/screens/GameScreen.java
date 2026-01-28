@@ -93,8 +93,9 @@ public class GameScreen extends ScreenAdapter {
                 GameResources.BLUE_PLAYER_ATTACK_SHEET,
                 GameResources.BLUE_PLAYER_DODGE_SHEET,
                 GameResources.BLUE_PLAYER_HIT_SHEET,
-                GameResources.BLUE_PLAYER_INVOCATION_SHEET
-            }, new int[] {4, 7, 6, 5, 5, 2, 5}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f}, myGdxGame.world);
+                GameResources.BLUE_PLAYER_INVOCATION_SHEET,
+                GameResources.BLUE_PLAYER_CLIMB_SHEET
+            }, new int[] {4, 7, 6, 5, 5, 2, 5, 1}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f, 48f}, myGdxGame.world);
         clientPlayer = new PlayerObject(START_PLAYER_CLIENT_X, START_PLAYER_CLIENT_Y, PLAYER_WIDTH, PLAYER_HEIGHT,new String[]{
             GameResources.RED_PLAYER_IDLE_SHEET,
             GameResources.RED_PLAYER_RUN_SHEET,
@@ -102,8 +103,9 @@ public class GameScreen extends ScreenAdapter {
             GameResources.RED_PLAYER_ATTACK_SHEET,
             GameResources.RED_PLAYER_DODGE_SHEET,
             GameResources.RED_PLAYER_HIT_SHEET,
-            GameResources.RED_PLAYER_INVOCATION_SHEET
-        }, new int[] {4, 7, 6, 5, 5, 2, 5}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f}, myGdxGame.world);
+            GameResources.RED_PLAYER_INVOCATION_SHEET,
+            GameResources.RED_PLAYER_CLIMB_SHEET
+        }, new int[] {4, 7, 6, 5, 5, 2, 5, 1}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f, 48f}, myGdxGame.world);
         clientPlayer.setFacingRight(false);
         joystick = new JoystickView(50, 30, GameResources.JOYSTICK_BG, GameResources.JOYSTICK_HANDLE);
         jumpButton = new ButtonView(SCREEN_WIDTH - 130 - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_JUMP);
@@ -367,7 +369,7 @@ public class GameScreen extends ScreenAdapter {
         resultDisplayTimer = 3.0f;
     }
 
-    private void handleInput() {
+    private void setPivotOffset() {
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) {
             serverPlayer.setPivotOffsetX(serverPlayer.getPivotOffsetX() - 0.5f);
             clientPlayer.setPivotOffsetX(clientPlayer.getPivotOffsetX() - 0.5f);
@@ -388,6 +390,9 @@ public class GameScreen extends ScreenAdapter {
             clientPlayer.setPivotOffsetY(clientPlayer.getPivotOffsetY() + 0.5f);
             System.out.println("Pivot Y: " + serverPlayer.getPivotOffsetY());
         }
+    }
+
+    private void handleInput() {
         localInput.moveLeft = false;
         localInput.moveRight = false;
         localInput.wantToGoDown = false;
@@ -483,7 +488,6 @@ public class GameScreen extends ScreenAdapter {
         jumpButton.draw(batch);
         dodgeButton.draw(batch);
         attackButton.draw(batch);
-        drawPlayerHitboxes();
 
         if (gameStatus == GameState.GameStatus.WAITING) {
             waitingText.draw(batch);

@@ -23,6 +23,7 @@ public class PlayerObject extends GameObject {
     private Animation<TextureRegion> dodgeAnimation;
     private Animation<TextureRegion> hitAnimation;
     private Animation<TextureRegion> invocationAnimation;
+    private Animation<TextureRegion> climbAnimation;
 
     private float stateTime = 0;
     private float pivotOffsetX = 48f;
@@ -40,6 +41,7 @@ public class PlayerObject extends GameObject {
     private boolean isInHitStun = false;
     private boolean isAttacking = false;
     private boolean isInvoking = false;
+    private boolean isClimbing = false;
     private float invocationDuration = 1.0f;
     private float attackTimer = 0f;
     private float attackCooldown = 0f;
@@ -111,6 +113,13 @@ public class PlayerObject extends GameObject {
         int invocationHeight = invocationSheet.getHeight();
         invocationAnimation = createAnimation(invocationSheet, invocationWidth, invocationHeight,
             framesPerAnimation[6], 0.2f);
+
+        Texture climbingSheet = new Texture(texturePaths[7]);
+        int climbingWidth = invocationSheet.getWidth() / framesPerAnimation[7];
+        int climbingHeight = invocationSheet.getHeight();
+        invocationAnimation = createAnimation(climbingSheet, climbingWidth, climbingHeight,
+            framesPerAnimation[7], 0.1f);
+        Texture climbSheet = new Texture(texturePaths[7]);
     }
 
     private Animation<TextureRegion> createAnimation(Texture texture, int frameWidth, int frameHeight, int frameCount, float frameDuration) {
@@ -175,19 +184,14 @@ public class PlayerObject extends GameObject {
             float frameTime;
 
             if (stateTime < animDur) {
-                // Фаза 1: Проигрывание вперед
                 frameTime = stateTime;
             } else if (stateTime < reverseStartTime) {
-                // Фаза 2: Удержание поднятого меча (последний кадр)
                 frameTime = animDur - 0.01f;
             } else if (stateTime < targetEndTime) {
-                // Фаза 3: Обратное проигрывание
                 float elapsedInReverse = stateTime - reverseStartTime;
                 float reverseDuration = targetEndTime - reverseStartTime;
-                // Интерполируем от animDur до 0
                 frameTime = animDur * (1.0f - (elapsedInReverse / reverseDuration));
             } else {
-                // Фаза 4: За 0.3 сек до начала - замираем в исходной стойке (первый кадр)
                 frameTime = 0;
             }
 
@@ -208,7 +212,11 @@ public class PlayerObject extends GameObject {
         } else if (isInHitStun) {
             pivotOffsetX = ArrayPivotOffsetX[5];
             currentAnim = hitAnimation;
-        } else if (!isOnGround) {
+        } else if (isClimbing) {
+            pivotOffsetX = ArrayPivotOffsetX[7];
+            currentAnim = climbAnimation;
+        }
+        else if (!isOnGround) {
             currentAnim = jumpAnimation;
             pivotOffsetX = ArrayPivotOffsetX[2];
             if (jumpAnimation.isAnimationFinished(stateTime)) {
@@ -241,11 +249,7 @@ public class PlayerObject extends GameObject {
 
         drawY = hitboxCenterY - frameHeight / 2 + pivotOffsetY;
 
-        batch.draw(currentFrame,
-            drawX, drawY,
-            frameWidth / 2, frameHeight / 2,
-            frameWidth, frameHeight,
-            facingRight ? 1.0f : -1.0f, 1.0f, 0);
+        batch.draw(currentFrame, drawX, drawY, frameWidth / 2, frameHeight / 2, frameWidth, frameHeight, facingRight ? 1.0f : -1.0f, 1.0f, 0);
     }
 
     public void applyHitStun(float duration) {
