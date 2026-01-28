@@ -10,6 +10,7 @@ public class NetworkPacket implements Serializable {
     public GameState.GameStatus status;
     public float countdown;
 
+    public String sName;
     public float sX, sY;
     public float sVX, sVY;
     public int sHealth;
@@ -27,6 +28,7 @@ public class NetworkPacket implements Serializable {
     public boolean sIsClimbing;
     public float sInvocationDuration;
 
+    public String cName;
     public float cX, cY;
     public float cVX, cVY;
     public int cHealth;

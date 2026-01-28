@@ -41,7 +41,7 @@ public class TopPanelView extends View {
         super(x, y, width, height);
 
 
-        player1NameText = new TextView(font, x, y + height - 40, MemoryManager.loadProfileName());
+        player1NameText = new TextView(font, x, y + height - 40, "Player1");
         player1NameText.setCenterX(x + width / 4 - 10);
         player2NameText = new TextView(font, x + width - 100, y + height - 40, "Player2");
         player2NameText.setCenterX(x + width / 4 + 10);
@@ -137,6 +137,9 @@ public class TopPanelView extends View {
         int seconds = (int) (matchTimer % 60);
         String timeText = String.format("%02d:%02d", minutes, seconds);
         timerText.setText(timeText);
+
+        player1NameText.setText(player1Name);
+        player2NameText.setText(player2Name);
 
         if (player1IsOutOfBounds && player1Lives > 0) {
             float timeLeft = GameSettings.OUT_OF_BOUNDS_RESPAWN_TIME - player1OutTimer;
@@ -249,6 +252,9 @@ public class TopPanelView extends View {
 
     public boolean isPlayer1OutOfBounds() { return player1IsOutOfBounds; }
     public boolean isPlayer2OutOfBounds() { return player2IsOutOfBounds; }
+
+    public void setPlayer1Name(String name) { this.player1Name = name; }
+    public void setPlayer2Name(String name) { this.player2Name = name; }
     public String getPlayer1Name() { return player1Name; }
     public String getPlayer2Name() { return player2Name; }
     @Override

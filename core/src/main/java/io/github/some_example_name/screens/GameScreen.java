@@ -122,9 +122,11 @@ public class GameScreen extends ScreenAdapter {
             server = new Server();
             server.start(PORT);
             connected = true;
+            topPanel.setPlayer1Name(myGdxGame.playerName);
         } else {
             client = new Client();
             connected = client.connect(myGdxGame.hostIp, PORT);
+            topPanel.setPlayer2Name(myGdxGame.playerName);
         }
     }
 
@@ -207,19 +209,24 @@ public class GameScreen extends ScreenAdapter {
             PlayerInput remoteInput = (server != null) ? server.getClientInput() : null;
             updateServerState(delta);
 
-            if (remoteInput != null && (remoteInput.x != 0 || remoteInput.y != 0)) {
-                if (!clientPlayer.isInHitStun() && !clientPlayer.isDodging()) {
-                    clientPlayer.getBody().setTransform(remoteInput.x, remoteInput.y, 0);
-                    clientPlayer.getBody().setLinearVelocity(remoteInput.vx, remoteInput.vy);
+            if (remoteInput != null) {
+                if (remoteInput.playerName != null) {
+                    topPanel.setPlayer2Name(remoteInput.playerName);
                 }
-                clientPlayer.setHealth(remoteInput.health);
-                clientPlayer.setFacingRight(remoteInput.facingRight);
-                clientPlayer.setIsDodging(remoteInput.isDodging);
-                clientPlayer.setIsOnGround(remoteInput.isOnGround);
-                clientPlayer.setJumpsRemaining(remoteInput.jumpsRemaining);
-                clientPlayer.setIsClimbing(remoteInput.isClimbing);
-                if (remoteInput.isAttacking && !clientPlayer.isAttacking()) {
-                    clientPlayer.startAttack(remoteInput.attackDir);
+                if (remoteInput.x != 0 || remoteInput.y != 0) {
+                    if (!clientPlayer.isInHitStun() && !clientPlayer.isDodging()) {
+                        clientPlayer.getBody().setTransform(remoteInput.x, remoteInput.y, 0);
+                        clientPlayer.getBody().setLinearVelocity(remoteInput.vx, remoteInput.vy);
+                    }
+                    clientPlayer.setHealth(remoteInput.health);
+                    clientPlayer.setFacingRight(remoteInput.facingRight);
+                    clientPlayer.setIsDodging(remoteInput.isDodging);
+                    clientPlayer.setIsOnGround(remoteInput.isOnGround);
+                    clientPlayer.setJumpsRemaining(remoteInput.jumpsRemaining);
+                    clientPlayer.setIsClimbing(remoteInput.isClimbing);
+                    if (remoteInput.isAttacking && !clientPlayer.isAttacking()) {
+                        clientPlayer.startAttack(remoteInput.attackDir);
+                    }
                 }
             }
             clientPlayer.update(delta);
@@ -230,11 +237,11 @@ public class GameScreen extends ScreenAdapter {
             if (gameStatus == GameState.GameStatus.PLAYING) {
                 topPanel.checkOutOfBounds(serverPlayer.getX(), serverPlayer.getY(), true);
                 topPanel.checkOutOfBounds(clientPlayer.getX(), clientPlayer.getY(), false);
-                topPanel.update(delta);
-
-                if (serverPlayer.isInvoking() && serverPlayer.isInvocationFinished()) serverPlayer.setIsInvoking(false);
-                if (clientPlayer.isInvoking() && clientPlayer.isInvocationFinished()) clientPlayer.setIsInvoking(false);
             }
+            topPanel.update(delta);
+
+            if (serverPlayer.isInvoking() && serverPlayer.isInvocationFinished()) serverPlayer.setIsInvoking(false);
+            if (clientPlayer.isInvoking() && clientPlayer.isInvocationFinished()) clientPlayer.setIsInvoking(false);
 
 
             boolean sRespawn = false, cRespawn = false;
@@ -265,6 +272,8 @@ public class GameScreen extends ScreenAdapter {
             packet.sNeedRespawn = sRespawn;
             packet.cNeedRespawn = cRespawn;
             packet.musicIndex = selectedMusicIndex;
+            packet.sName = topPanel.getPlayer1Name();
+            packet.cName = topPanel.getPlayer2Name();
 
             packet.sX = serverPlayer.getBody().getPosition().x;
             packet.sY = serverPlayer.getBody().getPosition().y;
@@ -313,6 +322,8 @@ public class GameScreen extends ScreenAdapter {
                 topPanel.setPlayer1Out(packet.sIsOut);
                 topPanel.setPlayer2Out(packet.cIsOut);
                 selectedMusicIndex = packet.musicIndex;
+                if (packet.sName != null) topPanel.setPlayer1Name(packet.sName);
+                if (packet.cName != null) topPanel.setPlayer2Name(packet.cName);
 
                 int oldClientHealth = clientPlayer.getHealth();
                 int oldServerHealth = serverPlayer.getHealth();
@@ -368,10 +379,9 @@ public class GameScreen extends ScreenAdapter {
             applyPlayerInput(clientPlayer, localInput);
             clientPlayer.update(delta);
 
-            if (gameStatus == GameState.GameStatus.PLAYING) {
-                topPanel.update(delta);
-            }
+            topPanel.update(delta);
 
+            localInput.playerName = myGdxGame.playerName;
             localInput.x = clientPlayer.getBody().getPosition().x;
             localInput.y = clientPlayer.getBody().getPosition().y;
             localInput.vx = clientPlayer.getBody().getLinearVelocity().x;
