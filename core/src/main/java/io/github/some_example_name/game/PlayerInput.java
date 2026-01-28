@@ -14,4 +14,5 @@ public class PlayerInput implements Serializable {
     public boolean isDodging;
     public boolean isOnGround;
     public int jumpsRemaining;
+    public boolean isClimbing;
 }

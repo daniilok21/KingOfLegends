@@ -192,6 +192,7 @@ public class GameScreen extends ScreenAdapter {
                 clientPlayer.setIsDodging(remoteInput.isDodging);
                 clientPlayer.setIsOnGround(remoteInput.isOnGround);
                 clientPlayer.setJumpsRemaining(remoteInput.jumpsRemaining);
+                clientPlayer.setIsClimbing(remoteInput.isClimbing);
                 if (remoteInput.isAttacking && !clientPlayer.isAttacking()) {
                     clientPlayer.startAttack(remoteInput.attackDir);
                 }
@@ -255,6 +256,7 @@ public class GameScreen extends ScreenAdapter {
             packet.sIsOut = topPanel.isPlayer1OutOfBounds();
             packet.sIsInvoking = serverPlayer.isInvoking();
             packet.sInvocationDuration = serverPlayer.getInvocationDuration();
+            packet.sIsClimbing = serverPlayer.isClimbing();
 
             packet.cX = clientPlayer.getBody().getPosition().x;
             packet.cY = clientPlayer.getBody().getPosition().y;
@@ -269,6 +271,7 @@ public class GameScreen extends ScreenAdapter {
             packet.cIsOut = topPanel.isPlayer2OutOfBounds();
             packet.cIsInvoking = clientPlayer.isInvoking();
             packet.cInvocationDuration = clientPlayer.getInvocationDuration();
+            packet.cIsClimbing = clientPlayer.isClimbing();
 
             if (server != null) server.sendState(packet);
         }
@@ -292,6 +295,7 @@ public class GameScreen extends ScreenAdapter {
                 serverPlayer.setIsDodging(packet.sIsDodging);
                 serverPlayer.setIsOnGround(packet.sOnGround);
                 serverPlayer.setJumpsRemaining(packet.sJumps);
+                serverPlayer.setIsClimbing(packet.sIsClimbing);
 
                 if (!serverPlayer.isInvoking() && packet.sIsInvoking) {
                     serverPlayer.startInvocation(packet.sInvocationDuration);
@@ -307,6 +311,7 @@ public class GameScreen extends ScreenAdapter {
 
                 clientPlayer.setHealth(packet.cHealth);
                 clientPlayer.setInHitStun(packet.cInHitStun);
+                clientPlayer.setIsClimbing(packet.cIsClimbing);
 
                 if (!clientPlayer.isInvoking() && packet.cIsInvoking) {
                     clientPlayer.startInvocation(packet.cInvocationDuration);
@@ -343,6 +348,7 @@ public class GameScreen extends ScreenAdapter {
             localInput.isDodging = clientPlayer.isDodging();
             localInput.isOnGround = clientPlayer.isOnGround();
             localInput.jumpsRemaining = clientPlayer.getJumpsRemaining();
+            localInput.isClimbing = clientPlayer.isClimbing();
 
             if (client != null) client.sendInput(localInput);
             serverPlayer.update(delta);
@@ -390,7 +396,6 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void handleInput() {
-        setPivotOffset();
         localInput.moveLeft = false;
         localInput.moveRight = false;
         localInput.wantToGoDown = false;
