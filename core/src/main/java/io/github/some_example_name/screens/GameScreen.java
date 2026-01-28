@@ -34,6 +34,7 @@ public class GameScreen extends ScreenAdapter {
     private TopPanelView topPanel;
     private PlayerInput localInput = new PlayerInput();
     private boolean jumpWasPressed = false, connected = false;
+    private boolean musicStarted = false;
     private GameState.GameStatus gameStatus = GameState.GameStatus.WAITING;
     private float countdown = 3.0f, timeAccumulator = 0, resultDisplayTimer = 0f;
     private TextView waitingText, countdownText, resultText, ipAddressText;
@@ -97,15 +98,15 @@ public class GameScreen extends ScreenAdapter {
                 GameResources.BLUE_PLAYER_CLIMB_SHEET
             }, new int[] {4, 7, 6, 5, 5, 2, 5, 1}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f, 453.5f}, new float[] {51f, 51f, 51f, 51f, 51f, 51f, 51f, 5f}, myGdxGame.world);
         clientPlayer = new PlayerObject(START_PLAYER_CLIENT_X, START_PLAYER_CLIENT_Y, PLAYER_WIDTH, PLAYER_HEIGHT,new String[]{
-            GameResources.RED_PLAYER_IDLE_SHEET,
-            GameResources.RED_PLAYER_RUN_SHEET,
-            GameResources.RED_PLAYER_JUMP_SHEET,
-            GameResources.RED_PLAYER_ATTACK_SHEET,
-            GameResources.RED_PLAYER_DODGE_SHEET,
-            GameResources.RED_PLAYER_HIT_SHEET,
-            GameResources.RED_PLAYER_INVOCATION_SHEET,
-            GameResources.RED_PLAYER_CLIMB_SHEET
-        }, new int[] {4, 7, 6, 5, 5, 2, 5, 1}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f, 453f}, new float[] {51f, 51f, 51f, 51f, 51f, 51f, 51f, 5f}, myGdxGame.world);
+                GameResources.RED_PLAYER_IDLE_SHEET,
+                GameResources.RED_PLAYER_RUN_SHEET,
+                GameResources.RED_PLAYER_JUMP_SHEET,
+                GameResources.RED_PLAYER_ATTACK_SHEET,
+                GameResources.RED_PLAYER_DODGE_SHEET,
+                GameResources.RED_PLAYER_HIT_SHEET,
+                GameResources.RED_PLAYER_INVOCATION_SHEET,
+                GameResources.RED_PLAYER_CLIMB_SHEET
+            }, new int[] {4, 7, 6, 5, 5, 2, 5, 1}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f, 453.5f}, new float[] {51f, 51f, 51f, 51f, 51f, 51f, 51f, 5f}, myGdxGame.world);
         clientPlayer.setFacingRight(false);
         joystick = new JoystickView(50, 30, GameResources.JOYSTICK_BG, GameResources.JOYSTICK_HANDLE);
         jumpButton = new ButtonView(SCREEN_WIDTH - 130 - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_JUMP);
@@ -167,7 +168,12 @@ public class GameScreen extends ScreenAdapter {
                 return;
             }
         }
-
+        if (gameStatus == GameState.GameStatus.PLAYING) {
+            if (!musicStarted) {
+                myGdxGame.audioManager.playGameMusic();
+                musicStarted = true;
+            }
+        }
         checkMatchEndConditions();
 
         if (gameStatus == GameState.GameStatus.FINISHED) {
@@ -199,8 +205,8 @@ public class GameScreen extends ScreenAdapter {
             }
             clientPlayer.update(delta);
 
-            if (serverPlayer.isAttacking()) serverPlayer.checkHit(clientPlayer);
-            if (clientPlayer.isAttacking()) clientPlayer.checkHit(serverPlayer);
+            if (serverPlayer.isAttacking()) if (serverPlayer.checkHit(clientPlayer)) myGdxGame.audioManager.playHitSound();
+            if (clientPlayer.isAttacking()) if (clientPlayer.checkHit(serverPlayer)) myGdxGame.audioManager.playHitSound();
 
             if (gameStatus == GameState.GameStatus.PLAYING) {
                 topPanel.checkOutOfBounds(serverPlayer.getX(), serverPlayer.getY(), true);
@@ -287,6 +293,8 @@ public class GameScreen extends ScreenAdapter {
                 topPanel.setPlayer1Out(packet.sIsOut);
                 topPanel.setPlayer2Out(packet.cIsOut);
 
+                int oldClientHealth = clientPlayer.getHealth();
+                int oldServerHealth = serverPlayer.getHealth();
                 serverPlayer.getBody().setTransform(packet.sX, packet.sY, 0);
                 serverPlayer.getBody().setLinearVelocity(packet.sVX, packet.sVY);
                 serverPlayer.setHealth(packet.sHealth);
@@ -312,6 +320,12 @@ public class GameScreen extends ScreenAdapter {
                 clientPlayer.setHealth(packet.cHealth);
                 clientPlayer.setInHitStun(packet.cInHitStun);
                 clientPlayer.setIsClimbing(packet.cIsClimbing);
+
+                if (packet.cHealth < oldClientHealth && myGdxGame.audioManager != null) {
+                    myGdxGame.audioManager.playHitSound();
+                } else if (packet.sHealth < oldServerHealth && myGdxGame.audioManager != null) {
+                    myGdxGame.audioManager.playHitSound();
+                }
 
                 if (!clientPlayer.isInvoking() && packet.cIsInvoking) {
                     clientPlayer.startInvocation(packet.cInvocationDuration);
@@ -409,7 +423,7 @@ public class GameScreen extends ScreenAdapter {
         localInput.moveRight = Gdx.input.isKeyPressed(Input.Keys.D) || (joystick.isCaptured() && joystick.isRight());
         localInput.wantToGoDown = Gdx.input.isKeyPressed(Input.Keys.S) || (joystick.isCaptured() && joystick.isDown());
 
-        boolean isJumpButtonDown = Gdx.input.isKeyPressed(Input.Keys.SPACE) || jumpButton.isPressed();;
+        boolean isJumpButtonDown = Gdx.input.isKeyPressed(Input.Keys.SPACE) || jumpButton.isPressed();
         localInput.jump = isJumpButtonDown && !jumpWasPressed;
         jumpWasPressed = isJumpButtonDown;
 
@@ -441,8 +455,10 @@ public class GameScreen extends ScreenAdapter {
             countdown = 3f;
             serverPlayer.startInvocation(3.0f);
             clientPlayer.startInvocation(3.0f);
+            musicStarted = false;
         } else if (gameStatus == GameState.GameStatus.COUNTDOWN) {
             countdown -= delta;
+            musicStarted = false;
             if (countdown <= 0) {
                 gameStatus = GameState.GameStatus.PLAYING;
                 serverPlayer.setIsInvoking(false);
@@ -492,7 +508,6 @@ public class GameScreen extends ScreenAdapter {
         jumpButton.draw(batch);
         dodgeButton.draw(batch);
         attackButton.draw(batch);
-        drawPlayerHitboxes();
 
         if (gameStatus == GameState.GameStatus.WAITING) {
             waitingText.draw(batch);

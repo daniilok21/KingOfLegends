@@ -51,6 +51,11 @@ public class MenuScreen extends ScreenAdapter {
     }
 
     @Override
+    public void show() {
+        game.audioManager.playMenuMusic();
+    }
+
+    @Override
     public void render(float delta) {
 
         handleInput();

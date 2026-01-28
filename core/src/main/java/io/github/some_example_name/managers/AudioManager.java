@@ -3,37 +3,73 @@ package io.github.some_example_name.managers;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-
 import io.github.some_example_name.GameResources;
+import java.util.Random;
 
 public class AudioManager {
 
-    public boolean isSoundOn;
-    public boolean isMusicOn;
+    private Music menuMusic;
+    private Music gameMusic1;
+    private Music gameMusic2;
+    private Music currentGameMusic;
+    private Sound hitSound;
 
-    public Music backgroundMusic;
-    public Sound shootSound;
-    public Sound explosionSound;
+    private Random random = new Random();
 
     public AudioManager() {
-//        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal(GameResources.BACKGROUND_MUSIC_PATH));
-//        shootSound = Gdx.audio.newSound(Gdx.files.internal(GameResources.SHOOT_SOUND_PATH));
-//        explosionSound = Gdx.audio.newSound(Gdx.files.internal(GameResources.DESTROY_SOUND_PATH));
+        menuMusic = Gdx.audio.newMusic(Gdx.files.internal(GameResources.MENU_BACKGROUND_MUSIC_PATH));
+        gameMusic1 = Gdx.audio.newMusic(Gdx.files.internal(GameResources.GAME_BACKGROUND_1_MUSIC_PATH));
+        gameMusic2 = Gdx.audio.newMusic(Gdx.files.internal(GameResources.GAME_BACKGROUND_2_MUSIC_PATH));
+        hitSound = Gdx.audio.newSound(Gdx.files.internal(GameResources.HIT_SOUND_PATH));
 
-//        backgroundMusic.setVolume(0.2f);
-//        backgroundMusic.setLooping(true);
-
-        updateSoundFlag();
-        updateMusicFlag();
+        menuMusic.setLooping(true);
+        menuMusic.setVolume(0.3f);
+        gameMusic1.setLooping(true);
+        gameMusic1.setVolume(0.2f);
+        gameMusic2.setLooping(true);
+        gameMusic2.setVolume(0.2f);
     }
 
-    public void updateMusicFlag() {
-//        isMusicOn = MemoryManager.loadIsMusicOn();
-//        if (isMusicOn) backgroundMusic.play();
-//        else backgroundMusic.stop();
-    }
-    public void updateSoundFlag() {
-//        isSoundOn = MemoryManager.loadIsSoundOn();
+    public void playMenuMusic() {
+        stopGameMusic();
+        if (!menuMusic.isPlaying()) {
+            menuMusic.play();
+        }
     }
 
+    public void stopMenuMusic() {
+        if (menuMusic.isPlaying()) {
+            menuMusic.stop();
+        }
+    }
+
+    public void playGameMusic() {
+        stopMenuMusic();
+        if (currentGameMusic != null && currentGameMusic.isPlaying()) return;
+
+        if (random.nextBoolean()) {
+            currentGameMusic = gameMusic1;
+        } else {
+            currentGameMusic = gameMusic2;
+        }
+        currentGameMusic.play();
+    }
+
+    public void stopGameMusic() {
+        if (currentGameMusic != null && currentGameMusic.isPlaying()) {
+            currentGameMusic.stop();
+        }
+        currentGameMusic = null;
+    }
+
+    public void playHitSound() {
+        hitSound.play(0.5f);
+    }
+
+    public void dispose() {
+        menuMusic.dispose();
+        gameMusic1.dispose();
+        gameMusic2.dispose();
+        hitSound.dispose();
+    }
 }

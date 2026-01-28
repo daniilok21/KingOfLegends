@@ -43,4 +43,12 @@ public class GameResources {
     public static final String HEART_FULL = "textures/life.png";
     public static final String HEART_EMPTY = "textures/life_empty.png";
     public static final String TOP_PANEL_BG = "textures/blackout_top.png";
+
+    // Музыка
+    public static final String MENU_BACKGROUND_MUSIC_PATH = "audio/menu_background_music.mp3";
+    public static final String GAME_BACKGROUND_1_MUSIC_PATH = "audio/game_background_1_music.mp3";
+    public static final String GAME_BACKGROUND_2_MUSIC_PATH = "audio/game_background_2_music.mp3";
+
+    // СаундТреки
+    public static final String HIT_SOUND_PATH = "audio/shoot_sound.mp3";
 }
