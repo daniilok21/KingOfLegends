@@ -12,7 +12,6 @@ public class GameResources {
     public static final String BUTTON_SHORT_MENU = "textures/button_background_short.png";
 
 
-
     public static final String FONT_PATH = "fonts/Kenney Future.ttf";
 
     public static final String RED_PLAYER_SPRITE_SHEET = "textures/red_player.png";

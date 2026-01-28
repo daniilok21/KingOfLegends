@@ -95,7 +95,7 @@ public class GameScreen extends ScreenAdapter {
                 GameResources.BLUE_PLAYER_HIT_SHEET,
                 GameResources.BLUE_PLAYER_INVOCATION_SHEET,
                 GameResources.BLUE_PLAYER_CLIMB_SHEET
-            }, new int[] {4, 7, 6, 5, 5, 2, 5, 1}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f, 48f}, myGdxGame.world);
+            }, new int[] {4, 7, 6, 5, 5, 2, 5, 1}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f, 453.5f}, new float[] {51f, 51f, 51f, 51f, 51f, 51f, 51f, 5f}, myGdxGame.world);
         clientPlayer = new PlayerObject(START_PLAYER_CLIENT_X, START_PLAYER_CLIENT_Y, PLAYER_WIDTH, PLAYER_HEIGHT,new String[]{
             GameResources.RED_PLAYER_IDLE_SHEET,
             GameResources.RED_PLAYER_RUN_SHEET,
@@ -105,7 +105,7 @@ public class GameScreen extends ScreenAdapter {
             GameResources.RED_PLAYER_HIT_SHEET,
             GameResources.RED_PLAYER_INVOCATION_SHEET,
             GameResources.RED_PLAYER_CLIMB_SHEET
-        }, new int[] {4, 7, 6, 5, 5, 2, 5, 1}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f, 48f}, myGdxGame.world);
+        }, new int[] {4, 7, 6, 5, 5, 2, 5, 1}, new float[] {48f, 48f, 42f, 32f, 43f, 39.5f, 6f, 453f}, new float[] {51f, 51f, 51f, 51f, 51f, 51f, 51f, 5f}, myGdxGame.world);
         clientPlayer.setFacingRight(false);
         joystick = new JoystickView(50, 30, GameResources.JOYSTICK_BG, GameResources.JOYSTICK_HANDLE);
         jumpButton = new ButtonView(SCREEN_WIDTH - 130 - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_JUMP);
@@ -373,26 +373,24 @@ public class GameScreen extends ScreenAdapter {
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) {
             serverPlayer.setPivotOffsetX(serverPlayer.getPivotOffsetX() - 0.5f);
             clientPlayer.setPivotOffsetX(clientPlayer.getPivotOffsetX() - 0.5f);
-            System.out.println("Pivot X: " + serverPlayer.getPivotOffsetX());
         }
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_2)) {
             serverPlayer.setPivotOffsetX(serverPlayer.getPivotOffsetX() + 0.5f);
             clientPlayer.setPivotOffsetX(clientPlayer.getPivotOffsetX() + 0.5f);
-            System.out.println("Pivot X: " + serverPlayer.getPivotOffsetX());
         }
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_3)) {
             serverPlayer.setPivotOffsetY(serverPlayer.getPivotOffsetY() - 0.5f);
             clientPlayer.setPivotOffsetY(clientPlayer.getPivotOffsetY() - 0.5f);
-            System.out.println("Pivot Y: " + serverPlayer.getPivotOffsetY());
         }
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_4)) {
             serverPlayer.setPivotOffsetY(serverPlayer.getPivotOffsetY() + 0.5f);
             clientPlayer.setPivotOffsetY(clientPlayer.getPivotOffsetY() + 0.5f);
-            System.out.println("Pivot Y: " + serverPlayer.getPivotOffsetY());
         }
+        System.out.println("Pivot X: " + serverPlayer.getPivotOffsetX() + "; Pivot Y: " + serverPlayer.getPivotOffsetY());
     }
 
     private void handleInput() {
+        setPivotOffset();
         localInput.moveLeft = false;
         localInput.moveRight = false;
         localInput.wantToGoDown = false;
@@ -425,6 +423,7 @@ public class GameScreen extends ScreenAdapter {
         else targetX = vel.x * 0.8f;
 
         if (!p.isInHitStun() && !p.isDodging()) p.getBody().setLinearVelocity(targetX, vel.y);
+        p.setIsClimbing(p.canMove() && p.isOnGround() && (in.moveLeft || in.moveRight) && Math.abs(vel.x) < 0.1f && Math.abs(vel.y) < 0.1f);
         if (in.jump && p.canJump()) p.jump(PLAYER_JUMP_FORCE);
         if (in.dodge && p.canDodge()) p.dodge(in.moveLeft ? -1 : (in.moveRight ? 1 : 0));
         p.setWantsToGoDown(in.wantToGoDown);
@@ -488,6 +487,7 @@ public class GameScreen extends ScreenAdapter {
         jumpButton.draw(batch);
         dodgeButton.draw(batch);
         attackButton.draw(batch);
+        drawPlayerHitboxes();
 
         if (gameStatus == GameState.GameStatus.WAITING) {
             waitingText.draw(batch);
