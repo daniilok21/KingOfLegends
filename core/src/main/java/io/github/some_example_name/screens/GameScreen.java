@@ -31,7 +31,7 @@ public class GameScreen extends ScreenAdapter {
     private ArrayList<PlatformObject> platforms = new ArrayList<>();
     private ArrayList<OneWayPlatformObject> oneWayPlatforms = new ArrayList<>();
     private JoystickView joystick;
-    private ButtonView jumpButton, dodgeButton, attackButton;
+    private ButtonView jumpButton, dodgeButton, attackButton, homeButton;
     private TopPanelView topPanel;
     private PlayerInput localInput = new PlayerInput();
     private boolean jumpWasPressed = false, connected = false;
@@ -115,6 +115,7 @@ public class GameScreen extends ScreenAdapter {
         jumpButton = new ButtonView(SCREEN_WIDTH - 130 - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_JUMP);
         dodgeButton = new ButtonView(SCREEN_WIDTH - 130 - (BUTTON_WIDTH + 20) - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_DODGE);
         attackButton = new ButtonView(SCREEN_WIDTH - 130 - 2 * (BUTTON_WIDTH + 20) - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_ATTACK);
+        homeButton = new ButtonView(20, SCREEN_HEIGHT - 80, 60, 60, GameResources.BUTTON_HOME);
         if (topPanel != null) topPanel.dispose();
         topPanel = new TopPanelView(200, SCREEN_HEIGHT-TOP_PANEL_HEIGHT, SCREEN_WIDTH - 400, TOP_PANEL_HEIGHT, myGdxGame.defaultFont, myGdxGame.timerFont, GameResources.TOP_PANEL_BG, GameResources.HEART_FULL, GameResources.HEART_EMPTY);
     }
@@ -508,6 +509,7 @@ public class GameScreen extends ScreenAdapter {
         jumpButton.setPressed(false);
         dodgeButton.setPressed(false);
         attackButton.setPressed(false);
+        homeButton.setPressed(false);
         for (int i = 0; i < 5; i++) {
             if (Gdx.input.isTouched(i)) {
                 anyTouch = true;
@@ -515,6 +517,11 @@ public class GameScreen extends ScreenAdapter {
                 if (jumpButton.isHit(t.x, t.y)) jumpButton.setPressed(true);
                 if (dodgeButton.isHit(t.x, t.y)) dodgeButton.setPressed(true);
                 if (attackButton.isHit(t.x, t.y)) attackButton.setPressed(true);
+                if (gameStatus == GameState.GameStatus.WAITING && homeButton.isHit(t.x, t.y)) {
+                    homeButton.setPressed(true);
+                    myGdxGame.showMenuScreen();
+                    return;
+                }
                 joystick.processTouch(t.x, t.y, true, i);
             } else {
                 joystick.processTouch(0, 0, false, i);
@@ -550,6 +557,7 @@ public class GameScreen extends ScreenAdapter {
         attackButton.draw(batch);
 
         if (gameStatus == GameState.GameStatus.WAITING) {
+            homeButton.draw(batch);
             waitingText.draw(batch);
             ipAddressText.setText("YOUR IP: " + getIP());
             ipAddressText.setCenterX(SCREEN_WIDTH / 2f);
