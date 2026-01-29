@@ -13,6 +13,7 @@ public class GameResources {
     public static final String BUTTON_HOME = "textures/back_btn.png";
     public static final String BACKGROUND_MENU = "textures/background_menu.jpg";
     public static final String BACKGROUND_JOIN = "textures/background_join.jpg";
+    public static final String BACKGROUND_PROFILE = "textures/background_profile.png";
     public static final String BACKGROUND_GAME = "textures/background_game.jpg";
     public static final String KNIFE_LEFT = "textures/knife_left.png";
     public static final String KNIFE_RIGHT = "textures/knife_right.png";
