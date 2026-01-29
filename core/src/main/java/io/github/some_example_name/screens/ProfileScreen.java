@@ -31,17 +31,16 @@ public class ProfileScreen extends ScreenAdapter {
     private ButtonView changeNameButton;
     private ButtonView backButton;
     private ImageView board;
-    private ImageView nameEnterPlace;
 
-    // Для ввода имени
     private Stage inputStage;
     private TextField nameField;
+    private ImageView nameEnterPlace;
     private boolean isEditingName = false;
 
     public ProfileScreen(MyGdxGame game) {
         this.game = game;
     }
-// 1
+
     @Override
     public void show() {
         background = new MovingBackgroundView(GameResources.BACKGROUND_PROFILE);
@@ -84,8 +83,9 @@ public class ProfileScreen extends ScreenAdapter {
         background.draw(game.batch);
         titleView.draw(game.batch);
         board.draw(game.batch);
-        nameEnterPlace.draw(game.batch);
-        // Обновляем позицию имени
+        if (isEditingName) {
+            nameEnterPlace.draw(game.batch);
+        }
         GlyphLayout layout = new GlyphLayout(nameLabel.font, nameLabel.text);
         nameLabel.width = layout.width;
         nameLabel.height = layout.height;
@@ -99,7 +99,6 @@ public class ProfileScreen extends ScreenAdapter {
 
         game.batch.end();
 
-        // Обновляем позицию поля ввода, если активно
         if (isEditingName) {
             updateNameFieldPosition();
             inputStage.act(delta);
@@ -109,9 +108,8 @@ public class ProfileScreen extends ScreenAdapter {
 
     private void updateNameFieldPosition() {
         if (nameField != null) {
-            // Центрируем поле ввода по экрану (в экранных координатах)
-            float x = Gdx.graphics.getWidth() / 2f - nameField.getWidth() / 2f;
-            float y = Gdx.graphics.getHeight() / 2f + 15; // чуть выше центра
+            float x = Gdx.graphics.getWidth() / 2f - nameField.getWidth() / 2f + 40;
+            float y = Gdx.graphics.getHeight() / 2f + 35;
             nameField.setPosition(x, y);
         }
     }
@@ -142,11 +140,9 @@ public class ProfileScreen extends ScreenAdapter {
         skin.add("default", style);
 
         nameField = new TextField(game.playerName, skin);
-        nameField.setMessageText("Enter Name...");
         nameField.setSize(400, 50);
-        // Позиция будет обновляться в updateNameFieldPosition()
-        nameField.setPosition(0, 0);
         nameField.setMaxLength(12);
+        nameField.setMessageText("Enter Name...");
 
         nameField.setTextFieldListener(new TextField.TextFieldListener() {
             @Override
@@ -159,7 +155,8 @@ public class ProfileScreen extends ScreenAdapter {
 
         inputStage.addActor(nameField);
         Gdx.input.setInputProcessor(inputStage);
-        nameField.getOnscreenKeyboard().show(true);
+
+        inputStage.setKeyboardFocus(nameField);
     }
 
     private void saveName(String name) {

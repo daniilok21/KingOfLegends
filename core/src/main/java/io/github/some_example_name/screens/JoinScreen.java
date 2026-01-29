@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.Application;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 
 import io.github.some_example_name.MyGdxGame;
 import io.github.some_example_name.GameResources;
@@ -41,7 +42,6 @@ public class JoinScreen extends ScreenAdapter {
 
     @Override
     public void show() {
-
         float buttonY = SCREEN_HEIGHT / 2f - 100;
 
         titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 90, "JOIN GAME");
@@ -59,32 +59,30 @@ public class JoinScreen extends ScreenAdapter {
             game.defaultMenuFont, GameResources.BUTTON_MENU, "Back"
         );
 
-        board = new ImageView(SCREEN_WIDTH / 2f,SCREEN_HEIGHT - 650f,600,500,GameResources.BOARD);
+        board = new ImageView(SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 650f, 600, 500, GameResources.BOARD);
         board.setCenterX(SCREEN_WIDTH / 2f);
 
-        ipEnterPlace = new ImageView(SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f,440,80,GameResources.BUTTON_MENU);
-        ipEnterPlace.setCenterX(SCREEN_WIDTH / 2f);
+        ipEnterPlace = new ImageView(0, 0, 440, 80, GameResources.BUTTON_MENU);
 
         inputStage = new Stage(new ScreenViewport());
         Skin skin = new Skin();
         skin.add("default", game.defaultMenuFont);
 
-
         TextField.TextFieldStyle style = new TextField.TextFieldStyle();
         style.font = game.defaultMenuFont;
         style.fontColor = Color.WHITE;
+        style.background = null;
         skin.add("default", style);
 
         ipField = new TextField("", skin);
-        ipField.setMessageText("Enter IP...");
-        ipField.setPosition(Gdx.graphics.getWidth() / 2f - 190, Gdx.graphics.getHeight() / 2f + 15);
         ipField.setSize(400, 50);
         ipField.setMaxLength(15);
+        ipField.setMessageText("Enter IP...");
         ipField.setTextFieldFilter((textField, c) -> Character.isDigit(c) || c == '.');
         ipField.setTextFieldListener(new TextField.TextFieldListener() {
             @Override
             public void keyTyped(TextField textField, char c) {
-                if (c == '\n' || c == '\r') { // Enter / Готово
+                if (c == '\n' || c == '\r') {
                     submitIp(textField.getText().trim());
                 }
             }
@@ -92,7 +90,6 @@ public class JoinScreen extends ScreenAdapter {
 
         inputStage.addActor(ipField);
         Gdx.input.setInputProcessor(inputStage);
-        ipField.getOnscreenKeyboard().show(true);
     }
 
     @Override
@@ -108,26 +105,26 @@ public class JoinScreen extends ScreenAdapter {
         background.draw(game.batch);
         titleView.draw(game.batch);
         board.draw(game.batch);
-        ipEnterPlace.draw(game.batch);
-        ipEnterPlace.setPos(SCREEN_WIDTH / 2f,SCREEN_HEIGHT / 2f);
+
         ipEnterPlace.setCenterX(SCREEN_WIDTH / 2f);
+        ipEnterPlace.setY(SCREEN_HEIGHT / 2f + 15);
+        ipEnterPlace.draw(game.batch);
+
         connectButton.draw(game.batch);
         backButton.draw(game.batch);
 
-
-
-
         if (!errorMessage.isEmpty()) {
-            game.defaultFont.setColor(Color.RED);
-            game.defaultFont.draw(game.batch, errorMessage, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT / 2f - 80);
-            game.defaultFont.setColor(Color.WHITE);
+            game.defaultMenuFont.setColor(Color.RED);
+            game.defaultMenuFont.draw(game.batch, errorMessage, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT / 2f - 80);
+            game.defaultMenuFont.setColor(Color.WHITE);
         }
+
         game.batch.end();
 
+        updateIpFieldPosition();
 
         inputStage.act(delta);
         inputStage.draw();
-
 
         // Доп. управление на ПК
         if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
@@ -137,6 +134,14 @@ public class JoinScreen extends ScreenAdapter {
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
                 game.setScreen(game.menuScreen);
             }
+        }
+    }
+
+    private void updateIpFieldPosition() {
+        if (ipField != null) {
+            float x = Gdx.graphics.getWidth() / 2f - ipField.getWidth() / 2f + 90;
+            float y = Gdx.graphics.getHeight() / 2f + 55;
+            ipField.setPosition(x, y);
         }
     }
 
@@ -151,11 +156,12 @@ public class JoinScreen extends ScreenAdapter {
             }
         }
     }
-//2
+
     private void submitIp(String ip) {
         if (isValidIP(ip)) {
             game.hostIp = ip;
             game.showGameScreen(false, game.hostIp);
+            errorMessage = "";
         } else {
             errorMessage = "Invalid IP";
             Gdx.app.postRunnable(() -> {
@@ -165,6 +171,7 @@ public class JoinScreen extends ScreenAdapter {
             });
         }
     }
+
     private boolean isValidIP(String ip) {
         if (ip == null || ip.isEmpty()) return false;
         String[] parts = ip.split("\\.");
@@ -179,6 +186,7 @@ public class JoinScreen extends ScreenAdapter {
         }
         return true;
     }
+
     @Override
     public void dispose() {
         if (inputStage != null) inputStage.dispose();
