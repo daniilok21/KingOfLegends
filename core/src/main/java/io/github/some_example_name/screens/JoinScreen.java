@@ -25,25 +25,29 @@ import static io.github.some_example_name.GameSettings.SCREEN_HEIGHT;
 public class JoinScreen extends ScreenAdapter {
 
     private final MyGdxGame game;
-    private MovingBackgroundView backgroundJoin;
+    private MovingBackgroundView background;
     private TextView titleView;
     private ButtonView connectButton;
     private ButtonView backButton;
     private Stage inputStage;
     private TextField ipField;
-    private ImageView boardJoin;
+    private ImageView board;
     private ImageView ipEnterPlace;
     private String errorMessage = "";
 
     public JoinScreen(MyGdxGame game) {
         this.game = game;
+    }
+
+    @Override
+    public void show() {
 
         float buttonY = SCREEN_HEIGHT / 2f - 100;
 
         titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 90, "JOIN GAME");
         titleView.setCenterX(SCREEN_WIDTH / 2f);
 
-        backgroundJoin = new MovingBackgroundView(GameResources.BACKGROUND_JOIN);
+        background = new MovingBackgroundView(GameResources.BACKGROUND_JOIN);
 
         connectButton = new ButtonView(
             SCREEN_WIDTH / 2f - 220, buttonY, 440, 80,
@@ -55,15 +59,12 @@ public class JoinScreen extends ScreenAdapter {
             game.defaultMenuFont, GameResources.BUTTON_MENU, "Back"
         );
 
-        boardJoin = new ImageView(SCREEN_WIDTH / 2f,SCREEN_HEIGHT - 650f,600,500,GameResources.BOARD);
-        boardJoin.setCenterX(SCREEN_WIDTH / 2f);
+        board = new ImageView(SCREEN_WIDTH / 2f,SCREEN_HEIGHT - 650f,600,500,GameResources.BOARD);
+        board.setCenterX(SCREEN_WIDTH / 2f);
 
-        ipEnterPlace = new ImageView(SCREEN_WIDTH / 2f, Gdx.graphics.getHeight() / 2f,440,80,GameResources.BUTTON_MENU);
+        ipEnterPlace = new ImageView(SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f,440,80,GameResources.BUTTON_MENU);
         ipEnterPlace.setCenterX(SCREEN_WIDTH / 2f);
-    }
 
-    @Override
-    public void show() {
         inputStage = new Stage(new ScreenViewport());
         Skin skin = new Skin();
         skin.add("default", game.defaultMenuFont);
@@ -71,13 +72,13 @@ public class JoinScreen extends ScreenAdapter {
 
         TextField.TextFieldStyle style = new TextField.TextFieldStyle();
         style.font = game.defaultMenuFont;
-        style.fontColor = Color.BROWN;
+        style.fontColor = Color.WHITE;
         skin.add("default", style);
 
         ipField = new TextField("", skin);
-        ipField.setSize(400, 50);
-        ipField.setPosition(Gdx.graphics.getWidth() / 2f - 190, Gdx.graphics.getHeight() / 2f + 15);
         ipField.setMessageText("Enter IP...");
+        ipField.setPosition(Gdx.graphics.getWidth() / 2f - 190, Gdx.graphics.getHeight() / 2f + 15);
+        ipField.setSize(400, 50);
         ipField.setMaxLength(15);
         ipField.setTextFieldFilter((textField, c) -> Character.isDigit(c) || c == '.');
         ipField.setTextFieldListener(new TextField.TextFieldListener() {
@@ -100,15 +101,16 @@ public class JoinScreen extends ScreenAdapter {
 
         game.camera.update();
         game.batch.setProjectionMatrix(game.camera.combined);
-        ScreenUtils.clear(new Color(0.2f, 0.2f, 0.3f, 1));
-
+        ScreenUtils.clear(new Color(0, 0, 0, 1));
 
         game.batch.begin();
 
-        backgroundJoin.draw(game.batch);
+        background.draw(game.batch);
         titleView.draw(game.batch);
-        boardJoin.draw(game.batch);
+        board.draw(game.batch);
         ipEnterPlace.draw(game.batch);
+        ipEnterPlace.setPos(SCREEN_WIDTH / 2f,SCREEN_HEIGHT / 2f);
+        ipEnterPlace.setCenterX(SCREEN_WIDTH / 2f);
         connectButton.draw(game.batch);
         backButton.draw(game.batch);
 
@@ -118,7 +120,7 @@ public class JoinScreen extends ScreenAdapter {
         if (!errorMessage.isEmpty()) {
             game.defaultFont.setColor(Color.RED);
             game.defaultFont.draw(game.batch, errorMessage, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT / 2f - 80);
-            game.defaultFont.setColor(Color.WHITE); // сброс цвета
+            game.defaultFont.setColor(Color.WHITE);
         }
         game.batch.end();
 

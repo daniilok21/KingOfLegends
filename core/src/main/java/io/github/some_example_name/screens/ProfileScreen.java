@@ -9,10 +9,13 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 
 import io.github.some_example_name.MyGdxGame;
 import io.github.some_example_name.GameResources;
 import io.github.some_example_name.components.ButtonView;
+import io.github.some_example_name.components.ImageView;
+import io.github.some_example_name.components.MovingBackgroundView;
 import io.github.some_example_name.components.TextView;
 import io.github.some_example_name.managers.MemoryManager;
 
@@ -22,10 +25,13 @@ import static io.github.some_example_name.GameSettings.SCREEN_HEIGHT;
 public class ProfileScreen extends ScreenAdapter {
 
     private final MyGdxGame game;
+    private MovingBackgroundView background;
     private TextView titleView;
     private TextView nameLabel;
     private ButtonView changeNameButton;
     private ButtonView backButton;
+    private ImageView board;
+    private ImageView nameEnterPlace;
 
     // Для ввода имени
     private Stage inputStage;
@@ -38,24 +44,29 @@ public class ProfileScreen extends ScreenAdapter {
 
     @Override
     public void show() {
-        float buttonY = SCREEN_HEIGHT / 2f + 60;
+        background = new MovingBackgroundView(GameResources.BACKGROUND_PROFILE);
 
         titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f - 150, SCREEN_HEIGHT - 90, "PROFILE");
         titleView.setCenterX(SCREEN_WIDTH / 2f);
 
-        // Загружаем текущее имя из game.playerName (оно уже загружено из MemoryManager в MyGdxGame)
-        nameLabel = new TextView(game.defaultFont, SCREEN_WIDTH / 2f - 150, buttonY, "Name: " + game.playerName);
+        nameLabel = new TextView(game.defaultMenuFont, SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f + 100, "Name: " + game.playerName);
         nameLabel.setCenterX(SCREEN_WIDTH / 2f);
 
         changeNameButton = new ButtonView(
-            SCREEN_WIDTH / 2f - 220, buttonY - 90, 440, 70,
-            game.defaultFont, GameResources.BUTTON_LONG_MENU, "Change Name"
+            SCREEN_WIDTH / 2f - 220, SCREEN_HEIGHT / 2f - 90f, 440, 70,
+            game.defaultMenuFont, GameResources.BUTTON_MENU, "Change Name"
         );
 
         backButton = new ButtonView(
-            SCREEN_WIDTH / 2f - 220, buttonY - 180, 440, 70,
-            game.defaultFont, GameResources.BUTTON_LONG_MENU, "Back"
+            SCREEN_WIDTH / 2f - 220, SCREEN_HEIGHT / 2f - 180f, 440, 70,
+            game.defaultMenuFont, GameResources.BUTTON_MENU, "Back"
         );
+
+        board = new ImageView(SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 650f, 600, 500, GameResources.BOARD);
+        board.setCenterX(SCREEN_WIDTH / 2f);
+
+        nameEnterPlace = new ImageView(SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f, 440, 80, GameResources.BUTTON_MENU);
+        nameEnterPlace.setCenterX(SCREEN_WIDTH / 2f);
     }
 
     @Override
@@ -66,20 +77,42 @@ public class ProfileScreen extends ScreenAdapter {
 
         game.camera.update();
         game.batch.setProjectionMatrix(game.camera.combined);
-        ScreenUtils.clear(new Color(0.2f, 0.2f, 0.3f, 1));
+        ScreenUtils.clear(new Color(0, 0, 0, 1));
 
         game.batch.begin();
+
+        background.draw(game.batch);
         titleView.draw(game.batch);
+        board.draw(game.batch);
+        nameEnterPlace.draw(game.batch);
+        // Обновляем позицию имени
+        GlyphLayout layout = new GlyphLayout(nameLabel.font, nameLabel.text);
+        nameLabel.width = layout.width;
+        nameLabel.height = layout.height;
+        nameLabel.setCenterX(SCREEN_WIDTH / 2f);
         nameLabel.draw(game.batch);
+
         if (!isEditingName) {
             changeNameButton.draw(game.batch);
             backButton.draw(game.batch);
         }
+
         game.batch.end();
 
+        // Обновляем позицию поля ввода, если активно
         if (isEditingName) {
+            updateNameFieldPosition();
             inputStage.act(delta);
             inputStage.draw();
+        }
+    }
+
+    private void updateNameFieldPosition() {
+        if (nameField != null) {
+            // Центрируем поле ввода по экрану (в экранных координатах)
+            float x = Gdx.graphics.getWidth() / 2f - nameField.getWidth() / 2f;
+            float y = Gdx.graphics.getHeight() / 2f + 15; // чуть выше центра
+            nameField.setPosition(x, y);
         }
     }
 
@@ -100,20 +133,20 @@ public class ProfileScreen extends ScreenAdapter {
 
         inputStage = new Stage(new ScreenViewport());
         Skin skin = new Skin();
-        skin.add("default", game.defaultFont);
+        skin.add("default", game.defaultMenuFont);
 
         TextField.TextFieldStyle style = new TextField.TextFieldStyle();
-        style.font = game.defaultFont;
+        style.font = game.defaultMenuFont;
         style.fontColor = Color.WHITE;
-        style.background = null; // прозрачный фон
+        style.background = null;
         skin.add("default", style);
 
-        // Текущее имя из игры
         nameField = new TextField(game.playerName, skin);
+        nameField.setMessageText("Enter Name...");
         nameField.setSize(400, 50);
-        float x = Gdx.graphics.getWidth() / 2f - 200;
-        nameField.setPosition(x, Gdx.graphics.getHeight() / 2f + 20);
-        nameField.setMaxLength(16); // максимум 16 символов
+        // Позиция будет обновляться в updateNameFieldPosition()
+        nameField.setPosition(0, 0);
+        nameField.setMaxLength(12);
 
         nameField.setTextFieldListener(new TextField.TextFieldListener() {
             @Override
@@ -131,14 +164,11 @@ public class ProfileScreen extends ScreenAdapter {
 
     private void saveName(String name) {
         if (name != null && !name.isEmpty()) {
-            // Обновляем имя в игре
             game.playerName = name;
-            // Сохраняем в файл
             MemoryManager.saveProfileName(game.playerName);
-            // Обновляем надпись
             nameLabel.setText("Name: " + game.playerName);
+            nameLabel.setCenterX(SCREEN_WIDTH / 2f);
         }
-        // Возвращаемся в настройки
         isEditingName = false;
         if (inputStage != null) {
             inputStage.dispose();

@@ -32,6 +32,12 @@ public class MenuScreen extends ScreenAdapter {
     public MenuScreen(MyGdxGame game) {
         this.game = game;
 
+    }
+
+    @Override
+    public void show() {
+        game.audioManager.playMenuMusic();
+
         titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 120, "KING OF LEGENDS");
         titleView.setCenterX(SCREEN_WIDTH / 2f);
         backgroundView = new MovingBackgroundView(GameResources.BACKGROUND_MENU);
@@ -57,18 +63,13 @@ public class MenuScreen extends ScreenAdapter {
     }
 
     @Override
-    public void show() {
-        game.audioManager.playMenuMusic();
-    }
-
-    @Override
     public void render(float delta) {
 
         handleInput();
 
         game.camera.update();
         game.batch.setProjectionMatrix(game.camera.combined);
-        ScreenUtils.clear(new Color(0.2f, 0.2f, 0.3f, 1));
+        ScreenUtils.clear(new Color(0, 0, 0, 1));
 
         game.batch.begin();
         backgroundView.draw(game.batch);
