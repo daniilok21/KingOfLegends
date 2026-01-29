@@ -65,6 +65,9 @@ public class GameScreen extends ScreenAdapter {
         resultDisplayTimer = 0f;
         connected = false;
 
+        musicStarted = false;
+        musicWainigStarted = false;
+
         platforms.clear();
         oneWayPlatforms.clear();
 
