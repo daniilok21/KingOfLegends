@@ -224,7 +224,6 @@ public class GameScreen extends ScreenAdapter {
                         clientPlayer.getBody().setTransform(remoteInput.x, remoteInput.y, 0);
                         clientPlayer.getBody().setLinearVelocity(remoteInput.vx, remoteInput.vy);
                     }
-                    clientPlayer.setHealth(remoteInput.health);
                     clientPlayer.setFacingRight(remoteInput.facingRight);
                     clientPlayer.setIsDodging(remoteInput.isDodging);
                     clientPlayer.setIsOnGround(remoteInput.isOnGround);

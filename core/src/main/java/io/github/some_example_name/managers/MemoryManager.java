@@ -14,8 +14,4 @@ public class MemoryManager {
     public static String loadProfileName() {
         return preferences.getString("ProfileName", "Unknown");
     }
-
-
-
-
 }
