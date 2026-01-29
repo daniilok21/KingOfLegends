@@ -65,8 +65,8 @@ public class GameSettings {
     public static final float ARENA_BOTTOM_BOUND = -PLAYER_HEIGHT;
 
     // Начальная растановка игроков
-    public static final int START_PLAYER_SERVER_X = 275;
-    public static final int START_PLAYER_SERVER_Y = 300;
-    public static final int START_PLAYER_CLIENT_X = SCREEN_WIDTH - 275;
-    public static final int START_PLAYER_CLIENT_Y = 300;
+    public static final int START_PLAYER_SERVER_X = 485;
+    public static final int START_PLAYER_SERVER_Y = 390;
+    public static final int START_PLAYER_CLIENT_X = SCREEN_WIDTH - 485;
+    public static final int START_PLAYER_CLIENT_Y = 390;
 }

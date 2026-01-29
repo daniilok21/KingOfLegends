@@ -38,6 +38,7 @@ public class AudioManager {
 
     public void playMenuMusic() {
         stopGameMusic();
+        stopWaitingMusic();
         if (!menuMusic.isPlaying()) {
             menuMusic.play();
         }
@@ -50,6 +51,7 @@ public class AudioManager {
     }
     public void playWaitingMusic() {
         stopGameMusic();
+        stopMenuMusic();
         if (!menuWaiting.isPlaying()) {
             menuWaiting.play();
         }
@@ -62,6 +64,7 @@ public class AudioManager {
     }
     public void playGameMusic(int musicIndex) {
         stopMenuMusic();
+        stopWaitingMusic();
         if (currentGameMusic != null && currentGameMusic.isPlaying()) return;
 
         if (musicIndex == 0) {
@@ -91,10 +94,17 @@ public class AudioManager {
         victoryMusic.play(0.5f);
     }
 
+    public void stopMenuMusicCompletely() {
+        stopMenuMusic();
+        stopWaitingMusic();
+    }
+
     public void dispose() {
         menuMusic.dispose();
+        menuWaiting.dispose();
         gameMusic1.dispose();
         gameMusic2.dispose();
         hitSound.dispose();
+        victoryMusic.dispose();
     }
 }

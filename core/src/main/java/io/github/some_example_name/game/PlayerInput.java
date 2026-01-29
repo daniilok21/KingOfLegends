@@ -5,6 +5,7 @@ public class PlayerInput implements Serializable {
     private static final long serialVersionUID = 1L;
     public boolean moveRight, moveLeft, jump, dodge, attack, attackUp, attackDown, wantToGoDown;
 
+    public String playerName;
     public float x, y;
     public float vx, vy;
     public int health;
