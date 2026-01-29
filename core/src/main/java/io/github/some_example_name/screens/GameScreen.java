@@ -22,6 +22,7 @@ import static io.github.some_example_name.GameSettings.*;
 
 public class GameScreen extends ScreenAdapter {
     private final MyGdxGame myGdxGame;
+    MovingBackgroundView backgroundView;
     private ShapeRenderer shapeRenderer;
     private SpriteBatch batch;
     private Server server;
@@ -44,10 +45,11 @@ public class GameScreen extends ScreenAdapter {
         this.myGdxGame = game;
         this.batch = game.batch;
         shapeRenderer = new ShapeRenderer();
-        waitingText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2, "WAITING...");
-        ipAddressText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 + 50, "");
-        countdownText = new TextView(game.titleFont, SCREEN_WIDTH / 2 - 80, SCREEN_HEIGHT / 2, "");
-        resultText = new TextView(game.titleFont, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100, "");
+        waitingText = new TextView(game.titleFont, SCREEN_WIDTH / 2f - 100, SCREEN_HEIGHT / 4f * 3f - 30f, "WAITING...");
+        ipAddressText = new TextView(game.titleFont, SCREEN_WIDTH / 2f - 100, SCREEN_HEIGHT / 4f * 3f + 20f, "");
+        countdownText = new TextView(game.titleFont, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT, "");
+        resultText = new TextView(game.titleFont, SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f + 100, "");
+        backgroundView = new MovingBackgroundView(GameResources.BACKGROUND_GAME);
     }
 
     @Override
@@ -83,10 +85,10 @@ public class GameScreen extends ScreenAdapter {
 
     private void setupWorld() {
         int offset_buttons = 50;
-        platforms.add(new PlatformObject(100, 100, SCREEN_WIDTH - 200, 100, GameResources.PLATFORM, myGdxGame.world));
-        platforms.add(new PlatformObject(100, 350, 100, 220, GameResources.PLATFORM, myGdxGame.world));
-        platforms.add(new PlatformObject(SCREEN_WIDTH - 200, 350, 100, 220, GameResources.PLATFORM, myGdxGame.world));
-        oneWayPlatforms.add(new OneWayPlatformObject(SCREEN_WIDTH / 2 - 250, 325, 500, 50, GameResources.PLATFORM, myGdxGame.world));
+        platforms.add(new PlatformObject(398, 200, SCREEN_WIDTH - 788, 180, GameResources.PLATFORM, myGdxGame.world));
+        oneWayPlatforms.add(new OneWayPlatformObject(90, 275, 250, 30, GameResources.PLATFORM, myGdxGame.world));
+        oneWayPlatforms.add(new OneWayPlatformObject(503, 506, 288, 19, GameResources.PLATFORM, myGdxGame.world));
+        oneWayPlatforms.add(new OneWayPlatformObject(945, 198, 250, 19, GameResources.PLATFORM, myGdxGame.world));
         serverPlayer = new PlayerObject(START_PLAYER_SERVER_X, START_PLAYER_SERVER_Y, PLAYER_WIDTH, PLAYER_HEIGHT,
             new String[]{
                 GameResources.BLUE_PLAYER_IDLE_SHEET,
@@ -522,13 +524,17 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void draw() {
-        Gdx.gl.glClearColor(0.15f, 0.2f, 0.25f, 1);
+        Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.setProjectionMatrix(myGdxGame.camera.combined);
         batch.begin();
 
-        for (PlatformObject p : platforms) p.draw(batch);
-        for (OneWayPlatformObject o : oneWayPlatforms) o.draw(batch);
+        backgroundView.draw(batch);
+
+//        if (Gdx.input.isKeyPressed(Input.Keys.O)) {
+//            for (PlatformObject p : platforms) p.draw(batch);
+//            for (OneWayPlatformObject o : oneWayPlatforms) o.draw(batch);
+//        }
         if (myGdxGame.isHost) {
             clientPlayer.draw(batch);
             serverPlayer.draw(batch);
