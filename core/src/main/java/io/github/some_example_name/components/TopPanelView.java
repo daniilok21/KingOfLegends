@@ -71,7 +71,7 @@ public class TopPanelView extends View {
         player1Lives = GameSettings.PLAYER_MAX_LIVES;
         player2Lives = GameSettings.PLAYER_MAX_LIVES;
         matchTimer = GameSettings.MATCH_DURATION_SECONDS;
-        isMatchActive = true;
+        isMatchActive = false;
 
         player1IsOutOfBounds = false;
         player2IsOutOfBounds = false;

@@ -9,12 +9,15 @@ public class Server {
     private ObjectOutputStream out;
     private PlayerInput latestClientInput = new PlayerInput();
     private volatile boolean isClientConnected = false;
+    private ServerSocket serverSocket;
 
     public void start(int port) {
+        running = true;
         new Thread(() -> {
-            try (ServerSocket server = new ServerSocket(port)) {
+            try {
+                serverSocket = new ServerSocket(port);
                 System.out.println("SERVER: Started on port " + port);
-                Socket socket = server.accept();
+                Socket socket = serverSocket.accept();
                 socket.setTcpNoDelay(true);
                 out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
@@ -29,8 +32,12 @@ public class Server {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                if (running) {
+                    e.printStackTrace();
+                }
                 isClientConnected = false;
+            } finally {
+                stop();
             }
         }).start();
     }
@@ -48,5 +55,16 @@ public class Server {
 
     public PlayerInput getClientInput() { return latestClientInput; }
     public boolean isConnected() { return isClientConnected; }
-    public void stop() { running = false; }
+
+    public void stop() {
+        running = false;
+        isClientConnected = false;
+        try {
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

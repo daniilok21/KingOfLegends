@@ -191,6 +191,9 @@ public class GameScreen extends ScreenAdapter {
                 myGdxGame.audioManager.playGameMusic(selectedMusicIndex);
                 musicStarted = true;
             }
+            if (!topPanel.isMatchActive()) {
+                topPanel.setMatchActive(true);
+            }
         }
         if (gameStatus == GameState.GameStatus.WAITING) {
             if (!musicWainigStarted) {
@@ -519,6 +522,7 @@ public class GameScreen extends ScreenAdapter {
                 if (attackButton.isHit(t.x, t.y)) attackButton.setPressed(true);
                 if (gameStatus == GameState.GameStatus.WAITING && homeButton.isHit(t.x, t.y)) {
                     homeButton.setPressed(true);
+                    System.out.println(1221);
                     myGdxGame.showMenuScreen();
                     return;
                 }
