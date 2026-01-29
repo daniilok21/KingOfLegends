@@ -41,7 +41,7 @@ public class ProfileScreen extends ScreenAdapter {
     public ProfileScreen(MyGdxGame game) {
         this.game = game;
     }
-
+// 1
     @Override
     public void show() {
         background = new MovingBackgroundView(GameResources.BACKGROUND_PROFILE);

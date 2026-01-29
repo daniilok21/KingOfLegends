@@ -151,7 +151,7 @@ public class JoinScreen extends ScreenAdapter {
             }
         }
     }
-
+//2
     private void submitIp(String ip) {
         if (isValidIP(ip)) {
             game.hostIp = ip;
