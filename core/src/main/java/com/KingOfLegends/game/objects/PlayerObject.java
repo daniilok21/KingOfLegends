@@ -395,7 +395,7 @@ public class PlayerObject extends GameObject {
 
         knockbackDirection.nor();
 
-        float bonusForceWithHealth = 1 + (100 - target.getHealth()) / 100f;
+        float bonusForceWithHealth = (1 + (100 - target.getHealth()) / 100f) * 1.5f;
         float totalForce = forse * bonusForceWithHealth;
 
         target.applyHitStun(GameSettings.HIT_STUN_DURATION);

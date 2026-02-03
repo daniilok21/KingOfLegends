@@ -6,6 +6,7 @@ import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.HdpiUtils;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -40,6 +41,10 @@ public class GameScreen extends ScreenAdapter {
     private float countdown = 3.0f, timeAccumulator = 0, resultDisplayTimer = 0f;
     private TextView waitingText, countdownText, resultText, ipAddressText;
     private int selectedMusicIndex = 0;
+
+    private Rectangle scissorRect = new Rectangle();
+    private float serverRespawnIgnoreTimer = 0;
+    private float clientRespawnIgnoreTimer = 0;
 
     public GameScreen(MyGdxGame game) {
         this.myGdxGame = game;
@@ -121,6 +126,7 @@ public class GameScreen extends ScreenAdapter {
         homeButton = new ButtonView(20, SCREEN_HEIGHT - 80, 60, 60, GameResources.BUTTON_HOME);
         if (topPanel != null) topPanel.dispose();
         topPanel = new TopPanelView(200, SCREEN_HEIGHT-TOP_PANEL_HEIGHT, SCREEN_WIDTH - 400, TOP_PANEL_HEIGHT, myGdxGame.defaultFont, myGdxGame.timerFont, GameResources.TOP_PANEL_BG, GameResources.HEART_FULL, GameResources.HEART_EMPTY);
+        topPanel.setHost(myGdxGame.isHost);
     }
 
     public void initializeNetwork() {
@@ -151,6 +157,10 @@ public class GameScreen extends ScreenAdapter {
         myGdxGame.camera.position.set(SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f, 0);
         myGdxGame.camera.update();
         batch.setProjectionMatrix(myGdxGame.camera.combined);
+
+        Vector3 min = myGdxGame.camera.project(new Vector3(0, 0, 0));
+        Vector3 max = myGdxGame.camera.project(new Vector3(SCREEN_WIDTH, SCREEN_HEIGHT, 0));
+        scissorRect.set(min.x, min.y, max.x - min.x, max.y - min.y);
     }
 
     @Override
@@ -167,6 +177,9 @@ public class GameScreen extends ScreenAdapter {
 
     private void updateLogic(float delta) {
         handleInput();
+
+        if (serverRespawnIgnoreTimer > 0) serverRespawnIgnoreTimer -= delta;
+        if (clientRespawnIgnoreTimer > 0) clientRespawnIgnoreTimer -= delta;
 
         if (gameStatus == GameState.GameStatus.PLAYING || gameStatus == GameState.GameStatus.COUNTDOWN) {
             if (myGdxGame.isHost && (server == null || !server.isConnected())) {
@@ -222,7 +235,7 @@ public class GameScreen extends ScreenAdapter {
                 if (remoteInput.playerName != null) {
                     topPanel.setPlayer2Name(remoteInput.playerName);
                 }
-                if (remoteInput.x != 0 || remoteInput.y != 0) {
+                if ((remoteInput.x != 0 || remoteInput.y != 0) && clientRespawnIgnoreTimer <= 0) {
                     if (!clientPlayer.isInHitStun() && !clientPlayer.isDodging()) {
                         clientPlayer.getBody().setTransform(remoteInput.x, remoteInput.y, 0);
                         clientPlayer.getBody().setLinearVelocity(remoteInput.vx, remoteInput.vy);
@@ -260,6 +273,7 @@ public class GameScreen extends ScreenAdapter {
                 topPanel.setPlayer1Out(false);
                 serverPlayer.setHitImmunityTimer(2.0f);
                 sRespawn = true;
+                serverRespawnIgnoreTimer = 0.5f;
             }
             if (topPanel.getNeedChange2Player()) {
                 clientPlayer.getBody().setTransform(START_PLAYER_CLIENT_X * SCALE, START_PLAYER_CLIENT_Y * SCALE, 0);
@@ -268,6 +282,7 @@ public class GameScreen extends ScreenAdapter {
                 topPanel.setPlayer2Out(false);
                 clientPlayer.setHitImmunityTimer(2.0f);
                 cRespawn = true;
+                clientRespawnIgnoreTimer = 0.5f;
             }
 
             applyPlayerInput(serverPlayer, localInput);
@@ -331,12 +346,15 @@ public class GameScreen extends ScreenAdapter {
                 topPanel.setPlayer2Out(packet.cIsOut);
                 selectedMusicIndex = packet.musicIndex;
                 if (packet.sName != null) topPanel.setPlayer1Name(packet.sName);
-                if (packet.cName != null) topPanel.setPlayer2Name(packet.cName);
+                if (packet.sName != null) topPanel.setPlayer2Name(packet.cName);
 
                 int oldClientHealth = clientPlayer.getHealth();
                 int oldServerHealth = serverPlayer.getHealth();
-                serverPlayer.getBody().setTransform(packet.sX, packet.sY, 0);
-                serverPlayer.getBody().setLinearVelocity(packet.sVX, packet.sVY);
+
+                if (serverRespawnIgnoreTimer <= 0) {
+                    serverPlayer.getBody().setTransform(packet.sX, packet.sY, 0);
+                    serverPlayer.getBody().setLinearVelocity(packet.sVX, packet.sVY);
+                }
                 serverPlayer.setHealth(packet.sHealth);
                 serverPlayer.setFacingRight(packet.sFacingRight);
                 serverPlayer.setInHitStun(packet.sInHitStun);
@@ -378,7 +396,8 @@ public class GameScreen extends ScreenAdapter {
                 if (packet.cNeedRespawn) {
                     clientPlayer.getBody().setTransform(packet.cX, packet.cY, 0);
                     clientPlayer.getBody().setLinearVelocity(0, 0);
-                } else if (packet.cInHitStun || packet.cIsDodging) {
+                    clientRespawnIgnoreTimer = 0.5f;
+                } else if ((packet.cInHitStun || packet.cIsDodging) && clientRespawnIgnoreTimer <= 0) {
                     clientPlayer.getBody().setTransform(packet.cX, packet.cY, 0);
                     clientPlayer.getBody().setLinearVelocity(packet.cVX, packet.cVY);
                 }
@@ -540,14 +559,14 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.setProjectionMatrix(myGdxGame.camera.combined);
+
+        HdpiUtils.glScissor((int)scissorRect.x, (int)scissorRect.y, (int)scissorRect.width, (int)scissorRect.height);
+        Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
+
         batch.begin();
 
         backgroundView.draw(batch);
 
-//        if (Gdx.input.isKeyPressed(Input.Keys.O)) {
-//            for (PlatformObject p : platforms) p.draw(batch);
-//            for (OneWayPlatformObject o : oneWayPlatforms) o.draw(batch);
-//        }
         if (myGdxGame.isHost) {
             clientPlayer.draw(batch);
             serverPlayer.draw(batch);
@@ -556,6 +575,11 @@ public class GameScreen extends ScreenAdapter {
             serverPlayer.draw(batch);
             clientPlayer.draw(batch);
         }
+
+        batch.end();
+        Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
+
+        batch.begin();
         topPanel.draw(batch);
         joystick.draw(batch);
         jumpButton.draw(batch);

@@ -1,13 +1,10 @@
 package com.KingOfLegends.game.components;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 
 import com.KingOfLegends.game.GameSettings;
-import com.KingOfLegends.game.managers.MemoryManager;
 
 public class TopPanelView extends View {
     private Texture panelBackground;
@@ -30,6 +27,7 @@ public class TopPanelView extends View {
     private float player2OutTimer = 0f;
     private boolean needChange1Player;
     private boolean needChange2Player;
+    private boolean isHost;
 
     private int heartWidth = 30;
     private int heartHeight = 30;
@@ -54,6 +52,10 @@ public class TopPanelView extends View {
         emptyHeartTexture = new Texture(emptyHeartTexturePath);
 
         reset();
+    }
+
+    public void setHost(boolean isHost) {
+        this.isHost = isHost;
     }
 
     private void updateTextPositions() {
@@ -84,6 +86,18 @@ public class TopPanelView extends View {
     }
 
     public void update(float delta) {
+        if (!isHost) {
+            if (player1IsOutOfBounds) player1OutTimer += delta;
+            else player1OutTimer = 0;
+
+            if (player2IsOutOfBounds) player2OutTimer += delta;
+            else player2OutTimer = 0;
+
+            updateText();
+            updateTextPositions();
+            return;
+        }
+
         if (!isMatchActive) {
             updateText();
             return;
@@ -191,7 +205,7 @@ public class TopPanelView extends View {
     }
 
     public void checkOutOfBounds(float playerX, float playerY, boolean isPlayer1) {
-        if (!isMatchActive) return;
+        if (!isMatchActive || !isHost) return;
 
         boolean isOut = playerY < GameSettings.ARENA_BOTTOM_BOUND ||
             playerX < GameSettings.ARENA_LEFT_BOUND ||
@@ -221,8 +235,14 @@ public class TopPanelView extends View {
 
     public void setPlayer1Lives(int lives) { player1Lives = lives; }
     public void setPlayer2Lives(int lives) { player2Lives = lives; }
-    public void setPlayer1Out(boolean out) { this.player1IsOutOfBounds = out; }
-    public void setPlayer2Out(boolean out) { this.player2IsOutOfBounds = out; }
+    public void setPlayer1Out(boolean out) {
+        this.player1IsOutOfBounds = out;
+        if (!out) this.player1OutTimer = 0;
+    }
+    public void setPlayer2Out(boolean out) {
+        this.player2IsOutOfBounds = out;
+        if (!out) this.player2OutTimer = 0;
+    }
 
     public boolean getNeedChange1Player() {
         if (needChange1Player) {
