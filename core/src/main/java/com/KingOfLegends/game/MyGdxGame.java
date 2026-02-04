@@ -31,7 +31,7 @@ public class MyGdxGame extends Game {
     public JoinScreen joinScreen;
     public ProfileScreen profileScreen;
 
-    public BitmapFont defaultFont, largeFont, smallFont, titleFont, timerFont, defaultMenuFont, titleMenuFont;
+    public BitmapFont defaultFont, largeFont, smallFont, titleFont, timerFont, defaultMenuFont, titleMenuFont, textFieldFont;
 
     public boolean isHost = false;
     public String hostIp = "";
@@ -54,8 +54,13 @@ public class MyGdxGame extends Game {
         smallFont = FontBuilder.generate(16, Color.WHITE, GameResources.FONT_PATH);
         titleFont = FontBuilder.generate(64, Color.WHITE, GameResources.FONT_PATH);
         timerFont = FontBuilder.generate(24, Color.RED, GameResources.FONT_PATH);
-        defaultMenuFont = FontBuilder.generate(30, Color.BROWN, GameResources.DRAK_FONT_PATH);
+
+        // В меню текст белый
+        defaultMenuFont = FontBuilder.generate(30, Color.WHITE, GameResources.DRAK_FONT_PATH);
         titleMenuFont = FontBuilder.generate(110, Color.WHITE, GameResources.MENU_FONT_PATH);
+
+        // Для поля ввода создаем БЕЛЫЙ шрифт (чтобы потом задать нужные цвета в стиле)
+        textFieldFont = FontBuilder.generate(30, Color.WHITE, GameResources.DRAK_FONT_PATH);
 
         menuScreen = new MenuScreen(this);
         gameScreen = new GameScreen(this);
@@ -93,6 +98,9 @@ public class MyGdxGame extends Game {
         smallFont.dispose();
         titleFont.dispose();
         timerFont.dispose();
+        defaultMenuFont.dispose();
+        titleMenuFont.dispose();
+        textFieldFont.dispose();
 
         audioManager.dispose();
 

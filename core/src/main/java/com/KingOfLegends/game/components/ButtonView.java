@@ -45,7 +45,7 @@ public class ButtonView extends View {
 
     @Override
     public void draw(SpriteBatch batch) {
-        Color originalColor = new Color(batch.getColor());
+        Color originalColor = batch.getColor().cpy();
         if (!isEnabled) {
             batch.setColor(0.6f, 0.6f, 0.6f, 1f);
         }
@@ -56,7 +56,7 @@ public class ButtonView extends View {
         batch.setColor(originalColor);
 
         if (bitmapFont != null) {
-            Color originalFontColor = new Color(bitmapFont.getColor());
+            Color originalFontColor = bitmapFont.getColor().cpy();
             if (!isEnabled) {
                 bitmapFont.setColor(0.7f, 0.7f, 0.7f, 1f);
             }
@@ -82,7 +82,7 @@ public class ButtonView extends View {
     @Override
     public void dispose() {
         texture.dispose();
-        if (bitmapFont != null) bitmapFont.dispose();
+        // bitmapFont.dispose(); // УБРАНО: шрифт не принадлежит кнопке
     }
 
 }

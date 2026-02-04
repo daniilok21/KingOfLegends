@@ -100,6 +100,7 @@ public class TopPanelView extends View {
 
         if (!isMatchActive) {
             updateText();
+            updateTextPositions();
             return;
         }
 

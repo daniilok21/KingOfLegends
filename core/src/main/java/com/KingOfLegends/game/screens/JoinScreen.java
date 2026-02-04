@@ -19,6 +19,7 @@ import com.KingOfLegends.game.components.ButtonView;
 import com.KingOfLegends.game.components.ImageView;
 import com.KingOfLegends.game.components.MovingBackgroundView;
 import com.KingOfLegends.game.components.TextView;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import static com.KingOfLegends.game.GameSettings.SCREEN_WIDTH;
 import static com.KingOfLegends.game.GameSettings.SCREEN_HEIGHT;
@@ -64,13 +65,15 @@ public class JoinScreen extends ScreenAdapter {
 
         ipEnterPlace = new ImageView(0, 0, 440, 80, GameResources.BUTTON_MENU);
 
-        inputStage = new Stage(new ScreenViewport());
+        inputStage = new Stage(new ScreenViewport(game.camera));
         Skin skin = new Skin();
-        skin.add("default", game.defaultMenuFont);
+        skin.add("default", game.textFieldFont);
 
         TextField.TextFieldStyle style = new TextField.TextFieldStyle();
-        style.font = game.defaultMenuFont;
-        style.fontColor = Color.WHITE;
+        style.font = game.textFieldFont;
+        // Теперь и вводимый текст, и подсказка коричневые
+        style.fontColor = Color.BROWN.cpy();
+        style.messageFontColor = Color.BROWN.cpy();
         style.background = null;
         skin.add("default", style);
 
@@ -90,6 +93,24 @@ public class JoinScreen extends ScreenAdapter {
 
         inputStage.addActor(ipField);
         Gdx.input.setInputProcessor(inputStage);
+    }
+    @Override
+    public void resize(int width, int height) {
+        float screenRatio = width / (float) height;
+
+        if (screenRatio > SCREEN_WIDTH / (float) SCREEN_HEIGHT) {
+            float newWidth = SCREEN_HEIGHT * screenRatio;
+            game.camera.viewportWidth = newWidth;
+            game.camera.viewportHeight = SCREEN_HEIGHT;
+        }
+        else {
+            float newHeight = SCREEN_WIDTH / screenRatio;
+            game.camera.viewportWidth = SCREEN_WIDTH;
+            game.camera.viewportHeight = newHeight;
+        }
+
+        game.camera.position.set(SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f, 0);
+        game.camera.update();
     }
 
     @Override
@@ -114,9 +135,7 @@ public class JoinScreen extends ScreenAdapter {
         backButton.draw(game.batch);
 
         if (!errorMessage.isEmpty()) {
-            game.defaultMenuFont.setColor(Color.RED);
             game.defaultMenuFont.draw(game.batch, errorMessage, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT / 2f - 80);
-            game.defaultMenuFont.setColor(Color.WHITE);
         }
 
         game.batch.end();
@@ -126,7 +145,6 @@ public class JoinScreen extends ScreenAdapter {
         inputStage.act(delta);
         inputStage.draw();
 
-        // Доп. управление на ПК
         if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
             if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
                 submitIp(ipField.getText().trim());
@@ -139,8 +157,8 @@ public class JoinScreen extends ScreenAdapter {
 
     private void updateIpFieldPosition() {
         if (ipField != null) {
-            float x = Gdx.graphics.getWidth() / 2f - ipField.getWidth() / 2f + 90;
-            float y = Gdx.graphics.getHeight() / 2f + 55;
+            float x = ipEnterPlace.getX() + ipEnterPlace.getWidth() / 2f - ipField.getWidth() / 2f + 5;
+            float y = ipEnterPlace.getY() + ipEnterPlace.getHeight() / 2f - ipField.getHeight() / 2f;
             ipField.setPosition(x, y);
         }
     }
@@ -185,6 +203,11 @@ public class JoinScreen extends ScreenAdapter {
             }
         }
         return true;
+    }
+
+    @Override
+    public void hide() {
+        Gdx.input.setInputProcessor(null);
     }
 
     @Override
