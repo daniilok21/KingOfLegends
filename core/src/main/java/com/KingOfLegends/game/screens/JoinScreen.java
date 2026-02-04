@@ -5,13 +5,14 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.Application;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 
 import com.KingOfLegends.game.MyGdxGame;
 import com.KingOfLegends.game.GameResources;
@@ -19,7 +20,6 @@ import com.KingOfLegends.game.components.ButtonView;
 import com.KingOfLegends.game.components.ImageView;
 import com.KingOfLegends.game.components.MovingBackgroundView;
 import com.KingOfLegends.game.components.TextView;
-import com.badlogic.gdx.utils.viewport.Viewport;
 
 import static com.KingOfLegends.game.GameSettings.SCREEN_WIDTH;
 import static com.KingOfLegends.game.GameSettings.SCREEN_HEIGHT;
@@ -65,13 +65,24 @@ public class JoinScreen extends ScreenAdapter {
 
         ipEnterPlace = new ImageView(0, 0, 440, 80, GameResources.BUTTON_MENU);
 
-        inputStage = new Stage(new ScreenViewport(game.camera));
+        inputStage = new Stage(new ExtendViewport(SCREEN_WIDTH, SCREEN_HEIGHT, game.camera));
+
+        inputStage.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (!(event.getTarget() instanceof TextField)) {
+                    inputStage.setKeyboardFocus(null);
+                    Gdx.input.setOnscreenKeyboardVisible(false);
+                }
+                return false;
+            }
+        });
+
         Skin skin = new Skin();
         skin.add("default", game.textFieldFont);
 
         TextField.TextFieldStyle style = new TextField.TextFieldStyle();
         style.font = game.textFieldFont;
-        // Теперь и вводимый текст, и подсказка коричневые
         style.fontColor = Color.BROWN.cpy();
         style.messageFontColor = Color.BROWN.cpy();
         style.background = null;
@@ -85,6 +96,7 @@ public class JoinScreen extends ScreenAdapter {
         ipField.setTextFieldListener(new TextField.TextFieldListener() {
             @Override
             public void keyTyped(TextField textField, char c) {
+                errorMessage = "";
                 if (c == '\n' || c == '\r') {
                     submitIp(textField.getText().trim());
                 }
@@ -94,21 +106,10 @@ public class JoinScreen extends ScreenAdapter {
         inputStage.addActor(ipField);
         Gdx.input.setInputProcessor(inputStage);
     }
+
     @Override
     public void resize(int width, int height) {
-        float screenRatio = width / (float) height;
-
-        if (screenRatio > SCREEN_WIDTH / (float) SCREEN_HEIGHT) {
-            float newWidth = SCREEN_HEIGHT * screenRatio;
-            game.camera.viewportWidth = newWidth;
-            game.camera.viewportHeight = SCREEN_HEIGHT;
-        }
-        else {
-            float newHeight = SCREEN_WIDTH / screenRatio;
-            game.camera.viewportWidth = SCREEN_WIDTH;
-            game.camera.viewportHeight = newHeight;
-        }
-
+        inputStage.getViewport().update(width, height, false);
         game.camera.position.set(SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f, 0);
         game.camera.update();
     }
@@ -166,6 +167,12 @@ public class JoinScreen extends ScreenAdapter {
     private void handleInput() {
         if (Gdx.input.justTouched()) {
             Vector3 touch = game.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+
+            if (connectButton.isHit(touch.x, touch.y) || backButton.isHit(touch.x, touch.y)) {
+                inputStage.setKeyboardFocus(null);
+                Gdx.input.setOnscreenKeyboardVisible(false);
+            }
+
             if (connectButton.isHit(touch.x, touch.y)) {
                 submitIp(ipField.getText().trim());
             }

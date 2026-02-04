@@ -82,7 +82,6 @@ public class ButtonView extends View {
     @Override
     public void dispose() {
         texture.dispose();
-        // bitmapFont.dispose(); // УБРАНО: шрифт не принадлежит кнопке
     }
 
 }

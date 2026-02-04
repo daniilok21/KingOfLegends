@@ -55,11 +55,8 @@ public class MyGdxGame extends Game {
         titleFont = FontBuilder.generate(64, Color.WHITE, GameResources.FONT_PATH);
         timerFont = FontBuilder.generate(24, Color.RED, GameResources.FONT_PATH);
 
-        // В меню текст белый
         defaultMenuFont = FontBuilder.generate(30, Color.WHITE, GameResources.DRAK_FONT_PATH);
         titleMenuFont = FontBuilder.generate(110, Color.WHITE, GameResources.MENU_FONT_PATH);
-
-        // Для поля ввода создаем БЕЛЫЙ шрифт (чтобы потом задать нужные цвета в стиле)
         textFieldFont = FontBuilder.generate(30, Color.WHITE, GameResources.DRAK_FONT_PATH);
 
         menuScreen = new MenuScreen(this);

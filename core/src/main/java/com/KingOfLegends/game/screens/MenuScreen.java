@@ -38,7 +38,6 @@ public class MenuScreen extends ScreenAdapter {
     public void show() {
         game.audioManager.playMenuMusic();
 
-        // Сбрасываем цвет шрифта при входе на экран
         game.defaultMenuFont.setColor(Color.BROWN);
 
         titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 120, "KING OF LEGENDS");
@@ -75,7 +74,6 @@ public class MenuScreen extends ScreenAdapter {
         ScreenUtils.clear(new Color(0, 0, 0, 1));
 
         game.batch.begin();
-        // На всякий случай сбрасываем цвет перед отрисовкой каждого кадра
         game.defaultMenuFont.setColor(Color.BROWN);
 
         backgroundView.draw(game.batch);
