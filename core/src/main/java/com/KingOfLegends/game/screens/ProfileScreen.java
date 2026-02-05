@@ -108,8 +108,8 @@ public class ProfileScreen extends ScreenAdapter {
 
     private void updateNameFieldPosition() {
         if (nameField != null) {
-            float x = Gdx.graphics.getWidth() / 2f - nameField.getWidth() / 2f + 40;
-            float y = Gdx.graphics.getHeight() / 2f + 35;
+            float x = Gdx.graphics.getWidth() / 2f - nameField.getWidth() / 2f + 23;
+            float y = Gdx.graphics.getHeight() / 2f + 17;
             nameField.setPosition(x, y);
         }
     }
@@ -135,7 +135,7 @@ public class ProfileScreen extends ScreenAdapter {
 
         TextField.TextFieldStyle style = new TextField.TextFieldStyle();
         style.font = game.defaultMenuFont;
-        style.fontColor = Color.WHITE;
+        style.fontColor = Color.BROWN;
         style.background = null;
         skin.add("default", style);
 
