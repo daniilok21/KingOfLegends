@@ -347,7 +347,7 @@ public class PlayerObject extends GameObject {
     }
 
     public boolean checkHit(PlayerObject target) {
-        if (!isAttacking || target.hasHitImmunity() || attackAnimation.getKeyFrameIndex(stateTime) < attackAnimation.getKeyFrames().length - 2) return false;
+        if (!isAttacking || target.hasHitImmunity() || target.isDodging() || attackAnimation.getKeyFrameIndex(stateTime) < attackAnimation.getKeyFrames().length - 2) return false;
 
         updateAttackHitbox();
 
@@ -395,7 +395,7 @@ public class PlayerObject extends GameObject {
 
         knockbackDirection.nor();
 
-        float bonusForceWithHealth = (1 + (100 - target.getHealth()) / 100f) * 1.5f;
+        float bonusForceWithHealth = (1 + (100 - target.getHealth()) / 100f) * 2f;
         float totalForce = forse * bonusForceWithHealth;
 
         target.applyHitStun(GameSettings.HIT_STUN_DURATION);

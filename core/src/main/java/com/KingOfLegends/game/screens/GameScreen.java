@@ -41,6 +41,9 @@ public class GameScreen extends ScreenAdapter {
     private float countdown = 3.0f, timeAccumulator = 0, resultDisplayTimer = 0f;
     private TextView waitingText, countdownText, resultText, ipAddressText;
     private int selectedMusicIndex = 0;
+    private int cRespawnConfirmFrames = 0;
+    private int sRespawnConfirmFrames = 0;
+    private static final int RESPAWN_FRAMES = 5;
 
     private Rectangle scissorRect = new Rectangle();
     private float serverRespawnIgnoreTimer = 0;
@@ -252,8 +255,12 @@ public class GameScreen extends ScreenAdapter {
             }
             clientPlayer.update(delta);
 
-            if (serverPlayer.isAttacking()) if (serverPlayer.checkHit(clientPlayer)) myGdxGame.audioManager.playHitSound();
-            if (clientPlayer.isAttacking()) if (clientPlayer.checkHit(serverPlayer)) myGdxGame.audioManager.playHitSound();
+            if (serverPlayer.isAttacking()) if (serverPlayer.checkHit(clientPlayer)) {
+                myGdxGame.audioManager.playHitSound();
+            }
+            if (clientPlayer.isAttacking()) if (clientPlayer.checkHit(serverPlayer)) {
+                myGdxGame.audioManager.playHitSound();
+            }
 
             if (gameStatus == GameState.GameStatus.PLAYING) {
                 topPanel.checkOutOfBounds(serverPlayer.getX(), serverPlayer.getY(), true);
@@ -264,29 +271,31 @@ public class GameScreen extends ScreenAdapter {
             if (serverPlayer.isInvoking() && serverPlayer.isInvocationFinished()) serverPlayer.setIsInvoking(false);
             if (clientPlayer.isInvoking() && clientPlayer.isInvocationFinished()) clientPlayer.setIsInvoking(false);
 
-
-            boolean sRespawn = false, cRespawn = false;
-            if (topPanel.getNeedChange1Player()) {
-                serverPlayer.getBody().setTransform(START_PLAYER_SERVER_X * SCALE, START_PLAYER_SERVER_Y * SCALE, 0);
-                serverPlayer.getBody().setLinearVelocity(0, 0);
-                serverPlayer.setHealth(100);
-                topPanel.setPlayer1Out(false);
-                serverPlayer.setHitImmunityTimer(2.0f);
-                sRespawn = true;
-                serverRespawnIgnoreTimer = 0.5f;
-            }
             if (topPanel.getNeedChange2Player()) {
                 clientPlayer.getBody().setTransform(START_PLAYER_CLIENT_X * SCALE, START_PLAYER_CLIENT_Y * SCALE, 0);
                 clientPlayer.getBody().setLinearVelocity(0, 0);
                 clientPlayer.setHealth(100);
                 topPanel.setPlayer2Out(false);
                 clientPlayer.setHitImmunityTimer(2.0f);
-                cRespawn = true;
                 clientRespawnIgnoreTimer = 0.5f;
+                cRespawnConfirmFrames = RESPAWN_FRAMES;
+            }
+            if (topPanel.getNeedChange1Player()) {
+                serverPlayer.getBody().setTransform(START_PLAYER_SERVER_X * SCALE, START_PLAYER_SERVER_Y * SCALE, 0);
+                serverPlayer.getBody().setLinearVelocity(0, 0);
+                serverPlayer.setHealth(100);
+                topPanel.setPlayer1Out(false);
+                serverPlayer.setHitImmunityTimer(2.0f);
+                serverRespawnIgnoreTimer = 0.5f;
+                sRespawnConfirmFrames = RESPAWN_FRAMES;
             }
 
             applyPlayerInput(serverPlayer, localInput);
             serverPlayer.update(delta);
+            boolean cRespawn = cRespawnConfirmFrames > 0;
+            boolean sRespawn = sRespawnConfirmFrames > 0;
+            if (cRespawn) cRespawnConfirmFrames--;
+            if (sRespawn) sRespawnConfirmFrames--;
 
             NetworkPacket packet = new NetworkPacket();
             packet.status = gameStatus;
