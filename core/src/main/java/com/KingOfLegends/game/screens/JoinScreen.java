@@ -64,6 +64,9 @@ public class JoinScreen extends ScreenAdapter {
         board.setCenterX(SCREEN_WIDTH / 2f);
 
         ipEnterPlace = new ImageView(0, 0, 440, 80, GameResources.BUTTON_MENU);
+        ipEnterPlace.setCenterX(SCREEN_WIDTH / 2f);
+        ipEnterPlace.setY(SCREEN_HEIGHT / 2f + 15);
+
 
         inputStage = new Stage(new ExtendViewport(SCREEN_WIDTH, SCREEN_HEIGHT, game.camera));
 
@@ -128,8 +131,6 @@ public class JoinScreen extends ScreenAdapter {
         titleView.draw(game.batch);
         board.draw(game.batch);
 
-        ipEnterPlace.setCenterX(SCREEN_WIDTH / 2f);
-        ipEnterPlace.setY(SCREEN_HEIGHT / 2f + 15);
         ipEnterPlace.draw(game.batch);
 
         connectButton.draw(game.batch);
@@ -168,6 +169,14 @@ public class JoinScreen extends ScreenAdapter {
         if (Gdx.input.justTouched()) {
             Vector3 touch = game.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
 
+            if (touch.x >= ipEnterPlace.getX() && touch.x <= ipEnterPlace.getX() + ipEnterPlace.getWidth() &&
+                touch.y >= ipEnterPlace.getY() && touch.y <= ipEnterPlace.getY() + ipEnterPlace.getHeight()) {
+                if (Gdx.app.getType() == Application.ApplicationType.Android || Gdx.app.getType() == Application.ApplicationType.iOS) {
+                    showNativeIpInput();
+                    return;
+                }
+            }
+
             if (connectButton.isHit(touch.x, touch.y) || backButton.isHit(touch.x, touch.y)) {
                 inputStage.setKeyboardFocus(null);
                 Gdx.input.setOnscreenKeyboardVisible(false);
@@ -182,18 +191,31 @@ public class JoinScreen extends ScreenAdapter {
         }
     }
 
+    private void showNativeIpInput() {
+        Gdx.input.getTextInput(new Input.TextInputListener() {
+            @Override
+            public void input(String text) {
+                Gdx.app.postRunnable(() -> {
+                    String trimmedText = text.trim();
+                    ipField.setText(trimmedText);
+                    errorMessage = "";
+                    if (isValidIP(trimmedText)) {
+                        submitIp(trimmedText);
+                    }
+                });
+            }
+            @Override
+            public void canceled() {}
+        }, "Enter Server IP", ipField.getText(), "192.168.0.1");
+    }
+
     private void submitIp(String ip) {
         if (isValidIP(ip)) {
             game.hostIp = ip;
             game.showGameScreen(false, game.hostIp);
             errorMessage = "";
         } else {
-            errorMessage = "Invalid IP";
-            Gdx.app.postRunnable(() -> {
-                if (errorMessage.equals("Invalid IP")) {
-                    errorMessage = "";
-                }
-            });
+            errorMessage = ""; // а по хорошему сообщать...
         }
     }
 
