@@ -25,6 +25,7 @@ public class GameScreen extends ScreenAdapter {
     private final MyGdxGame myGdxGame;
     MovingBackgroundView backgroundView;
     private ShapeRenderer shapeRenderer;
+    private BloodParticle bloodParticles;
     private SpriteBatch batch;
     private Server server;
     private Client client;
@@ -53,6 +54,7 @@ public class GameScreen extends ScreenAdapter {
         this.myGdxGame = game;
         this.batch = game.batch;
         shapeRenderer = new ShapeRenderer();
+        bloodParticles = new BloodParticle();
         waitingText = new TextView(game.titleFont, SCREEN_WIDTH / 2f - 100, SCREEN_HEIGHT / 4f * 3f - 30f, "WAITING...");
         ipAddressText = new TextView(game.titleFont, SCREEN_WIDTH / 2f - 100, SCREEN_HEIGHT / 4f * 3f + 20f, "");
         countdownText = new TextView(game.titleFont, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT, "");
@@ -257,10 +259,15 @@ public class GameScreen extends ScreenAdapter {
 
             if (serverPlayer.isAttacking()) if (serverPlayer.checkHit(clientPlayer)) {
                 myGdxGame.audioManager.playHitSound();
+                bloodParticles.spawn(clientPlayer.getX() + clientPlayer.getWidth() / 2f, clientPlayer.getY() + clientPlayer.getHeight() / 2f, 12);
             }
             if (clientPlayer.isAttacking()) if (clientPlayer.checkHit(serverPlayer)) {
                 myGdxGame.audioManager.playHitSound();
+                myGdxGame.vibrate();
+                bloodParticles.spawn(serverPlayer.getX() + serverPlayer.getWidth() / 2f, serverPlayer.getY() + serverPlayer.getHeight() / 2f, 12);
             }
+
+            bloodParticles.update(delta);
 
             if (gameStatus == GameState.GameStatus.PLAYING) {
                 topPanel.checkOutOfBounds(serverPlayer.getX(), serverPlayer.getY(), true);
@@ -390,10 +397,13 @@ public class GameScreen extends ScreenAdapter {
 
                 if (packet.cHealth < oldClientHealth && myGdxGame.audioManager != null) {
                     myGdxGame.audioManager.playHitSound();
+                    myGdxGame.vibrate();
+                    bloodParticles.spawn(clientPlayer.getX() + clientPlayer.getWidth() / 2f, clientPlayer.getY() + clientPlayer.getHeight() / 2f, 12);
                 } else if (packet.sHealth < oldServerHealth && myGdxGame.audioManager != null) {
                     myGdxGame.audioManager.playHitSound();
+                    bloodParticles.spawn(serverPlayer.getX() + serverPlayer.getWidth() / 2f, serverPlayer.getY() + serverPlayer.getHeight() / 2f, 12);
                 }
-
+                bloodParticles.update(delta);
                 if (!clientPlayer.isInvoking() && packet.cIsInvoking) {
                     clientPlayer.startInvocation(packet.cInvocationDuration);
                 }
@@ -584,6 +594,7 @@ public class GameScreen extends ScreenAdapter {
             serverPlayer.draw(batch);
             clientPlayer.draw(batch);
         }
+        bloodParticles.draw(batch);
 
         batch.end();
         Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);

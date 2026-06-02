@@ -88,6 +88,12 @@ public class MyGdxGame extends Game {
         camera.update();
     }
 
+    public void vibrate() {
+        if (Gdx.input.isPeripheralAvailable(Input.Peripheral.Vibrator)) {
+            Gdx.input.vibrate(80);
+        }
+    }
+
     @Override
     public void dispose() {
         batch.dispose();
