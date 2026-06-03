@@ -33,6 +33,7 @@ public class ProfileScreen extends ScreenAdapter {
     private TextView nameLabel;
     private ButtonView changeNameButton;
     private ButtonView backButton;
+    private ButtonView saveButton;
     private ImageView board;
 
     private Stage inputStage;
@@ -62,6 +63,11 @@ public class ProfileScreen extends ScreenAdapter {
         backButton = new ButtonView(
             SCREEN_WIDTH / 2f - 220, SCREEN_HEIGHT / 2f - 180f, 440, 70,
             game.defaultMenuFont, GameResources.BUTTON_MENU, "Back"
+        );
+
+        saveButton = new ButtonView(
+            SCREEN_WIDTH / 2f - 220, SCREEN_HEIGHT / 2f - 90f, 440, 70,
+            game.defaultMenuFont, GameResources.BUTTON_MENU, "Save"
         );
 
         board = new ImageView(SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 650f, 600, 500, GameResources.BOARD);
@@ -108,15 +114,15 @@ public class ProfileScreen extends ScreenAdapter {
 
         if (isEditingName) {
             nameEnterPlace.draw(game.batch);
+            saveButton.draw(game.batch);
         }
 
         if (!isEditingName) {
             nameLabel.setCenterX(SCREEN_WIDTH / 2f);
             nameLabel.draw(game.batch);
             changeNameButton.draw(game.batch);
-            backButton.draw(game.batch);
         }
-
+        backButton.draw(game.batch);
         game.batch.end();
 
         if (isEditingName) {
@@ -135,6 +141,17 @@ public class ProfileScreen extends ScreenAdapter {
     }
 
     private void handleInput() {
+        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+            if (isEditingName) {
+                if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+                    saveName(nameField != null ? nameField.getText().trim() : "");
+                }
+                if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                    isEditingName = false;
+                    Gdx.input.setInputProcessor(null);
+                }
+            }
+        }
         if (Gdx.input.justTouched()) {
             Vector3 touch = game.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
 
@@ -146,7 +163,10 @@ public class ProfileScreen extends ScreenAdapter {
                     game.setScreen(game.menuScreen);
                 }
             } else {
-                if (!nameEnterPlace.isHit(touch.x, touch.y)) {
+                if (saveButton.isHit(touch.x, touch.y)) {
+                    saveName(nameField != null ? nameField.getText().trim() : "");
+                }
+                else if (!nameEnterPlace.isHit(touch.x, touch.y)) {
                     isEditingName = false;
                     Gdx.input.setInputProcessor(null);
                 }
