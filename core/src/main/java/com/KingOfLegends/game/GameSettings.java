@@ -69,4 +69,9 @@ public class GameSettings {
     public static final int START_PLAYER_SERVER_Y = 390;
     public static final int START_PLAYER_CLIENT_X = SCREEN_WIDTH - 485;
     public static final int START_PLAYER_CLIENT_Y = 390;
+
+    // Настройки звука и вибрации
+    public static float MUSIC_VOLUME = 0.2f;
+    public static float SOUND_VOLUME = 0.5f;
+    public static boolean VIBRATION_ENABLED = true;
 }

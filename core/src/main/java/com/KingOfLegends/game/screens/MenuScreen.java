@@ -23,6 +23,7 @@ public class MenuScreen extends ScreenAdapter {
     private TextView titleView;
     private ButtonView hostButton;
     private ButtonView joinButton;
+    private ButtonView profileButton;
     private ButtonView settingsButton;
     private ImageView knifeLeft;
     private ImageView knifeRight;
@@ -52,9 +53,13 @@ public class MenuScreen extends ScreenAdapter {
             SCREEN_WIDTH / 2f - 162.5f, buttonY - 115, 325, 100,
             game.defaultMenuFont, GameResources.BUTTON_MENU, "Join Game"
         );
-        settingsButton = new ButtonView(
+        profileButton = new ButtonView(
             SCREEN_WIDTH / 2f - 162.5f, buttonY - 240, 325, 100,
             game.defaultMenuFont, GameResources.BUTTON_MENU, "Profile"
+        );
+        settingsButton = new ButtonView(
+            20, 20, 80, 80,
+            GameResources.BUTTON_SETTINGS
         );
         exitButton = new ButtonView(
             SCREEN_WIDTH / 2f - 162.5f, buttonY - 365, 325, 100,
@@ -83,6 +88,7 @@ public class MenuScreen extends ScreenAdapter {
         hostButton.draw(game.batch);
         joinButton.draw(game.batch);
         settingsButton.draw(game.batch);
+        profileButton.draw(game.batch);
         exitButton.draw(game.batch);
         game.batch.end();
 
@@ -95,10 +101,12 @@ public class MenuScreen extends ScreenAdapter {
                 game.showGameScreen(true, null);
             }  if (joinButton.isHit(touch.x, touch.y)) {
                 game.setScreen(game.joinScreen);
-            }  if (settingsButton.isHit(touch.x, touch.y)){
+            }  if (profileButton.isHit(touch.x, touch.y)){
                 game.setScreen(game.profileScreen);
             } if (exitButton.isHit(touch.x, touch.y)) {
                 Gdx.app.exit();
+            } if (settingsButton.isHit(touch.x, touch.y)) {
+                game.setScreen(game.settingsScreen);
             }
         }
     }

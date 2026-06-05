@@ -11,6 +11,10 @@ public class GameResources {
     public static final String BUTTON_LONG_MENU = "textures/button_background_long.png";
     public static final String BUTTON_MENU = "textures/button_menu.png";
     public static final String BUTTON_HOME = "textures/back_btn.png";
+    public static final String BUTTON_SETTINGS = "textures/settings_btn.png";
+    public static final String SLIDER_FILL = "textures/slider_fill.png";
+    public static final String SLIDER_EMPTY = "textures/slider_empty.png";
+    public static final String CIRCLE_BUTTON = "textures/circle_btn.png";
     public static final String BACKGROUND_MENU = "textures/background_menu.jpg";
     public static final String BACKGROUND_JOIN = "textures/background_join.jpg";
     public static final String BACKGROUND_PROFILE = "textures/background_profile.png";
@@ -18,6 +22,8 @@ public class GameResources {
     public static final String KNIFE_LEFT = "textures/knife_left.png";
     public static final String KNIFE_RIGHT = "textures/knife_right.png";
     public static final String BOARD = "textures/board.png";
+    public static final String SWITCH_ONN = "textures/switch_onn.png";
+    public static final String SWITCH_OFF = "textures/switch_off.png";
 
 
     //FONT

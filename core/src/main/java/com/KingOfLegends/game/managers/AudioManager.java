@@ -1,5 +1,6 @@
 package com.KingOfLegends.game.managers;
 
+import com.KingOfLegends.game.GameSettings;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
@@ -87,11 +88,18 @@ public class AudioManager {
     }
 
     public void playHitSound() {
-        hitSound.play(0.5f);
+        hitSound.play(GameSettings.SOUND_VOLUME);
+    }
+
+    public void applyVolumes() {
+        menuMusic.setVolume(GameSettings.MUSIC_VOLUME);
+        menuWaiting.setVolume(GameSettings.MUSIC_VOLUME);
+        gameMusic1.setVolume(GameSettings.MUSIC_VOLUME);
+        gameMusic2.setVolume(GameSettings.MUSIC_VOLUME);
     }
 
     public void playVictorySound() {
-        victoryMusic.play(0.5f);
+        victoryMusic.play(GameSettings.SOUND_VOLUME);
     }
 
     public void stopMenuMusicCompletely() {

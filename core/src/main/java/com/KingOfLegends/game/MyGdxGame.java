@@ -16,6 +16,7 @@ import com.KingOfLegends.game.managers.MemoryManager;
 import com.KingOfLegends.game.screens.GameScreen;
 import com.KingOfLegends.game.screens.JoinScreen;
 import com.KingOfLegends.game.screens.MenuScreen;
+import com.KingOfLegends.game.screens.SettingsScreen;
 import com.KingOfLegends.game.screens.ProfileScreen;
 
 import static com.KingOfLegends.game.GameSettings.*;
@@ -32,6 +33,7 @@ public class MyGdxGame extends Game {
     public GameScreen gameScreen;
     public JoinScreen joinScreen;
     public ProfileScreen profileScreen;
+    public SettingsScreen settingsScreen;
 
     public BitmapFont defaultFont, largeFont, smallFont, titleFont, timerFont, defaultMenuFont, titleMenuFont, textFieldFont;
 
@@ -65,6 +67,8 @@ public class MyGdxGame extends Game {
         gameScreen = new GameScreen(this);
         joinScreen = new JoinScreen(this);
         profileScreen = new ProfileScreen(this);
+        MemoryManager.loadSettings();
+        settingsScreen = new SettingsScreen(this);
 
         setScreen(menuScreen);
     }
