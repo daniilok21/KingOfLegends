@@ -37,6 +37,12 @@ public class TextView extends View{
     public void setCenterY(float y) {
         this.y = y - height / 2;
     }
+    public float getCenterX() {
+        return x + width / 2;
+    }
+    public float getCenterY() {
+        return y + height / 2;
+    }
 
     public void setColor(Color color) {
         if (font != null) {

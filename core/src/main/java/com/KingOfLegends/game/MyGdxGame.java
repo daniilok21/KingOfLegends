@@ -1,5 +1,6 @@
 package com.KingOfLegends.game;
 
+import com.KingOfLegends.game.screens.UpgradeScreen;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -33,9 +34,10 @@ public class MyGdxGame extends Game {
     public GameScreen gameScreen;
     public JoinScreen joinScreen;
     public ProfileScreen profileScreen;
+    public UpgradeScreen upgradeScreen;
     public SettingsScreen settingsScreen;
 
-    public BitmapFont defaultFont, largeFont, smallFont, titleFont, timerFont, defaultMenuFont, titleMenuFont, textFieldFont;
+    public BitmapFont defaultFont, defaultFontWithBorder, largeFont, smallFont, titleFont, titleFontWithBorder, timerFont, defaultMenuFont, defaultUpgradeFont, titleMenuFont, textFieldFont, titleUpgradeFont;
 
     public boolean isHost = false;
     public String hostIp = "";
@@ -54,19 +56,24 @@ public class MyGdxGame extends Game {
 
         playerName = MemoryManager.loadProfileName();
         defaultFont = FontBuilder.generate(24, Color.WHITE, GameResources.FONT_PATH);
+        defaultFontWithBorder = FontBuilder.generate(24, Color.WHITE, GameResources.FONT_PATH, 1, Color.BLACK, true);
         largeFont = FontBuilder.generate(48, Color.WHITE, GameResources.FONT_PATH);
         smallFont = FontBuilder.generate(16, Color.WHITE, GameResources.FONT_PATH);
         titleFont = FontBuilder.generate(64, Color.WHITE, GameResources.FONT_PATH);
+        titleFontWithBorder = FontBuilder.generate(64, Color.WHITE, GameResources.FONT_PATH, 2, Color.BLACK, true);
         timerFont = FontBuilder.generate(24, Color.RED, GameResources.FONT_PATH);
 
         defaultMenuFont = FontBuilder.generate(30, Color.WHITE, GameResources.DRAK_FONT_PATH);
+        defaultUpgradeFont = FontBuilder.generate(50, Color.WHITE, GameResources.MENU_FONT_PATH, 2, Color.BLACK, true);
         titleMenuFont = FontBuilder.generate(110, Color.WHITE, GameResources.MENU_FONT_PATH);
         textFieldFont = FontBuilder.generate(30, Color.WHITE, GameResources.DRAK_FONT_PATH);
+        titleUpgradeFont = FontBuilder.generate(55, Color.WHITE, GameResources.MENU_FONT_PATH);
 
         menuScreen = new MenuScreen(this);
         gameScreen = new GameScreen(this);
         joinScreen = new JoinScreen(this);
         profileScreen = new ProfileScreen(this);
+        upgradeScreen = new UpgradeScreen(this);
         MemoryManager.loadSettings();
         settingsScreen = new SettingsScreen(this);
 

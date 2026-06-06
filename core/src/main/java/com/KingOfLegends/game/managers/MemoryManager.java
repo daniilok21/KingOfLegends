@@ -6,7 +6,49 @@ import com.badlogic.gdx.Preferences;
 
 public class MemoryManager {
     private static final Preferences preferences = Gdx.app.getPreferences("User saves");
+    private static final String[] SKILL_KEYS = {
+        "Skill_Health",
+        "Skill_Knockback",
+        "Skill_Luck",
+        "Skill_Protect",
+        "Skill_Critical",
+        "Skill_MoreExp"
+    };
 
+    public static void saveSkillLevel(int skillId, int level) {
+        if (skillId >= 0 && skillId < SKILL_KEYS.length) {
+            preferences.putInteger(SKILL_KEYS[skillId], level);
+            preferences.flush();
+        }
+    }
+
+    public static int getSkillLevel(int skillId) {
+        if (skillId >= 0 && skillId < SKILL_KEYS.length) {
+            return preferences.getInteger(SKILL_KEYS[skillId], 1);
+        }
+        return 1;
+    }
+
+    /**
+     * Сохраняет уровни сразу всех навыков из массива
+     * @param levels массив уровней длины 6
+     */
+    public static void saveAllSkills(int[] levels) {
+        if (levels == null || levels.length != SKILL_KEYS.length) return;
+
+        for (int i = 0; i < SKILL_KEYS.length; i++) {
+            preferences.putInteger(SKILL_KEYS[i], levels[i]);
+        }
+        preferences.flush();
+    }
+
+    public static int[] loadAllSkills() {
+        int[] levels = new int[SKILL_KEYS.length];
+        for (int i = 0; i < SKILL_KEYS.length; i++) {
+            levels[i] = getSkillLevel(i);
+        }
+        return levels;
+    }
     public static void saveProfileName(String profileName) {
         preferences.putString("ProfileName", profileName);
         preferences.flush();

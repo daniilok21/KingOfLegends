@@ -159,4 +159,14 @@ public class SettingsScreen extends ScreenAdapter {
         );
         game.setScreen(game.menuScreen);
     }
+    @Override
+    public void dispose() {
+        background.dispose();
+        titleView = null;
+        musicSlider = null;
+        soundSlider = null;
+        vibrationToggle = null;
+        backButton = null;
+        board = null;
+    }
 }

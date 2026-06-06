@@ -71,4 +71,20 @@ public class GameResources {
 
     // СаундТреки
     public static final String HIT_SOUND_PATH = "audio/shoot_sound.mp3";
+
+    // UpgradeScreen
+    public static final String BOARD_UPGRADE_PATH = "textures/upgrade_board.png";
+    public static final String FRAME_UPGRADE_PATH = "textures/frame.png";
+    public static final String EXP_UPGRADE_PATH = "textures/exp.png";
+    public static final String PERSON_UPGRADE_SCREEN_PATH = "textures/person_upgrade_screen.png";
+    public static final String PAPER_UPGRADE_PATH = "textures/paper.png";
+    public static final String BOARD_UNDER_SKILLS_UPGRADE_PATH = "textures/board_under_skills.png";
+    public static final String HEALTH_UPGRADE_PATH = "textures/health_upgrade.png";
+    public static final String CRITICAL_UPGRADE_PATH = "textures/critical_upgrade.png";
+    public static final String KNOCKBACK_UPGRADE_PATH = "textures/knockback_upgrade.png";
+    public static final String LUCK_UPGRADE_PATH = "textures/luck_upgrade.png";
+    public static final String MORE_EXP_UPGRADE_PATH = "textures/more_exp_upgrade.png";
+    public static final String PROTECT_UPGRADE_PATH = "textures/protect_upgrade.png";
+    public static final String PLUS_UPGRADE_PATH = "textures/plus_btn.png";
+    public static final String LVL_UPGRADES_UPGRADE_PATH = "textures/lvl_upgrades.png";
 }

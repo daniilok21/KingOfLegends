@@ -55,10 +55,10 @@ public class GameScreen extends ScreenAdapter {
         this.batch = game.batch;
         shapeRenderer = new ShapeRenderer();
         bloodParticles = new BloodParticle();
-        waitingText = new TextView(game.titleFont, SCREEN_WIDTH / 2f - 100, SCREEN_HEIGHT / 4f * 3f - 30f, "WAITING...");
-        ipAddressText = new TextView(game.titleFont, SCREEN_WIDTH / 2f - 100, SCREEN_HEIGHT / 4f * 3f + 20f, "");
-        countdownText = new TextView(game.titleFont, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT, "");
-        resultText = new TextView(game.titleFont, SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f + 100, "");
+        waitingText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f - 100, SCREEN_HEIGHT / 4f * 3f - 30f, "WAITING...");
+        ipAddressText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f - 100, SCREEN_HEIGHT / 4f * 3f + 20f, "");
+        countdownText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT, "");
+        resultText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f + 100, "");
         backgroundView = new MovingBackgroundView(GameResources.BACKGROUND_GAME);
     }
 
@@ -130,7 +130,7 @@ public class GameScreen extends ScreenAdapter {
         attackButton = new ButtonView(SCREEN_WIDTH - 130 - 2 * (BUTTON_WIDTH + 20) - offset_buttons, offset_buttons, BUTTON_WIDTH, BUTTON_HEIGHT, GameResources.BUTTON_ATTACK);
         homeButton = new ButtonView(20, SCREEN_HEIGHT - 80, 60, 60, GameResources.BUTTON_HOME);
         if (topPanel != null) topPanel.dispose();
-        topPanel = new TopPanelView(200, SCREEN_HEIGHT-TOP_PANEL_HEIGHT, SCREEN_WIDTH - 400, TOP_PANEL_HEIGHT, myGdxGame.defaultFont, myGdxGame.timerFont, GameResources.TOP_PANEL_BG, GameResources.HEART_FULL, GameResources.HEART_EMPTY);
+        topPanel = new TopPanelView(200, SCREEN_HEIGHT-TOP_PANEL_HEIGHT, SCREEN_WIDTH - 400, TOP_PANEL_HEIGHT, myGdxGame.defaultFontWithBorder, myGdxGame.timerFont, GameResources.TOP_PANEL_BG, GameResources.HEART_FULL, GameResources.HEART_EMPTY);
         topPanel.setHost(myGdxGame.isHost);
     }
 

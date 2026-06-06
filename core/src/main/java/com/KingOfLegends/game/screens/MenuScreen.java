@@ -38,6 +38,7 @@ public class MenuScreen extends ScreenAdapter {
     @Override
     public void show() {
         game.audioManager.playMenuMusic();
+        game.audioManager.applyVolumes();
 
         game.defaultMenuFont.setColor(Color.BROWN);
 
@@ -102,7 +103,7 @@ public class MenuScreen extends ScreenAdapter {
             }  if (joinButton.isHit(touch.x, touch.y)) {
                 game.setScreen(game.joinScreen);
             }  if (profileButton.isHit(touch.x, touch.y)){
-                game.setScreen(game.profileScreen);
+                game.setScreen(game.upgradeScreen);
             } if (exitButton.isHit(touch.x, touch.y)) {
                 Gdx.app.exit();
             } if (settingsButton.isHit(touch.x, touch.y)) {
