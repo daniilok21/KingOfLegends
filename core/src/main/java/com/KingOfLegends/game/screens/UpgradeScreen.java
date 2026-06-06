@@ -5,14 +5,11 @@ import static com.KingOfLegends.game.GameSettings.SCREEN_HEIGHT;
 import static com.KingOfLegends.game.GameSettings.SCREEN_WIDTH;
 
 import com.KingOfLegends.game.GameResources;
-import com.KingOfLegends.game.GameSettings;
 import com.KingOfLegends.game.MyGdxGame;
 import com.KingOfLegends.game.components.ButtonView;
 import com.KingOfLegends.game.components.ImageView;
 import com.KingOfLegends.game.components.MovingBackgroundView;
-import com.KingOfLegends.game.components.SliderView;
 import com.KingOfLegends.game.components.TextView;
-import com.KingOfLegends.game.components.ToggleView;
 import com.KingOfLegends.game.managers.MemoryManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
@@ -28,7 +25,7 @@ public class UpgradeScreen extends ScreenAdapter {
     private TextView titleView, hp, lvl, exp_text;
     private TextureRegion[] critical_im, health_im, knockback_im, luck_im, moreExp_im, protect_im, lvl_im;
     private TextureRegion[][] skills_im;
-    private Texture healthTexture, knockbackTexture, luckTexture, protectTexture, criticalTexture, moreExpTexture, lvlTexture, plusTexture;
+    private Texture healthTexture, knockbackTexture, luckTexture, protectTexture, criticalTexture, moreExpTexture, lvlTexture;
     private ButtonView homeButton;
     private float[] healthData;
     private float[] knockbackData;
@@ -110,7 +107,7 @@ public class UpgradeScreen extends ScreenAdapter {
         moreExp_im = TextureRegion.split(moreExpTexture, frameWidth, frameHeight)[0];
         skills_im = new TextureRegion[][] {health_im, knockback_im, luck_im, protect_im, critical_im, moreExp_im};
 
-        frameWidth = lvlTexture.getWidth() / 5;
+        frameWidth = lvlTexture.getWidth() / 6;
         frameHeight = lvlTexture.getHeight();
         lvl_im = TextureRegion.split(lvlTexture, frameWidth, frameHeight)[0];
     }
@@ -127,14 +124,13 @@ public class UpgradeScreen extends ScreenAdapter {
                     break;
                 }
 
-                if (touch.x >= plusButtons[i].getX() && touch.x <= plusButtons[i].getX() + plusButtons[i].getWidth() &&
+                if (lvlSkills[i] < 5 &&
+                    touch.x >= plusButtons[i].getX() && touch.x <= plusButtons[i].getX() + plusButtons[i].getWidth() &&
                     touch.y >= plusButtons[i].getY() && touch.y <= plusButtons[i].getY() + plusButtons[i].getHeight()) {
-                    // дописаттт
-                    if (lvlSkills[i] < 5) {
-                        lvlSkills[i]++;
-                        MemoryManager.saveSkillLevel(i, lvlSkills[i]);
-                        System.out.println("Прокачан навык " + i + ". Текущий уровень: " + lvlSkills[i]);
-                    }
+
+                    lvlSkills[i]++;
+                    MemoryManager.saveSkillLevel(i, lvlSkills[i]);
+                    System.out.println("Прокачан навык " + i + ". Текущий уровень: " + lvlSkills[i]);
                     break;
                 }
             }
@@ -176,10 +172,24 @@ public class UpgradeScreen extends ScreenAdapter {
         paper3.draw(game.batch);
 
         for (int i = 0; i < data.length; i++) {
-            int currentLvlIndex = lvlSkills[i] - 1;
-            game.batch.draw(skills_im[i][currentLvlIndex], data[i][0], data[i][1], data[i][2], data[i][3]);
-            game.batch.draw(lvl_im[currentLvlIndex], lvlData[i][0], lvlData[i][1], lvlData[i][2], lvlData[i][3]);
-            plusButtons[i].draw(game.batch);
+            int currentSkillTextureIndex;
+
+            if (lvlSkills[i] == 0) {
+                currentSkillTextureIndex = 0;
+                game.batch.setColor(0.3f, 0.3f, 0.3f, 0.6f);
+            } else {
+                currentSkillTextureIndex = lvlSkills[i] - 1;
+                game.batch.setColor(Color.WHITE);
+            }
+            game.batch.draw(skills_im[i][currentSkillTextureIndex], data[i][0], data[i][1], data[i][2], data[i][3]);
+            game.batch.setColor(Color.WHITE);
+
+            int currentLvlTextureIndex = Math.max(0, Math.min(lvlSkills[i], 5));
+            game.batch.draw(lvl_im[currentLvlTextureIndex], lvlData[i][0], lvlData[i][1], lvlData[i][2], lvlData[i][3]);
+
+            if (lvlSkills[i] < 5) {
+                plusButtons[i].draw(game.batch);
+            }
         }
         homeButton.draw(game.batch);
 

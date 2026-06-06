@@ -24,15 +24,11 @@ public class MemoryManager {
 
     public static int getSkillLevel(int skillId) {
         if (skillId >= 0 && skillId < SKILL_KEYS.length) {
-            return preferences.getInteger(SKILL_KEYS[skillId], 1);
+            return preferences.getInteger(SKILL_KEYS[skillId], 0);
         }
         return 1;
     }
 
-    /**
-     * Сохраняет уровни сразу всех навыков из массива
-     * @param levels массив уровней длины 6
-     */
     public static void saveAllSkills(int[] levels) {
         if (levels == null || levels.length != SKILL_KEYS.length) return;
 
