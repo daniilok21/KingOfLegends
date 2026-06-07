@@ -1,5 +1,7 @@
 package com.KingOfLegends.game.screens;
 
+import com.KingOfLegends.game.managers.MemoryManager;
+import com.KingOfLegends.game.managers.SkillMessageManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
@@ -45,6 +47,12 @@ public class GameScreen extends ScreenAdapter {
     private int cRespawnConfirmFrames = 0;
     private int sRespawnConfirmFrames = 0;
     private static final int RESPAWN_FRAMES = 5;
+    SkillMessageManager skillMessageManager;
+
+    private int[] localSkills;
+    private int[] clientSkills;
+    private int[] serverSkills;
+    private int localMaxHealth;
 
     private Rectangle scissorRect = new Rectangle();
     private float serverRespawnIgnoreTimer = 0;
@@ -60,6 +68,7 @@ public class GameScreen extends ScreenAdapter {
         countdownText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT, "");
         resultText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f + 100, "");
         backgroundView = new MovingBackgroundView(GameResources.BACKGROUND_GAME);
+        skillMessageManager = new SkillMessageManager(myGdxGame.defaultFontWithBorder);
     }
 
     @Override
@@ -84,6 +93,8 @@ public class GameScreen extends ScreenAdapter {
         if (myGdxGame.world != null) myGdxGame.world.dispose();
         myGdxGame.world = new World(new Vector2(0, GRAVITY), true);
         myGdxGame.contactManager = new ContactManager(myGdxGame.world);
+
+        localSkills = MemoryManager.loadAllSkills();
 
         setupWorld();
 
@@ -132,6 +143,14 @@ public class GameScreen extends ScreenAdapter {
         if (topPanel != null) topPanel.dispose();
         topPanel = new TopPanelView(200, SCREEN_HEIGHT-TOP_PANEL_HEIGHT, SCREEN_WIDTH - 400, TOP_PANEL_HEIGHT, myGdxGame.defaultFontWithBorder, myGdxGame.timerFont, GameResources.TOP_PANEL_BG, GameResources.HEART_FULL, GameResources.HEART_EMPTY);
         topPanel.setHost(myGdxGame.isHost);
+        localMaxHealth = 100 + GameSettings.HEALTH_BUFF[localSkills[0]];
+        if (myGdxGame.isHost) {
+            serverPlayer.setMaxHealth(localMaxHealth);
+            serverPlayer.setHealth(localMaxHealth);
+        } else {
+            clientPlayer.setMaxHealth(localMaxHealth);
+            clientPlayer.setHealth(localMaxHealth);
+        }
     }
 
     public void initializeNetwork() {
@@ -253,15 +272,25 @@ public class GameScreen extends ScreenAdapter {
                     if (remoteInput.isAttacking && !clientPlayer.isAttacking()) {
                         clientPlayer.startAttack(remoteInput.attackDir);
                     }
+                    if (remoteInput.skills != null) {
+                        clientSkills = remoteInput.skills;
+                        int clientMaxHealth = 100 + GameSettings.HEALTH_BUFF[clientSkills[0]];
+                        if (clientPlayer.getMaxHealth() != clientMaxHealth) {
+                            clientPlayer.setMaxHealth(clientMaxHealth);
+                            if (gameStatus != GameState.GameStatus.PLAYING) {
+                                clientPlayer.setHealth(clientMaxHealth);
+                            }
+                        }
+                    }
                 }
             }
             clientPlayer.update(delta);
 
-            if (serverPlayer.isAttacking()) if (serverPlayer.checkHit(clientPlayer)) {
+            if (serverPlayer.isAttacking()) if (serverPlayer.checkHit(clientPlayer, GameSettings.KNOCKBACK_BUFF[localSkills[1]])) {
                 myGdxGame.audioManager.playHitSound();
                 bloodParticles.spawn(clientPlayer.getX() + clientPlayer.getWidth() / 2f, clientPlayer.getY() + clientPlayer.getHeight() / 2f, 12);
             }
-            if (clientPlayer.isAttacking()) if (clientPlayer.checkHit(serverPlayer)) {
+            if (clientPlayer.isAttacking()) if (clientPlayer.checkHit(serverPlayer, GameSettings.KNOCKBACK_BUFF[clientSkills != null ? clientSkills[1] : 0])) {
                 myGdxGame.audioManager.playHitSound();
                 myGdxGame.vibrate();
                 bloodParticles.spawn(serverPlayer.getX() + serverPlayer.getWidth() / 2f, serverPlayer.getY() + serverPlayer.getHeight() / 2f, 12);
@@ -281,7 +310,7 @@ public class GameScreen extends ScreenAdapter {
             if (topPanel.getNeedChange2Player()) {
                 clientPlayer.getBody().setTransform(START_PLAYER_CLIENT_X * SCALE, START_PLAYER_CLIENT_Y * SCALE, 0);
                 clientPlayer.getBody().setLinearVelocity(0, 0);
-                clientPlayer.setHealth(100);
+                clientPlayer.setHealth(clientPlayer.getMaxHealth());
                 topPanel.setPlayer2Out(false);
                 clientPlayer.setHitImmunityTimer(2.0f);
                 clientRespawnIgnoreTimer = 0.5f;
@@ -290,7 +319,7 @@ public class GameScreen extends ScreenAdapter {
             if (topPanel.getNeedChange1Player()) {
                 serverPlayer.getBody().setTransform(START_PLAYER_SERVER_X * SCALE, START_PLAYER_SERVER_Y * SCALE, 0);
                 serverPlayer.getBody().setLinearVelocity(0, 0);
-                serverPlayer.setHealth(100);
+                serverPlayer.setHealth(serverPlayer.getMaxHealth());
                 topPanel.setPlayer1Out(false);
                 serverPlayer.setHitImmunityTimer(2.0f);
                 serverRespawnIgnoreTimer = 0.5f;
@@ -363,6 +392,13 @@ public class GameScreen extends ScreenAdapter {
                 selectedMusicIndex = packet.musicIndex;
                 if (packet.sName != null) topPanel.setPlayer1Name(packet.sName);
                 if (packet.sName != null) topPanel.setPlayer2Name(packet.cName);
+                if (packet.sSkills != null) {
+                    serverSkills = packet.sSkills;
+                    int serverMaxHealth = 100 + GameSettings.HEALTH_BUFF[serverSkills[0]];
+                    if (serverPlayer.getMaxHealth() != serverMaxHealth) {
+                        serverPlayer.setMaxHealth(serverMaxHealth);
+                    }
+                }
 
                 int oldClientHealth = clientPlayer.getHealth();
                 int oldServerHealth = serverPlayer.getHealth();
@@ -415,6 +451,7 @@ public class GameScreen extends ScreenAdapter {
                 if (packet.cNeedRespawn) {
                     clientPlayer.getBody().setTransform(packet.cX, packet.cY, 0);
                     clientPlayer.getBody().setLinearVelocity(0, 0);
+                    clientPlayer.setHealth(clientPlayer.getMaxHealth());
                     clientRespawnIgnoreTimer = 0.5f;
                 } else if ((packet.cInHitStun || packet.cIsDodging) && clientRespawnIgnoreTimer <= 0) {
                     clientPlayer.getBody().setTransform(packet.cX, packet.cY, 0);
@@ -440,10 +477,13 @@ public class GameScreen extends ScreenAdapter {
             localInput.isOnGround = clientPlayer.isOnGround();
             localInput.jumpsRemaining = clientPlayer.getJumpsRemaining();
             localInput.isClimbing = clientPlayer.isClimbing();
+            localInput.skills = localSkills;
 
             if (client != null) client.sendInput(localInput);
             serverPlayer.update(delta);
         }
+
+        skillMessageManager.update(delta);
     }
 
     private void checkMatchEndConditions() {
@@ -457,11 +497,28 @@ public class GameScreen extends ScreenAdapter {
         myGdxGame.audioManager.playVictorySound();
         myGdxGame.audioManager.stopGameMusic();
         String winner = "DRAW!";
-        if (topPanel.getPlayer1Lives() <= 0) winner = topPanel.getPlayer2Name() + " - WIN!";
-        else if (topPanel.getPlayer2Lives() <= 0) winner = topPanel.getPlayer1Name() + " - WIN!";
+        boolean localWon = false;
+
+        if (topPanel.getPlayer1Lives() <= 0) {
+            winner = topPanel.getPlayer2Name() + " - WIN!";
+            localWon = !myGdxGame.isHost;
+        }
+        else if (topPanel.getPlayer2Lives() <= 0) {
+            winner = topPanel.getPlayer1Name() + " - WIN!";
+            localWon = myGdxGame.isHost;
+        }
+        awardExp(localWon);
         endMatchWithWinner(winner);
     }
+    private void awardExp(boolean won) {
+        int[] skills = MemoryManager.loadAllSkills();
 
+        int baseExp = won ? GameSettings.EXP_WIN : GameSettings.EXP_LOSE;
+        int finalExp = (int)(baseExp * GameSettings.MORE_EXP_BUFF[skills[5]]);
+
+        MemoryManager.addExp(finalExp);
+        System.out.println("Exp awarded: " + finalExp + " (won=" + won + ", multiplier=" + GameSettings.MORE_EXP_BUFF[skills[5]] + ")");
+    }
     private void endMatchWithWinner(String message) {
         gameStatus = GameState.GameStatus.FINISHED;
         resultText.setText(message);
@@ -605,6 +662,7 @@ public class GameScreen extends ScreenAdapter {
         jumpButton.draw(batch);
         dodgeButton.draw(batch);
         attackButton.draw(batch);
+        skillMessageManager.draw(batch);
 
         if (gameStatus == GameState.GameStatus.WAITING) {
             homeButton.draw(batch);

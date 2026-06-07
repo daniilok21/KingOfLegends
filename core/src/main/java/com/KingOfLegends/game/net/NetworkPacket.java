@@ -27,6 +27,10 @@ public class NetworkPacket implements Serializable {
     public boolean sIsInvoking;
     public boolean sIsClimbing;
     public float sInvocationDuration;
+    public int[] sSkills;
+    public boolean sLuckProc;
+    public boolean sProtectProc;
+    public boolean sCritProc;
 
     public String cName;
     public float cX, cY;
@@ -45,6 +49,10 @@ public class NetworkPacket implements Serializable {
     public boolean cIsInvoking;
     public boolean cIsClimbing;
     public float cInvocationDuration;
+    public int[] cSkills;
+    public boolean cLuckProc;
+    public boolean cProtectProc;
+    public boolean cCritProc;
 
     public float matchTimer;
     public int musicIndex;

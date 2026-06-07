@@ -346,17 +346,15 @@ public class PlayerObject extends GameObject {
         attackHitbox.set(hitboxX, hitboxY, hitboxWidth, hitboxHeight);
     }
 
-    public boolean checkHit(PlayerObject target) {
-        if (!isAttacking || target.hasHitImmunity() || target.isDodging() || attackAnimation.getKeyFrameIndex(stateTime) < attackAnimation.getKeyFrames().length - 2) return false;
+    public boolean checkHit(PlayerObject target, float knockbackMultiplier) {
+        if (!isAttacking || target.hasHitImmunity() || target.isDodging() ||
+            attackAnimation.getKeyFrameIndex(stateTime) < attackAnimation.getKeyFrames().length - 2) return false;
 
         updateAttackHitbox();
 
         if (attackHitbox.overlaps(target.getBounds())) {
-            System.out.println("Попал. Атака: " + currentAttackDirection);
-
             int damage = calculateDamage();
-            applyKnockback(target, damage);
-
+            applyKnockback(target, damage, knockbackMultiplier);
             return true;
         }
         return false;
@@ -375,7 +373,7 @@ public class PlayerObject extends GameObject {
         }
     }
 
-    private void applyKnockback(PlayerObject target, int damage) {
+    private void applyKnockback(PlayerObject target, int damage, float knockbackMultiplier) {
         Vector2 knockbackDirection = new Vector2();
         float forse = 40f;
 
@@ -396,7 +394,7 @@ public class PlayerObject extends GameObject {
         knockbackDirection.nor();
 
         float bonusForceWithHealth = (1 + (100 - target.getHealth()) / 100f) * 2f;
-        float totalForce = forse * bonusForceWithHealth;
+        float totalForce = forse * bonusForceWithHealth * knockbackMultiplier;
 
         target.applyHitStun(GameSettings.HIT_STUN_DURATION);
         target.takeDamage(damage);
@@ -737,7 +735,9 @@ public class PlayerObject extends GameObject {
         }
         this.jumpsRemaining = jumps;
     }
-
+    public void setMaxHealth(int maxHealth) {
+        this.maxHealth = maxHealth;
+    }
     public Rectangle getPlayerHitbox() {
         return new Rectangle(getX(), getY(), width, height);
     }

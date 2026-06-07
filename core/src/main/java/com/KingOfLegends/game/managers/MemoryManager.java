@@ -49,7 +49,19 @@ public class MemoryManager {
         preferences.putString("ProfileName", profileName);
         preferences.flush();
     }
+    public static void saveExp(int exp) {
+        preferences.putInteger("PlayerExp", exp);
+        preferences.flush();
+    }
 
+    public static int loadExp() {
+        return preferences.getInteger("PlayerExp", 0);
+    }
+
+    public static void addExp(int value) {
+        int current = loadExp();
+        saveExp(current + value);
+    }
     public static String loadProfileName() {
         return preferences.getString("ProfileName", "Unknown");
     }

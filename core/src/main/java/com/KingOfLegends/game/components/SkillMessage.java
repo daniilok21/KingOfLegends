@@ -1,4 +1,4 @@
-package com.KingOfLegends.game.objects;
+package com.KingOfLegends.game.components;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -22,15 +22,14 @@ public class SkillMessage {
 
     public void update(float delta) {
         lifeTime -= delta;
-        y += 40f * delta; // Скорость плытия текста вверх
+        y += 40f * delta;
     }
 
     public void draw(SpriteBatch batch, BitmapFont font) {
         if (lifeTime <= 0) return;
-        // Плавное исчезновение текста (альфа-канал)
         float alpha = lifeTime / maxLifeTime;
         font.setColor(color.r, color.g, color.b, alpha);
         font.draw(batch, text, x, y);
-        font.setColor(Color.WHITE); // Возвращаем дефолтный цвет
+        font.setColor(Color.WHITE);
     }
 }

@@ -16,4 +16,5 @@ public class PlayerInput implements Serializable {
     public boolean isOnGround;
     public int jumpsRemaining;
     public boolean isClimbing;
+    public int[] skills;
 }
