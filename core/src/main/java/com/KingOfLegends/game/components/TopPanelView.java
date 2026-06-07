@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import com.KingOfLegends.game.GameSettings;
 
+import java.util.Random;
+
 public class TopPanelView extends View {
     private Texture panelBackground;
     private Texture heartTexture;
@@ -15,6 +17,7 @@ public class TopPanelView extends View {
     TextView timerText;
     TextView player1RespawnText;
     TextView player2RespawnText;
+    Random random;
     private String player1Name;
     private String player2Name;
     private int player1Lives;
@@ -33,6 +36,11 @@ public class TopPanelView extends View {
     private int heartHeight = 30;
     private int heartSpacing = 5;
 
+    private int sLuckLevel;
+    private int cLuckLevel;
+    private boolean sLuckProc;
+    private boolean cLuckProc;
+
     public TopPanelView(float x, float y, float width, float height,
                         BitmapFont font, BitmapFont timerFont, String panelTexturePath,
                         String heartTexturePath, String emptyHeartTexturePath) {
@@ -50,12 +58,19 @@ public class TopPanelView extends View {
         panelBackground = new Texture(panelTexturePath);
         heartTexture = new Texture(heartTexturePath);
         emptyHeartTexture = new Texture(emptyHeartTexturePath);
+        random = new Random();
+        sLuckLevel = 0;
+        cLuckLevel = 0;
 
         reset();
     }
 
     public void setHost(boolean isHost) {
         this.isHost = isHost;
+    }
+    public void setLuckLevel(int sLuckLevel, int cLuckLevel) {
+        this.sLuckLevel = sLuckLevel;
+        this.cLuckLevel = cLuckLevel;
     }
 
     private void updateTextPositions() {
@@ -82,6 +97,10 @@ public class TopPanelView extends View {
 
         needChange1Player = false;
         needChange2Player = false;
+
+        sLuckProc = false;
+        cLuckProc = false;
+
         updateTextPositions();
     }
 
@@ -113,7 +132,12 @@ public class TopPanelView extends View {
         if (player1IsOutOfBounds) {
             player1OutTimer += delta;
             if (player1OutTimer >= GameSettings.OUT_OF_BOUNDS_RESPAWN_TIME) {
-                player1Lives--;
+                if (GameSettings.LUCK_BUFF[sLuckLevel] <= random.nextFloat()) {
+                    player1Lives--;
+                }
+                else {
+                    sLuckProc = true;
+                }
                 player1IsOutOfBounds = false;
                 player1OutTimer = 0f;
                 if (player1Lives > 0) {
@@ -130,7 +154,13 @@ public class TopPanelView extends View {
         if (player2IsOutOfBounds) {
             player2OutTimer += delta;
             if (player2OutTimer >= GameSettings.OUT_OF_BOUNDS_RESPAWN_TIME) {
-                player2Lives--;
+                System.out.println(cLuckLevel);;
+                if (GameSettings.LUCK_BUFF[cLuckLevel] <= random.nextFloat() ) {
+                    player2Lives--;
+                }
+                else {
+                    cLuckProc = true;
+                }
                 player2IsOutOfBounds = false;
                 player2OutTimer = 0f;
                 if (player2Lives > 0) {
@@ -259,7 +289,10 @@ public class TopPanelView extends View {
         }
         return false;
     }
-
+    public boolean getSLuckProc() { return sLuckProc; }
+    public boolean getCLuckProc() { return cLuckProc; }
+    public void setSLuckProc(boolean sLuckProc) { this.sLuckProc = sLuckProc; }
+    public void setCLuckProc(boolean cLuckProc) { this.cLuckProc = cLuckProc; }
     public int getPlayer1Lives() { return player1Lives; }
     public int getPlayer2Lives() { return player2Lives; }
 

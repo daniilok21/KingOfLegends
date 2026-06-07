@@ -21,11 +21,14 @@ import com.KingOfLegends.game.managers.ContactManager;
 import com.KingOfLegends.game.net.*;
 import com.KingOfLegends.game.objects.*;
 import java.util.ArrayList;
+import java.util.Random;
+
 import static com.KingOfLegends.game.GameSettings.*;
 
 public class GameScreen extends ScreenAdapter {
     private final MyGdxGame myGdxGame;
     MovingBackgroundView backgroundView;
+    Random random;
     private ShapeRenderer shapeRenderer;
     private BloodParticle bloodParticles;
     private SpriteBatch batch;
@@ -53,6 +56,13 @@ public class GameScreen extends ScreenAdapter {
     private int[] clientSkills;
     private int[] serverSkills;
     private int localMaxHealth;
+    public boolean sLuckProc;
+    public boolean sProtectProc;
+    public boolean sCritProc;
+
+    public boolean cLuckProc;
+    public boolean cProtectProc;
+    public boolean cCritProc;
 
     private Rectangle scissorRect = new Rectangle();
     private float serverRespawnIgnoreTimer = 0;
@@ -69,6 +79,7 @@ public class GameScreen extends ScreenAdapter {
         resultText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f + 100, "");
         backgroundView = new MovingBackgroundView(GameResources.BACKGROUND_GAME);
         skillMessageManager = new SkillMessageManager(myGdxGame.defaultFontWithBorder);
+        random = new Random();
     }
 
     @Override
@@ -86,7 +97,12 @@ public class GameScreen extends ScreenAdapter {
 
         musicStarted = false;
         musicWainigStarted = false;
-
+        sLuckProc = false;
+        sProtectProc = false;
+        sCritProc = false;
+        cLuckProc = false;
+        cProtectProc = false;
+        cCritProc = false;
         platforms.clear();
         oneWayPlatforms.clear();
 
@@ -254,11 +270,13 @@ public class GameScreen extends ScreenAdapter {
         if (myGdxGame.isHost) {
             PlayerInput remoteInput = (server != null) ? server.getClientInput() : null;
             updateServerState(delta);
-
             if (remoteInput != null) {
                 if (remoteInput.playerName != null) {
                     topPanel.setPlayer2Name(remoteInput.playerName);
                 }
+
+                topPanel.setLuckLevel(localSkills[2], remoteInput.skills != null ? remoteInput.skills[2] : 0);
+
                 if ((remoteInput.x != 0 || remoteInput.y != 0) && clientRespawnIgnoreTimer <= 0) {
                     if (!clientPlayer.isInHitStun() && !clientPlayer.isDodging()) {
                         clientPlayer.getBody().setTransform(remoteInput.x, remoteInput.y, 0);
@@ -294,6 +312,21 @@ public class GameScreen extends ScreenAdapter {
                 myGdxGame.audioManager.playHitSound();
                 myGdxGame.vibrate();
                 bloodParticles.spawn(serverPlayer.getX() + serverPlayer.getWidth() / 2f, serverPlayer.getY() + serverPlayer.getHeight() / 2f, 12);
+            }
+
+            sLuckProc = false;
+            cLuckProc = false;
+            if (topPanel.getSLuckProc()) {
+                sLuckProc = true;
+                topPanel.setSLuckProc(false);
+                skillMessageManager.show("LUCKY!", serverPlayer.getX(), serverPlayer.getY() + serverPlayer.getHeight() + 20, Color.GREEN);
+                System.out.println("SERVER. x = " + serverPlayer.getX() + "y = " + serverPlayer.getY() + serverPlayer.getHeight() + 20);
+            }
+            if (topPanel.getCLuckProc()) {
+                cLuckProc = true;
+                topPanel.setCLuckProc(false);
+                skillMessageManager.show("LUCKY!", clientPlayer.getX(), clientPlayer.getY() + clientPlayer.getHeight() + 20, Color.GREEN);
+                System.out.println("CLIENT. x = " + clientPlayer.getX() + "y = " + clientPlayer.getY() + clientPlayer.getHeight() + 20);
             }
 
             bloodParticles.update(delta);
@@ -360,6 +393,7 @@ public class GameScreen extends ScreenAdapter {
             packet.sIsInvoking = serverPlayer.isInvoking();
             packet.sInvocationDuration = serverPlayer.getInvocationDuration();
             packet.sIsClimbing = serverPlayer.isClimbing();
+            packet.sLuckProc = sLuckProc;
 
             packet.cX = clientPlayer.getBody().getPosition().x;
             packet.cY = clientPlayer.getBody().getPosition().y;
@@ -375,6 +409,7 @@ public class GameScreen extends ScreenAdapter {
             packet.cIsInvoking = clientPlayer.isInvoking();
             packet.cInvocationDuration = clientPlayer.getInvocationDuration();
             packet.cIsClimbing = clientPlayer.isClimbing();
+            packet.cLuckProc = cLuckProc;
 
             if (server != null) server.sendState(packet);
         }
@@ -414,6 +449,13 @@ public class GameScreen extends ScreenAdapter {
                 serverPlayer.setIsOnGround(packet.sOnGround);
                 serverPlayer.setJumpsRemaining(packet.sJumps);
                 serverPlayer.setIsClimbing(packet.sIsClimbing);
+
+                if (packet.sLuckProc) {
+                    skillMessageManager.show("LUCKY!", serverPlayer.getX(), serverPlayer.getY() + serverPlayer.getHeight() + 20, Color.GREEN);
+                }
+                if (packet.cLuckProc) {
+                    skillMessageManager.show("LUCKY!", clientPlayer.getX(), clientPlayer.getY() + clientPlayer.getHeight() + 20, Color.GREEN);
+                }
 
                 if (!serverPlayer.isInvoking() && packet.sIsInvoking) {
                     serverPlayer.startInvocation(packet.sInvocationDuration);
