@@ -346,7 +346,7 @@ public class PlayerObject extends GameObject {
         attackHitbox.set(hitboxX, hitboxY, hitboxWidth, hitboxHeight);
     }
 
-    public boolean checkHit(PlayerObject target, float knockbackMultiplier) {
+    public boolean checkHit(PlayerObject target, float knockbackMultiplier, boolean crit) {
         if (!isAttacking || target.hasHitImmunity() || target.isDodging() ||
             attackAnimation.getKeyFrameIndex(stateTime) < attackAnimation.getKeyFrames().length - 2) return false;
 
@@ -354,7 +354,7 @@ public class PlayerObject extends GameObject {
 
         if (attackHitbox.overlaps(target.getBounds())) {
             int damage = calculateDamage();
-            applyKnockback(target, damage, knockbackMultiplier);
+            applyKnockback(target, crit ? damage * 2 : damage, knockbackMultiplier);
             return true;
         }
         return false;

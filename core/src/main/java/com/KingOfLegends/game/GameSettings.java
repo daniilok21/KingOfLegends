@@ -78,9 +78,9 @@ public class GameSettings {
     // Баффы от улучшений
     public static int[] HEALTH_BUFF = {0, 10, 20, 30, 40, 50}; // + к HP
     public static float[] KNOCKBACK_BUFF = {1, 1.05f, 1.1f, 1.15f, 1.2f, 1.25f}; // множитель к отдаче
-    public static float[] LUCK_BUFF = {0, 0.02f, 0.03f, 0.05f, 0.07f, 0.9f}; // вероятность 0-1.0
-    public static float[] PROTECT_BUFF = {0, 0.03f, 0.05f, 0.07f, 0.09f, 1f}; // вероятность 0-1.0
-    public static float[] CRITICAL_BUFF = {0, 0.05f, 0.08f, 0.1f, 0.14f, 1f}; // вероятность 0-1.0
+    public static float[] LUCK_BUFF = {0, 0.02f, 0.03f, 0.05f, 0.07f, 0.09f}; // вероятность 0-1.0 (не включительно)
+    public static float[] PROTECT_BUFF = {0, 0.03f, 0.05f, 0.07f, 0.09f, 0.9f}; // вероятность 0-1.0 (не включительно)
+    public static float[] CRITICAL_BUFF = {0, 0.05f, 0.08f, 0.1f, 0.14f, 1f}; // вероятность 0-1.0  (не включительно)
     public static float[] MORE_EXP_BUFF = {1, 1.1f, 1.2f, 1.3f, 1.4f, 1.5f}; // множитель
     public static final int EXP_WIN = 100;
     public static final int EXP_LOSE = 30;

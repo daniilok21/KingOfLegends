@@ -63,6 +63,8 @@ public class GameScreen extends ScreenAdapter {
     public boolean cLuckProc;
     public boolean cProtectProc;
     public boolean cCritProc;
+    private boolean sCritShown;
+    private boolean cCritShown;
 
     private Rectangle scissorRect = new Rectangle();
     private float serverRespawnIgnoreTimer = 0;
@@ -103,6 +105,8 @@ public class GameScreen extends ScreenAdapter {
         cLuckProc = false;
         cProtectProc = false;
         cCritProc = false;
+        sCritShown = false;
+        cCritShown = false;
         platforms.clear();
         oneWayPlatforms.clear();
 
@@ -303,15 +307,29 @@ public class GameScreen extends ScreenAdapter {
                 }
             }
             clientPlayer.update(delta);
+            sCritProc = false;
+            cCritProc = false;
 
-            if (serverPlayer.isAttacking()) if (serverPlayer.checkHit(clientPlayer, GameSettings.KNOCKBACK_BUFF[localSkills[1]])) {
-                myGdxGame.audioManager.playHitSound();
-                bloodParticles.spawn(clientPlayer.getX() + clientPlayer.getWidth() / 2f, clientPlayer.getY() + clientPlayer.getHeight() / 2f, 12);
+            if (serverPlayer.isAttacking() && gameStatus == GameState.GameStatus.PLAYING) {
+                sCritProc = GameSettings.CRITICAL_BUFF[localSkills[4]] >= random.nextFloat();
+                if (serverPlayer.checkHit(clientPlayer, GameSettings.KNOCKBACK_BUFF[localSkills[1]], sCritProc)) {
+                    myGdxGame.audioManager.playHitSound();
+                    bloodParticles.spawn(clientPlayer.getX() + clientPlayer.getWidth() / 2f, clientPlayer.getY() + clientPlayer.getHeight() / 2f, 12);
+                    if (sCritProc) {
+                        skillMessageManager.show("CRIT!", clientPlayer.getX(), clientPlayer.getY() + clientPlayer.getHeight() + 20, Color.YELLOW);
+                    }
+                }
             }
-            if (clientPlayer.isAttacking()) if (clientPlayer.checkHit(serverPlayer, GameSettings.KNOCKBACK_BUFF[clientSkills != null ? clientSkills[1] : 0])) {
-                myGdxGame.audioManager.playHitSound();
-                myGdxGame.vibrate();
-                bloodParticles.spawn(serverPlayer.getX() + serverPlayer.getWidth() / 2f, serverPlayer.getY() + serverPlayer.getHeight() / 2f, 12);
+            if (clientPlayer.isAttacking() && gameStatus == GameState.GameStatus.PLAYING) {
+                cCritProc = GameSettings.CRITICAL_BUFF[clientSkills != null ? clientSkills[4] : 0] >= random.nextFloat();
+                if (clientPlayer.checkHit(serverPlayer, GameSettings.KNOCKBACK_BUFF[clientSkills != null ? clientSkills[1] : 0], cCritProc)) {
+                    myGdxGame.audioManager.playHitSound();
+                    myGdxGame.vibrate();
+                    bloodParticles.spawn(serverPlayer.getX() + serverPlayer.getWidth() / 2f, serverPlayer.getY() + serverPlayer.getHeight() / 2f, 12);
+                    if (cCritProc) {
+                        skillMessageManager.show("CRIT!", serverPlayer.getX(), serverPlayer.getY() + serverPlayer.getHeight() + 20, Color.YELLOW);
+                    }
+                }
             }
 
             sLuckProc = false;
@@ -320,13 +338,11 @@ public class GameScreen extends ScreenAdapter {
                 sLuckProc = true;
                 topPanel.setSLuckProc(false);
                 skillMessageManager.show("LUCKY!", serverPlayer.getX(), serverPlayer.getY() + serverPlayer.getHeight() + 20, Color.GREEN);
-                System.out.println("SERVER. x = " + serverPlayer.getX() + "y = " + serverPlayer.getY() + serverPlayer.getHeight() + 20);
             }
             if (topPanel.getCLuckProc()) {
                 cLuckProc = true;
                 topPanel.setCLuckProc(false);
                 skillMessageManager.show("LUCKY!", clientPlayer.getX(), clientPlayer.getY() + clientPlayer.getHeight() + 20, Color.GREEN);
-                System.out.println("CLIENT. x = " + clientPlayer.getX() + "y = " + clientPlayer.getY() + clientPlayer.getHeight() + 20);
             }
 
             bloodParticles.update(delta);
@@ -394,6 +410,7 @@ public class GameScreen extends ScreenAdapter {
             packet.sInvocationDuration = serverPlayer.getInvocationDuration();
             packet.sIsClimbing = serverPlayer.isClimbing();
             packet.sLuckProc = sLuckProc;
+            packet.sCritProc = sCritProc;
 
             packet.cX = clientPlayer.getBody().getPosition().x;
             packet.cY = clientPlayer.getBody().getPosition().y;
@@ -410,6 +427,7 @@ public class GameScreen extends ScreenAdapter {
             packet.cInvocationDuration = clientPlayer.getInvocationDuration();
             packet.cIsClimbing = clientPlayer.isClimbing();
             packet.cLuckProc = cLuckProc;
+            packet.cCritProc = cCritProc;
 
             if (server != null) server.sendState(packet);
         }
@@ -450,12 +468,18 @@ public class GameScreen extends ScreenAdapter {
                 serverPlayer.setJumpsRemaining(packet.sJumps);
                 serverPlayer.setIsClimbing(packet.sIsClimbing);
 
-                if (packet.sLuckProc) {
-                    skillMessageManager.show("LUCKY!", serverPlayer.getX(), serverPlayer.getY() + serverPlayer.getHeight() + 20, Color.GREEN);
+                if (packet.sLuckProc) { skillMessageManager.show("LUCKY!", serverPlayer.getX(), serverPlayer.getY() + serverPlayer.getHeight() + 20, Color.GREEN); }
+                if (packet.cLuckProc) { skillMessageManager.show("LUCKY!", clientPlayer.getX(), clientPlayer.getY() + clientPlayer.getHeight() + 20, Color.GREEN); }
+                if (packet.sCritProc && !sCritShown) {
+                    sCritShown = true;
+                    skillMessageManager.show("CRIT!", clientPlayer.getX(), clientPlayer.getY() + clientPlayer.getHeight() + 20, Color.YELLOW);
                 }
-                if (packet.cLuckProc) {
-                    skillMessageManager.show("LUCKY!", clientPlayer.getX(), clientPlayer.getY() + clientPlayer.getHeight() + 20, Color.GREEN);
+                if (packet.cCritProc && !cCritShown) {
+                    cCritShown = true;
+                    skillMessageManager.show("CRIT!", serverPlayer.getX(), serverPlayer.getY() + serverPlayer.getHeight() + 20, Color.YELLOW);
                 }
+                if (!packet.sCritProc) sCritShown = false;
+                if (!packet.cCritProc) cCritShown = false;
 
                 if (!serverPlayer.isInvoking() && packet.sIsInvoking) {
                     serverPlayer.startInvocation(packet.sInvocationDuration);
