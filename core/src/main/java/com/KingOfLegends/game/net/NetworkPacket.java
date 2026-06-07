@@ -31,6 +31,7 @@ public class NetworkPacket implements Serializable {
     public boolean sLuckProc;
     public boolean sProtectProc;
     public boolean sCritProc;
+    public boolean sHit;
 
     public String cName;
     public float cX, cY;
@@ -53,6 +54,7 @@ public class NetworkPacket implements Serializable {
     public boolean cLuckProc;
     public boolean cProtectProc;
     public boolean cCritProc;
+    public boolean cHit;
 
     public float matchTimer;
     public int musicIndex;

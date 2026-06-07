@@ -58,13 +58,18 @@ public class GameScreen extends ScreenAdapter {
     private int localMaxHealth;
     public boolean sLuckProc;
     public boolean sProtectProc;
+    public boolean sProtectShown;
     public boolean sCritProc;
+    private boolean sCritShown;
 
     public boolean cLuckProc;
     public boolean cProtectProc;
+    public boolean cProtectShown;
     public boolean cCritProc;
-    private boolean sCritShown;
     private boolean cCritShown;
+
+    boolean sStartAtack;
+    boolean cStartAtack;
 
     private Rectangle scissorRect = new Rectangle();
     private float serverRespawnIgnoreTimer = 0;
@@ -107,6 +112,10 @@ public class GameScreen extends ScreenAdapter {
         cCritProc = false;
         sCritShown = false;
         cCritShown = false;
+
+        sStartAtack = false;
+        cStartAtack = false;
+
         platforms.clear();
         oneWayPlatforms.clear();
 
@@ -309,28 +318,76 @@ public class GameScreen extends ScreenAdapter {
             clientPlayer.update(delta);
             sCritProc = false;
             cCritProc = false;
+            boolean sIsCrit;
+            boolean cIsCrit;
+            sProtectProc = false;
+            cProtectProc = false;
+            boolean sIsProtect;
+            boolean cIsProtect;
+            boolean sIsHit = false;
+            boolean cIsHit = false;
 
-            if (serverPlayer.isAttacking() && gameStatus == GameState.GameStatus.PLAYING) {
-                sCritProc = GameSettings.CRITICAL_BUFF[localSkills[4]] >= random.nextFloat();
-                if (serverPlayer.checkHit(clientPlayer, GameSettings.KNOCKBACK_BUFF[localSkills[1]], sCritProc)) {
+            if (serverPlayer.isAttacking() && gameStatus == GameState.GameStatus.PLAYING && !sStartAtack) {
+                sIsCrit = GameSettings.CRITICAL_BUFF[localSkills[4]] >= random.nextFloat();
+                sIsProtect = GameSettings.PROTECT_BUFF[clientSkills != null ? clientSkills[3] : 0] >= random.nextFloat();
+                if (sIsProtect) {
+                    sIsCrit = false;
+                }
+                if (serverPlayer.checkHit(clientPlayer, GameSettings.KNOCKBACK_BUFF[localSkills[1]], sIsCrit, sIsProtect)) {
+                    sStartAtack = true;
+                    sCritProc = sIsCrit;
+                    sProtectProc = sIsProtect;
+
                     myGdxGame.audioManager.playHitSound();
-                    bloodParticles.spawn(clientPlayer.getX() + clientPlayer.getWidth() / 2f, clientPlayer.getY() + clientPlayer.getHeight() / 2f, 12);
-                    if (sCritProc) {
+                    if (!sProtectProc) {
+                        bloodParticles.spawn(clientPlayer.getX() + clientPlayer.getWidth() / 2f, clientPlayer.getY() + clientPlayer.getHeight() / 2f, 12);
+                        cIsHit = true;
+                    }
+                    if (sProtectProc && !sProtectShown) {
+                        sProtectShown = true;
+                        skillMessageManager.show("BLOCK!", clientPlayer.getX(), clientPlayer.getY() + clientPlayer.getHeight() + 20, Color.CYAN);
+                    }
+                    else if (sCritProc && !sCritShown && !sProtectShown) {
+                        sCritShown = true;
                         skillMessageManager.show("CRIT!", clientPlayer.getX(), clientPlayer.getY() + clientPlayer.getHeight() + 20, Color.YELLOW);
                     }
                 }
             }
-            if (clientPlayer.isAttacking() && gameStatus == GameState.GameStatus.PLAYING) {
-                cCritProc = GameSettings.CRITICAL_BUFF[clientSkills != null ? clientSkills[4] : 0] >= random.nextFloat();
-                if (clientPlayer.checkHit(serverPlayer, GameSettings.KNOCKBACK_BUFF[clientSkills != null ? clientSkills[1] : 0], cCritProc)) {
+            if (!serverPlayer.isAttacking()) { sStartAtack = false; }
+
+            if (clientPlayer.isAttacking() && gameStatus == GameState.GameStatus.PLAYING && !cStartAtack) {
+                cIsCrit = GameSettings.CRITICAL_BUFF[clientSkills != null ? clientSkills[4] : 0] >= random.nextFloat();
+                cIsProtect = GameSettings.PROTECT_BUFF[localSkills[3]] >= random.nextFloat();
+                if (cIsProtect) {
+                    cIsCrit = false;
+                }
+                if (clientPlayer.checkHit(serverPlayer, GameSettings.KNOCKBACK_BUFF[clientSkills != null ? clientSkills[1] : 0], cIsCrit, cIsProtect)) {
+                    cStartAtack = true;
+                    cCritProc = cIsCrit;
+                    cProtectProc = cIsProtect;
                     myGdxGame.audioManager.playHitSound();
                     myGdxGame.vibrate();
-                    bloodParticles.spawn(serverPlayer.getX() + serverPlayer.getWidth() / 2f, serverPlayer.getY() + serverPlayer.getHeight() / 2f, 12);
-                    if (cCritProc) {
+                    if (!cProtectProc) {
+                        sIsHit = true;
+                        bloodParticles.spawn(serverPlayer.getX() + serverPlayer.getWidth() / 2f, serverPlayer.getY() + serverPlayer.getHeight() / 2f, 12);
+                    }
+                    if (cProtectProc && !cProtectShown) {
+                        cProtectShown = true;
+                        skillMessageManager.show("BLOCK!", serverPlayer.getX(), serverPlayer.getY() + serverPlayer.getHeight() + 20, Color.CYAN);
+                    }
+                    else if (cCritProc && !cCritShown && !cProtectShown) {
+                        cProtectShown = true;
                         skillMessageManager.show("CRIT!", serverPlayer.getX(), serverPlayer.getY() + serverPlayer.getHeight() + 20, Color.YELLOW);
                     }
                 }
             }
+
+            if (!clientPlayer.isAttacking()) { cStartAtack = false; }
+
+            if (!sProtectProc) { sProtectShown = false; }
+            if (!cProtectProc) { cProtectShown = false; }
+            if (!sCritProc) { sCritShown = false; }
+            if (!cCritProc) { cCritShown = false; }
 
             sLuckProc = false;
             cLuckProc = false;
@@ -411,6 +468,8 @@ public class GameScreen extends ScreenAdapter {
             packet.sIsClimbing = serverPlayer.isClimbing();
             packet.sLuckProc = sLuckProc;
             packet.sCritProc = sCritProc;
+            packet.sProtectProc = sProtectProc;
+            packet.sHit = sIsHit;
 
             packet.cX = clientPlayer.getBody().getPosition().x;
             packet.cY = clientPlayer.getBody().getPosition().y;
@@ -428,6 +487,8 @@ public class GameScreen extends ScreenAdapter {
             packet.cIsClimbing = clientPlayer.isClimbing();
             packet.cLuckProc = cLuckProc;
             packet.cCritProc = cCritProc;
+            packet.cProtectProc = cProtectProc;
+            packet.cHit = cIsHit;
 
             if (server != null) server.sendState(packet);
         }
@@ -453,8 +514,6 @@ public class GameScreen extends ScreenAdapter {
                     }
                 }
 
-                int oldClientHealth = clientPlayer.getHealth();
-                int oldServerHealth = serverPlayer.getHealth();
 
                 if (serverRespawnIgnoreTimer <= 0) {
                     serverPlayer.getBody().setTransform(packet.sX, packet.sY, 0);
@@ -470,16 +529,26 @@ public class GameScreen extends ScreenAdapter {
 
                 if (packet.sLuckProc) { skillMessageManager.show("LUCKY!", serverPlayer.getX(), serverPlayer.getY() + serverPlayer.getHeight() + 20, Color.GREEN); }
                 if (packet.cLuckProc) { skillMessageManager.show("LUCKY!", clientPlayer.getX(), clientPlayer.getY() + clientPlayer.getHeight() + 20, Color.GREEN); }
-                if (packet.sCritProc && !sCritShown) {
+
+                if (packet.sProtectProc && !sProtectShown) {
+                    sProtectShown = true;
+                    skillMessageManager.show("BLOCK!", clientPlayer.getX(), clientPlayer.getY() + clientPlayer.getHeight() + 20, Color.CYAN);
+                } else if (packet.sCritProc && !sCritShown && !sProtectShown) {
                     sCritShown = true;
                     skillMessageManager.show("CRIT!", clientPlayer.getX(), clientPlayer.getY() + clientPlayer.getHeight() + 20, Color.YELLOW);
                 }
-                if (packet.cCritProc && !cCritShown) {
+                if (packet.cProtectProc && !cProtectShown) {
+                    cProtectShown = true;
+                    skillMessageManager.show("BLOCK!", serverPlayer.getX(), serverPlayer.getY() + serverPlayer.getHeight() + 20, Color.CYAN);
+                } else if (packet.cCritProc && !cCritShown && !cProtectShown) {
                     cCritShown = true;
                     skillMessageManager.show("CRIT!", serverPlayer.getX(), serverPlayer.getY() + serverPlayer.getHeight() + 20, Color.YELLOW);
                 }
+
                 if (!packet.sCritProc) sCritShown = false;
                 if (!packet.cCritProc) cCritShown = false;
+                if (!packet.sProtectProc) sProtectShown = false;
+                if (!packet.cProtectProc) cProtectShown = false;
 
                 if (!serverPlayer.isInvoking() && packet.sIsInvoking) {
                     serverPlayer.startInvocation(packet.sInvocationDuration);
@@ -496,14 +565,16 @@ public class GameScreen extends ScreenAdapter {
                 clientPlayer.setHealth(packet.cHealth);
                 clientPlayer.setInHitStun(packet.cInHitStun);
                 clientPlayer.setIsClimbing(packet.cIsClimbing);
-
-                if (packet.cHealth < oldClientHealth && myGdxGame.audioManager != null) {
+                if (packet.cHit) {
                     myGdxGame.audioManager.playHitSound();
                     myGdxGame.vibrate();
-                    bloodParticles.spawn(clientPlayer.getX() + clientPlayer.getWidth() / 2f, clientPlayer.getY() + clientPlayer.getHeight() / 2f, 12);
-                } else if (packet.sHealth < oldServerHealth && myGdxGame.audioManager != null) {
+                    bloodParticles.spawn(clientPlayer.getX() + clientPlayer.getWidth() / 2f,
+                        clientPlayer.getY() + clientPlayer.getHeight() / 2f, 12);
+                }
+                if (packet.sHit) {
                     myGdxGame.audioManager.playHitSound();
-                    bloodParticles.spawn(serverPlayer.getX() + serverPlayer.getWidth() / 2f, serverPlayer.getY() + serverPlayer.getHeight() / 2f, 12);
+                    bloodParticles.spawn(serverPlayer.getX() + serverPlayer.getWidth() / 2f,
+                        serverPlayer.getY() + serverPlayer.getHeight() / 2f, 12);
                 }
                 bloodParticles.update(delta);
                 if (!clientPlayer.isInvoking() && packet.cIsInvoking) {

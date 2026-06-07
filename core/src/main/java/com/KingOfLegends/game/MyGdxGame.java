@@ -101,7 +101,9 @@ public class MyGdxGame extends Game {
 
     public void vibrate() {
         if (Gdx.input.isPeripheralAvailable(Input.Peripheral.Vibrator)) {
-            Gdx.input.vibrate(80);
+            if (GameSettings.VIBRATION_ENABLED) {
+                Gdx.input.vibrate(80);
+            }
         }
     }
 

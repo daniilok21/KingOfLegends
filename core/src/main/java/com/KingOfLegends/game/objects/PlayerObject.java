@@ -57,6 +57,7 @@ public class PlayerObject extends GameObject {
     private float lastVelocityY = 0f;
     private boolean wasMovingUpBeforeHit = false;
     private float headHitCooldown = 0.15f;
+    private boolean protect = false;
 
     public PlayerObject(int x, int y, int width, int height, String[] texturePaths, int[] framesPerAnimation, float[] ArrayPivotOffsetX, float[] ArrayPivotOffsetY, World world) {
         super(null, x, y, width, height, GameSettings.PLAYER_BIT, world, true, BodyDef.BodyType.DynamicBody);
@@ -219,7 +220,7 @@ public class PlayerObject extends GameObject {
             pivotOffsetX = ArrayPivotOffsetX[4];
             pivotOffsetY = ArrayPivotOffsetY[4];
             currentAnim = dodgeAnimation;
-        } else if (isInHitStun) {
+        } else if (isInHitStun && !protect) {
             pivotOffsetX = ArrayPivotOffsetX[5];
             pivotOffsetY = ArrayPivotOffsetY[5];
             currentAnim = hitAnimation;
@@ -346,15 +347,16 @@ public class PlayerObject extends GameObject {
         attackHitbox.set(hitboxX, hitboxY, hitboxWidth, hitboxHeight);
     }
 
-    public boolean checkHit(PlayerObject target, float knockbackMultiplier, boolean crit) {
+    public boolean checkHit(PlayerObject target, float knockbackMultiplier, boolean crit, boolean protect) {
         if (!isAttacking || target.hasHitImmunity() || target.isDodging() ||
             attackAnimation.getKeyFrameIndex(stateTime) < attackAnimation.getKeyFrames().length - 2) return false;
-
         updateAttackHitbox();
-
+        this.protect = protect;
         if (attackHitbox.overlaps(target.getBounds())) {
-            int damage = calculateDamage();
-            applyKnockback(target, crit ? damage * 2 : damage, knockbackMultiplier);
+            if (!protect) {
+                int damage = calculateDamage();
+                applyKnockback(target, crit ? damage * 2 : damage, knockbackMultiplier);
+            }
             return true;
         }
         return false;
