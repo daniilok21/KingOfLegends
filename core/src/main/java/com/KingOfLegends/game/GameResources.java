@@ -31,6 +31,7 @@ public class GameResources {
     public static final String FONT_PATH = "fonts/Kenney Future.ttf";
     public static final String DRAK_FONT_PATH = "fonts/Silkscreen-Bold.ttf";
     public static final String MENU_FONT_PATH = "fonts/dark-whisper.ttf";
+    public static final String DESCRIBE_UPGRADE_FONT_PATH = "fonts/ofont.ru_Nexa Script.ttf";
 
     public static final String RED_PLAYER_SPRITE_SHEET = "textures/red_player.png";
     public static final String BLUE_PLAYER_SPRITE_SHEET = "textures/blue_player.png";

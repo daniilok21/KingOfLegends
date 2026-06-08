@@ -16,6 +16,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
 import java.security.Key;
@@ -24,11 +25,13 @@ public class UpgradeScreen extends ScreenAdapter {
     private final MyGdxGame game;
     private MovingBackgroundView background;
     private ImageView board, boardUnderSkills, boardForDescription, frame, exp, person, paper1, paper2, paper3;
-    private TextView titleView, hp, lvl, exp_text, hp_text, lvl_text;
+    private TextView titleView, hp, lvl, exp_text, hp_text, lvl_text, titleDescribe;
+    private TextView skillNameText;
     private TextureRegion[] critical_im, health_im, knockback_im, luck_im, moreExp_im, protect_im, lvl_im;
     private TextureRegion[][] skills_im;
     private Texture healthTexture, knockbackTexture, luckTexture, protectTexture, criticalTexture, moreExpTexture, lvlTexture, expTexture;
     private ButtonView homeButton;
+    private int selectedSkillIndex = -1;
     private float[] healthData;
     private float[] knockbackData;
     private float[] luckData;
@@ -40,6 +43,17 @@ public class UpgradeScreen extends ScreenAdapter {
     private int[] lvlSkills;
     private ImageView[] plusButtons = new ImageView[6];
     private int expValue;
+    private static final String[] SKILL_NAMES = {
+        "HEALTH", "KNOCKBACK", "LUCK", "PROTECT", "CRITICAL", "MORE EXP"
+    };
+    private static final String[] SKILL_DESCRIPTIONS = {
+        "Increases max HP\nby 10 per level.\nHigher health means\nless knockback\nfrom enemy attacks",
+        "Increases knock-\nbackforce by 5%\nper level.",
+        "When you fall off\nthe map and would\nlose a life, there is\na chance to survive\ninstead.",
+        "Chance to block\nan incoming hit\ncompletely.",
+        "Chance to deal\ndouble damage\non attack.",
+        "Increases earned\nEXP by 10%\nper level."
+    };
 
     public UpgradeScreen(MyGdxGame game) {
         this.game = game;
@@ -78,6 +92,7 @@ public class UpgradeScreen extends ScreenAdapter {
         lvlTexture = new Texture(GameResources.LVL_UPGRADES_UPGRADE_PATH);
 
         setUpSkillsImages();
+        setUpDescribeUpgrades();
 
         lvlSkills = MemoryManager.loadAllSkills();
         expValue = MemoryManager.loadExp();
@@ -130,6 +145,14 @@ public class UpgradeScreen extends ScreenAdapter {
         frameHeight = lvlTexture.getHeight();
         lvl_im = TextureRegion.split(lvlTexture, frameWidth, frameHeight)[0];
     }
+
+    private void setUpDescribeUpgrades() {
+        titleDescribe = new TextView(game.titleUpgradeFont2, 0, 0, "DESCRIPTION");
+        titleDescribe.setCenterX(boardForDescription.getX() + boardForDescription.getWidth() / 2f);
+        titleDescribe.setY(boardForDescription.getY() + boardForDescription.getHeight() - titleDescribe.getHeight() - 60);
+        skillNameText = new TextView(game.describeUpgradeFont, 0, 0, "");
+    }
+
     private void handleInput() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             expValue += 400;
@@ -144,6 +167,7 @@ public class UpgradeScreen extends ScreenAdapter {
             for (int i = 0; i < data.length; i++) {
                 if (checkHitRhomb(touch.x, touch.y, data[i])) {
                     System.out.println("Нажат ромб с индексом: " + i);
+                    selectedSkillIndex = (selectedSkillIndex == i) ? -1 : i;
                     break;
                 }
 
@@ -213,7 +237,27 @@ public class UpgradeScreen extends ScreenAdapter {
         paper3.draw(game.batch);
         hp_text.draw(game.batch);
         lvl_text.draw(game.batch);
+        titleDescribe.draw(game.batch);
+        if (selectedSkillIndex >= 0) {
+            float centerX = boardForDescription.getX() + boardForDescription.getWidth() / 2f;
+            float startY = titleDescribe.getY() - 50;
 
+            skillNameText.setText(SKILL_NAMES[selectedSkillIndex]);
+            skillNameText.setCenterX(centerX);
+            skillNameText.setY(startY);
+            game.describeUpgradeFont.setColor(Color.YELLOW);
+            skillNameText.draw(game.batch);
+
+            game.describeUpgradeFont.setColor(Color.WHITE);
+            String[] lines = SKILL_DESCRIPTIONS[selectedSkillIndex].split("\n");
+            float lineY = startY - skillNameText.getHeight();
+            for (String line : lines) {
+                GlyphLayout layout = new GlyphLayout(game.describeUpgradeFont, line);
+                game.describeUpgradeFont.draw(game.batch, line, centerX - layout.width / 2f, lineY);
+                lineY -= layout.height + 8;
+            }
+            game.describeUpgradeFont.setColor(Color.WHITE);
+        }
         boolean showPlusOrNot = MemoryManager.getUpgradePoint() > 0;
         for (int i = 0; i < data.length; i++) {
             int currentSkillTextureIndex;
@@ -241,6 +285,7 @@ public class UpgradeScreen extends ScreenAdapter {
     }
     @Override
     public void dispose() {
+        selectedSkillIndex = -1;
         if (background != null) background.dispose();
         if (healthTexture != null) healthTexture.dispose();
         if (knockbackTexture != null) knockbackTexture.dispose();

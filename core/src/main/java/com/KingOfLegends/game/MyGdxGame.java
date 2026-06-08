@@ -37,7 +37,9 @@ public class MyGdxGame extends Game {
     public UpgradeScreen upgradeScreen;
     public SettingsScreen settingsScreen;
 
-    public BitmapFont defaultFont, defaultFontWithBorder, largeFont, smallFont, titleFont, titleFontWithBorder, timerFont, defaultMenuFont, defaultMenuFontWithBorder, defaultUpgradeFont, titleMenuFont, textFieldFont, titleUpgradeFont;
+    public BitmapFont defaultFont, defaultFontWithBorder, largeFont, smallFont, titleFont,
+        titleFontWithBorder, timerFont, defaultMenuFont, defaultMenuFontWithBorder,
+        defaultUpgradeFont, titleMenuFont, textFieldFont, titleUpgradeFont, titleUpgradeFont2, describeUpgradeFont;
 
     public boolean isHost = false;
     public String hostIp = "";
@@ -69,6 +71,8 @@ public class MyGdxGame extends Game {
         titleMenuFont = FontBuilder.generate(110, Color.WHITE, GameResources.MENU_FONT_PATH);
         textFieldFont = FontBuilder.generate(30, Color.WHITE, GameResources.DRAK_FONT_PATH);
         titleUpgradeFont = FontBuilder.generate(55, Color.WHITE, GameResources.MENU_FONT_PATH);
+        titleUpgradeFont2 = FontBuilder.generate(45, Color.WHITE, GameResources.MENU_FONT_PATH);
+        describeUpgradeFont = FontBuilder.generate(30, Color.WHITE, GameResources.DESCRIBE_UPGRADE_FONT_PATH);
 
         menuScreen = new MenuScreen(this);
         gameScreen = new GameScreen(this);
