@@ -23,8 +23,9 @@ public class MenuScreen extends ScreenAdapter {
     private TextView titleView;
     private ButtonView hostButton;
     private ButtonView joinButton;
-    private ButtonView profileButton;
+    private ButtonView skillsButton;
     private ButtonView settingsButton;
+    private ButtonView profileButton;
     private ImageView knifeLeft;
     private ImageView knifeRight;
     private ButtonView exitButton;
@@ -54,13 +55,16 @@ public class MenuScreen extends ScreenAdapter {
             SCREEN_WIDTH / 2f - 162.5f, buttonY - 115, 325, 100,
             game.defaultMenuFont, GameResources.BUTTON_MENU, "Join Game"
         );
-        profileButton = new ButtonView(
+        skillsButton = new ButtonView(
             SCREEN_WIDTH / 2f - 162.5f, buttonY - 240, 325, 100,
-            game.defaultMenuFont, GameResources.BUTTON_MENU, "Profile"
+            game.defaultMenuFont, GameResources.BUTTON_MENU, "Skills"
         );
         settingsButton = new ButtonView(
             20, 20, 80, 80,
             GameResources.BUTTON_SETTINGS
+        );
+        profileButton = new ButtonView(
+            settingsButton.getX() + settingsButton.getHeight() + 20, settingsButton.getY(), settingsButton.getWidth(), settingsButton.getHeight(), GameResources.BUTTON_PROFILE
         );
         exitButton = new ButtonView(
             SCREEN_WIDTH / 2f - 162.5f, buttonY - 365, 325, 100,
@@ -89,6 +93,7 @@ public class MenuScreen extends ScreenAdapter {
         hostButton.draw(game.batch);
         joinButton.draw(game.batch);
         settingsButton.draw(game.batch);
+        skillsButton.draw(game.batch);
         profileButton.draw(game.batch);
         exitButton.draw(game.batch);
         game.batch.end();
@@ -102,8 +107,10 @@ public class MenuScreen extends ScreenAdapter {
                 game.showGameScreen(true, null);
             }  if (joinButton.isHit(touch.x, touch.y)) {
                 game.setScreen(game.joinScreen);
-            }  if (profileButton.isHit(touch.x, touch.y)){
+            }  if (skillsButton.isHit(touch.x, touch.y)){
                 game.setScreen(game.upgradeScreen);
+            } if (profileButton.isHit(touch.x, touch.y)){
+                game.setScreen(game.profileScreen);
             } if (exitButton.isHit(touch.x, touch.y)) {
                 Gdx.app.exit();
             } if (settingsButton.isHit(touch.x, touch.y)) {

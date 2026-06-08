@@ -74,6 +74,7 @@ public class SettingsScreen extends ScreenAdapter {
             sliderX + 50, SCREEN_HEIGHT / 2f - 160, 70, 70,
             "Vibration", GameSettings.VIBRATION_ENABLED,
             game.defaultMenuFont,
+            game.defaultMenuFontWithBorder,
             GameResources.SWITCH_ONN,
             GameResources.SWITCH_OFF
         );

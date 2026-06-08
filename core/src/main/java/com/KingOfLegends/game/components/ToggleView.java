@@ -13,17 +13,19 @@ public class ToggleView extends View {
     private Texture onTexture;
     private Texture offTexture;
     private BitmapFont font;
+    private BitmapFont font2;
     private String label;
     private boolean value;
     private boolean is_active;
 
     public ToggleView(float x, float y, float width, float height, String label,
-                      boolean initialValue, BitmapFont font,
+                      boolean initialValue, BitmapFont font1, BitmapFont font2,
                       String onTexturePath, String offTexturePath) {
         super(x, y, width, height);
         this.label = label;
         this.value = initialValue;
-        this.font = font;
+        this.font = font1;
+        this.font2 = font2;
         onTexture = new Texture(onTexturePath);
         offTexture = new Texture(offTexturePath);
     }
@@ -50,9 +52,8 @@ public class ToggleView extends View {
 
         batch.draw(is_active ? offTexture : onTexture, x, y, width, height);
 
-        font.setColor(value ? Color.GREEN : Color.RED);
-        font.draw(batch, value ? "ON" : "OFF", x + width + 20, y + height / 2f + 10);
-        font.setColor(Color.BROWN);
+        font2.setColor(value ? Color.GREEN : Color.RED);
+        font2.draw(batch, value ? "ON" : "OFF", x + width + 20, y + height / 2f + 10);
 
         is_active = false;
     }

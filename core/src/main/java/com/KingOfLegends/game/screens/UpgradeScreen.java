@@ -131,6 +131,9 @@ public class UpgradeScreen extends ScreenAdapter {
         lvl_im = TextureRegion.split(lvlTexture, frameWidth, frameHeight)[0];
     }
     private void handleInput() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            expValue += 400;
+        }
         if (Gdx.input.justTouched()) {
             Vector3 touch = game.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
             if (homeButton.isHit(touch.x, touch.y)) {
@@ -176,6 +179,14 @@ public class UpgradeScreen extends ScreenAdapter {
         game.batch.setProjectionMatrix(game.camera.combined);
 
         game.batch.begin();
+
+        while (expValue >= 1000) {
+            expValue -= 1000;
+            MemoryManager.add1Lvl();
+            MemoryManager.add1UpgradePoint();
+            lvl_text.setText(MemoryManager.getLvl() + "");
+        }
+        MemoryManager.saveExp(expValue);
 
         float widthExpProgress = 324 - 144.3f;
         float value = Math.max(0f, Math.min(1f, expValue / 1000f));
