@@ -183,6 +183,7 @@ public class JoinScreen extends ScreenAdapter {
             }
 
             if (connectButton.isHit(touch.x, touch.y) || backButton.isHit(touch.x, touch.y)) {
+                game.audioManager.playClickSound();
                 inputStage.setKeyboardFocus(null);
                 Gdx.input.setOnscreenKeyboardVisible(false);
             }

@@ -1,5 +1,6 @@
 package com.KingOfLegends.game.screens;
 
+import com.KingOfLegends.game.managers.AudioManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
@@ -105,16 +106,22 @@ public class MenuScreen extends ScreenAdapter {
             Vector3 touch = game.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
             if (hostButton.isHit(touch.x, touch.y)) {
                 game.showGameScreen(true, null);
+                game.audioManager.playClickSound();
             }  if (joinButton.isHit(touch.x, touch.y)) {
                 game.setScreen(game.joinScreen);
+                game.audioManager.playClickSound();
             }  if (skillsButton.isHit(touch.x, touch.y)){
                 game.setScreen(game.upgradeScreen);
+                game.audioManager.playClickSound();
             } if (profileButton.isHit(touch.x, touch.y)){
                 game.setScreen(game.profileScreen);
+                game.audioManager.playClickSound();
             } if (exitButton.isHit(touch.x, touch.y)) {
+                game.audioManager.playClickSound();
                 Gdx.app.exit();
             } if (settingsButton.isHit(touch.x, touch.y)) {
                 game.setScreen(game.settingsScreen);
+                game.audioManager.playClickSound();
             }
         }
     }

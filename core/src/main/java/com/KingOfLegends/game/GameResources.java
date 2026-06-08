@@ -73,6 +73,7 @@ public class GameResources {
 
     // СаундТреки
     public static final String HIT_SOUND_PATH = "audio/shoot_sound.mp3";
+    public static final String CLICK_SOUND_PATH = "audio/click.mp3";
 
     // UpgradeScreen
     public static final String BOARD_UPGRADE_PATH = "textures/upgrade_board.png";

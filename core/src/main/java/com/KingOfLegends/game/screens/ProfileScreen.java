@@ -157,16 +157,20 @@ public class ProfileScreen extends ScreenAdapter {
 
             if (!isEditingName) {
                 if (changeNameButton.isHit(touch.x, touch.y)) {
+                    game.audioManager.playClickSound();
                     showNameInput();
                 }
                 if (backButton.isHit(touch.x, touch.y)) {
+                    game.audioManager.playClickSound();
                     game.setScreen(game.menuScreen);
                 }
             } else {
                 if (saveButton.isHit(touch.x, touch.y)) {
+                    game.audioManager.playClickSound();
                     saveName(nameField != null ? nameField.getText().trim() : "");
                 }
                 else if (!nameEnterPlace.isHit(touch.x, touch.y)) {
+                    game.audioManager.playClickSound();
                     isEditingName = false;
                     Gdx.input.setInputProcessor(null);
                 }

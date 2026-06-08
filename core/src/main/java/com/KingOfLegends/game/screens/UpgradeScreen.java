@@ -93,7 +93,6 @@ public class UpgradeScreen extends ScreenAdapter {
 
         setUpSkillsImages();
         setUpDescribeUpgrades();
-
         lvlSkills = MemoryManager.loadAllSkills();
         expValue = MemoryManager.loadExp();
 
@@ -154,12 +153,10 @@ public class UpgradeScreen extends ScreenAdapter {
     }
 
     private void handleInput() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-            expValue += 400;
-        }
         if (Gdx.input.justTouched()) {
             Vector3 touch = game.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
             if (homeButton.isHit(touch.x, touch.y)) {
+                game.audioManager.playClickSound();
                 game.setScreen(game.menuScreen);
                 return;
             }
@@ -167,6 +164,7 @@ public class UpgradeScreen extends ScreenAdapter {
             for (int i = 0; i < data.length; i++) {
                 if (checkHitRhomb(touch.x, touch.y, data[i])) {
                     System.out.println("Нажат ромб с индексом: " + i);
+                    game.audioManager.playClickSound();
                     selectedSkillIndex = (selectedSkillIndex == i) ? -1 : i;
                     break;
                 }
@@ -179,8 +177,10 @@ public class UpgradeScreen extends ScreenAdapter {
                     if (i == 0) {
                         hp_text.setText(lvlSkills[0] * 10 + 100 + "");
                     }
+                    game.audioManager.playClickSound();
                     MemoryManager.saveUpgradePoint(MemoryManager.getUpgradePoint() - 1);
                     MemoryManager.saveSkillLevel(i, lvlSkills[i]);
+                    selectedSkillIndex = (selectedSkillIndex == i) ? -1 : i;
                     System.out.println("Прокачан навык " + i + ". Текущий уровень: " + lvlSkills[i]);
                     break;
                 }
@@ -204,13 +204,6 @@ public class UpgradeScreen extends ScreenAdapter {
 
         game.batch.begin();
 
-        while (expValue >= 1000) {
-            expValue -= 1000;
-            MemoryManager.add1Lvl();
-            MemoryManager.add1UpgradePoint();
-            lvl_text.setText(MemoryManager.getLvl() + "");
-        }
-        MemoryManager.saveExp(expValue);
 
         float widthExpProgress = 324 - 144.3f;
         float value = Math.max(0f, Math.min(1f, expValue / 1000f));

@@ -132,6 +132,7 @@ public class SettingsScreen extends ScreenAdapter {
             );
             vibrationToggle.tap(touch.x, touch.y);
             if (backButton.isHit(touch.x, touch.y)) {
+                game.audioManager.playClickSound();
                 saveAndGoBack();
             }
         }
