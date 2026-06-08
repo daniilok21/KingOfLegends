@@ -22,10 +22,10 @@ public class UpgradeScreen extends ScreenAdapter {
     private final MyGdxGame game;
     private MovingBackgroundView background;
     private ImageView board, boardUnderSkills, boardForDescription, frame, exp, person, paper1, paper2, paper3;
-    private TextView titleView, hp, lvl, exp_text;
+    private TextView titleView, hp, lvl, exp_text, hp_text, lvl_text;
     private TextureRegion[] critical_im, health_im, knockback_im, luck_im, moreExp_im, protect_im, lvl_im;
     private TextureRegion[][] skills_im;
-    private Texture healthTexture, knockbackTexture, luckTexture, protectTexture, criticalTexture, moreExpTexture, lvlTexture;
+    private Texture healthTexture, knockbackTexture, luckTexture, protectTexture, criticalTexture, moreExpTexture, lvlTexture, expTexture;
     private ButtonView homeButton;
     private float[] healthData;
     private float[] knockbackData;
@@ -37,6 +37,7 @@ public class UpgradeScreen extends ScreenAdapter {
     private float[][] data;
     private int[] lvlSkills;
     private ImageView[] plusButtons = new ImageView[6];
+    private int expValue;
 
     public UpgradeScreen(MyGdxGame game) {
         this.game = game;
@@ -77,7 +78,15 @@ public class UpgradeScreen extends ScreenAdapter {
         setUpSkillsImages();
 
         lvlSkills = MemoryManager.loadAllSkills();
+        expValue = MemoryManager.loadExp();
 
+        hp_text = new TextView(game.defaultUpgradeFont, 320, hp.getY(), "");
+        hp_text.setText(lvlSkills[0] * 10 + 100 + "");
+        hp_text.setX(hp_text.getX() - hp_text.getWidth());
+        lvl_text = new TextView(game.defaultUpgradeFont, 320, lvl.getY(), "");
+        lvl_text.setText(MemoryManager.getLvl() + "");
+        lvl_text.setX(hp_text.getCenterX() - lvl_text.getWidth() / 2f);
+        expTexture = new Texture(GameResources.EXP_PROGRESS_UPGRADE_PATH);
         healthData = new float[] {paper3.getX() + 80, paper3.getY(), paper3.getHeight(), paper3.getHeight()};
         knockbackData = new float[] {paper3.getX() + paper3.getWidth() - paper3.getHeight() - 80, paper3.getY(), paper3.getHeight(), paper3.getHeight()};
         luckData = new float[] {paper2.getX() + 80, paper2.getY(), paper2.getHeight(), paper2.getHeight()};
@@ -154,12 +163,19 @@ public class UpgradeScreen extends ScreenAdapter {
 
         game.batch.begin();
 
+        float widthExpProgress = 324 - 144.3f;
+        float value = Math.max(0f, Math.min(1f, expValue / 1000f));
+        float filledWidth = value * widthExpProgress;
+
         background.draw(game.batch);
         board.draw(game.batch);
         boardUnderSkills.draw(game.batch);
         boardForDescription.draw(game.batch);
         person.draw(game.batch);
         frame.draw(game.batch);
+        if (filledWidth > 0) {
+            game.batch.draw(expTexture, 144.3f, 243.6f, filledWidth, 258 - 243.6f, 0, 0, value, 1f);
+        }
         exp.draw(game.batch);
         titleView.draw(game.batch);
         game.defaultUpgradeFont.setColor(Color.GREEN);
@@ -170,6 +186,8 @@ public class UpgradeScreen extends ScreenAdapter {
         paper1.draw(game.batch);
         paper2.draw(game.batch);
         paper3.draw(game.batch);
+        hp_text.draw(game.batch);
+        lvl_text.draw(game.batch);
 
         for (int i = 0; i < data.length; i++) {
             int currentSkillTextureIndex;

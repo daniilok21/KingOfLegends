@@ -31,6 +31,10 @@ public class TextView extends View{
         height = glyphLayout.height;
     }
 
+    public String getText() {
+        return text;
+    }
+
     public void setCenterX(float x) {
         this.x = x - width / 2;
     }

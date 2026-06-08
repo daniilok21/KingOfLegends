@@ -87,4 +87,5 @@ public class GameResources {
     public static final String PROTECT_UPGRADE_PATH = "textures/protect_upgrade.png";
     public static final String PLUS_UPGRADE_PATH = "textures/plus_btn.png";
     public static final String LVL_UPGRADES_UPGRADE_PATH = "textures/lvl_upgrades.png";
+    public static final String EXP_PROGRESS_UPGRADE_PATH = "textures/exp_progress.png";
 }

@@ -66,6 +66,14 @@ public class MemoryManager {
         return preferences.getString("ProfileName", "Unknown");
     }
 
+    public static void saveLvl(int lvl) {
+        preferences.putInteger("PlayerLVL", lvl);
+    }
+
+    public static int getLvl() {
+        return preferences.getInteger("PlayerLVL", 0);
+    }
+
     public static void saveSettings(float musicVolume, float soundVolume, boolean vibration) {
         preferences.putFloat("MusicVolume", musicVolume);
         preferences.putFloat("SoundVolume", soundVolume);
