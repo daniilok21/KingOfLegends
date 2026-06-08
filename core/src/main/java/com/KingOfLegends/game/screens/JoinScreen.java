@@ -1,5 +1,6 @@
 package com.KingOfLegends.game.screens;
 
+import com.KingOfLegends.game.managers.MemoryManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
@@ -93,8 +94,12 @@ public class JoinScreen extends ScreenAdapter {
 
         ipField = new TextField("", skin);
         ipField.setSize(400, 50);
-        ipField.setMaxLength(15);
-        ipField.setMessageText("Enter IP...");
+        ipField.setMaxLength(15);;
+        if (MemoryManager.getLastIP() == "") {
+            ipField.setMessageText("Enter IP...");
+        } else {
+            ipField.setText(MemoryManager.getLastIP());
+        }
         ipField.setTextFieldFilter((textField, c) -> Character.isDigit(c) || c == '.');
         ipField.setTextFieldListener(new TextField.TextFieldListener() {
             @Override
@@ -211,6 +216,7 @@ public class JoinScreen extends ScreenAdapter {
 
     private void submitIp(String ip) {
         if (isValidIP(ip)) {
+            MemoryManager.setLastIP(ip);
             game.hostIp = ip;
             game.showGameScreen(false, game.hostIp);
             errorMessage = "";

@@ -61,21 +61,37 @@ public class MemoryManager {
     public static void addExp(int value) {
         int current = loadExp();
         saveExp(current + value);
+        preferences.flush();
     }
     public static String loadProfileName() {
         return preferences.getString("ProfileName", "Unknown");
     }
     public static int getUpgradePoint() { return preferences.getInteger("PlayerUpgradePoint", 0); }
-    public static void add1UpgradePoint() { preferences.putInteger("PlayerUpgradePoint", getUpgradePoint() + 1); }
-    public static void saveUpgradePoint(int lvl) { preferences.putInteger("PlayerUpgradePoint", lvl); }
+    public static void add1UpgradePoint() {
+        preferences.putInteger("PlayerUpgradePoint", getUpgradePoint() + 1);
+        preferences.flush();
+    }
+    public static void saveUpgradePoint(int lvl) {
+        preferences.putInteger("PlayerUpgradePoint", lvl);
+        preferences.flush();
+    }
     public static void saveLvl(int lvl) {
         preferences.putInteger("PlayerLVL", lvl);
+        preferences.flush();
     }
-    public static void add1Lvl() {preferences.putInteger("PlayerLVL", getLvl() + 1);}
+    public static void add1Lvl() {
+        preferences.putInteger("PlayerLVL", getLvl() + 1);
+        preferences.flush();
+    }
 
     public static int getLvl() {
         return preferences.getInteger("PlayerLVL", 0);
     }
+    public static void setLastIP(String ip) {
+        preferences.putString("LastIP", ip);
+        preferences.flush();
+    }
+    public static String getLastIP() { return preferences.getString("LastIP", ""); }
 
     public static void saveSettings(float musicVolume, float soundVolume, boolean vibration) {
         preferences.putFloat("MusicVolume", musicVolume);
