@@ -12,11 +12,13 @@ import com.KingOfLegends.game.components.MovingBackgroundView;
 import com.KingOfLegends.game.components.TextView;
 import com.KingOfLegends.game.managers.MemoryManager;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
+import java.security.Key;
 
 public class UpgradeScreen extends ScreenAdapter {
     private final MyGdxGame game;
@@ -103,6 +105,14 @@ public class UpgradeScreen extends ScreenAdapter {
             plusButtons[i] = new ImageView(data[i][0] + data[i][2] / 2f + 4, data[i][1] - pHeight / 2f + 8, pHeight, pHeight, GameResources.PLUS_UPGRADE_PATH);
             lvlData[i] = new float[] {data[i][0] + data[i][2] / 2f - pHeight - 4, data[i][1] - pHeight / 2f + 8, pHeight, pHeight};
         }
+
+        while (expValue >= 1000) {
+            expValue -= 1000;
+            MemoryManager.add1Lvl();
+            MemoryManager.add1UpgradePoint();
+            lvl_text.setText(MemoryManager.getLvl() + "");
+        }
+        MemoryManager.saveExp(expValue);
     }
 
     private void setUpSkillsImages() {
@@ -127,17 +137,22 @@ public class UpgradeScreen extends ScreenAdapter {
                 game.setScreen(game.menuScreen);
                 return;
             }
+            boolean showPlusOrNot = MemoryManager.getUpgradePoint() > 0;
             for (int i = 0; i < data.length; i++) {
                 if (checkHitRhomb(touch.x, touch.y, data[i])) {
                     System.out.println("Нажат ромб с индексом: " + i);
                     break;
                 }
 
-                if (lvlSkills[i] < 5 &&
+                if (lvlSkills[i] < 5 && showPlusOrNot &&
                     touch.x >= plusButtons[i].getX() && touch.x <= plusButtons[i].getX() + plusButtons[i].getWidth() &&
                     touch.y >= plusButtons[i].getY() && touch.y <= plusButtons[i].getY() + plusButtons[i].getHeight()) {
 
                     lvlSkills[i]++;
+                    if (i == 0) {
+                        hp_text.setText(lvlSkills[0] * 10 + 100 + "");
+                    }
+                    MemoryManager.saveUpgradePoint(MemoryManager.getUpgradePoint() - 1);
                     MemoryManager.saveSkillLevel(i, lvlSkills[i]);
                     System.out.println("Прокачан навык " + i + ". Текущий уровень: " + lvlSkills[i]);
                     break;
@@ -157,7 +172,6 @@ public class UpgradeScreen extends ScreenAdapter {
     @Override
     public void render(float delta) {
         handleInput();
-
         game.camera.update();
         game.batch.setProjectionMatrix(game.camera.combined);
 
@@ -189,6 +203,7 @@ public class UpgradeScreen extends ScreenAdapter {
         hp_text.draw(game.batch);
         lvl_text.draw(game.batch);
 
+        boolean showPlusOrNot = MemoryManager.getUpgradePoint() > 0;
         for (int i = 0; i < data.length; i++) {
             int currentSkillTextureIndex;
 
@@ -205,7 +220,7 @@ public class UpgradeScreen extends ScreenAdapter {
             int currentLvlTextureIndex = Math.max(0, Math.min(lvlSkills[i], 5));
             game.batch.draw(lvl_im[currentLvlTextureIndex], lvlData[i][0], lvlData[i][1], lvlData[i][2], lvlData[i][3]);
 
-            if (lvlSkills[i] < 5) {
+            if (lvlSkills[i] < 5 && showPlusOrNot) {
                 plusButtons[i].draw(game.batch);
             }
         }

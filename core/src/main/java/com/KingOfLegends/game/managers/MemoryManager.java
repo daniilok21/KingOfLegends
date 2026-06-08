@@ -65,10 +65,13 @@ public class MemoryManager {
     public static String loadProfileName() {
         return preferences.getString("ProfileName", "Unknown");
     }
-
+    public static int getUpgradePoint() { return preferences.getInteger("PlayerUpgradePoint", 0); }
+    public static void add1UpgradePoint() { preferences.putInteger("PlayerUpgradePoint", getUpgradePoint() + 1); }
+    public static void saveUpgradePoint(int lvl) { preferences.putInteger("PlayerUpgradePoint", lvl); }
     public static void saveLvl(int lvl) {
         preferences.putInteger("PlayerLVL", lvl);
     }
+    public static void add1Lvl() {preferences.putInteger("PlayerLVL", getLvl() + 1);}
 
     public static int getLvl() {
         return preferences.getInteger("PlayerLVL", 0);
