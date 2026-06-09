@@ -112,7 +112,7 @@ public class ContactManager {
             float platformBottom = platform.getY();
             float playerVelocityY = player.getBody().getLinearVelocity().y;
 
-            if (player.isReadyToDropDown() && playerBottom >= platformTop - 5) {
+            if (player.getPassThroughTimer() > 0) {
                 contact.setEnabled(false);
                 return;
             }
@@ -121,6 +121,11 @@ public class ContactManager {
                 return;
             }
             if (playerVelocityY <= 0 && playerBottom >= platformTop - 5) {
+                if (player.wantsToGoDown() && player.isOnGround() && player.isReadyToDropDown()) {
+                    player.startPassThroughTimer(0.2f);
+                    contact.setEnabled(false);
+                    return;
+                }
                 return;
             }
             contact.setEnabled(false);

@@ -54,6 +54,7 @@ public class PlayerObject extends GameObject {
     private int maxHealth = 100;
     private boolean wantsToGoDown = false;
     private boolean canControl = true;
+    private float passThroughTimer = 0f;
 
     private float lastVelocityY = 0f;
     private boolean wasMovingUpBeforeHit = false;
@@ -170,6 +171,7 @@ public class PlayerObject extends GameObject {
                 body.setAwake(true);
             }
         }
+        if (passThroughTimer > 0) passThroughTimer -= delta;
         if (hitImmunityTimer < 0) hitImmunityTimer = 0;
         if (dodgeCooldown < 0) dodgeCooldown = 0;
         if (attackCooldown < 0) attackCooldown = 0;
@@ -519,7 +521,19 @@ public class PlayerObject extends GameObject {
         }
         this.wantsToGoDown = wantsToGoDown;
     }
+    public float getDropDownTimer() {
+        return dropDownTimer;
+    }
+    public float getPassThroughTimer() {
+        return passThroughTimer;
+    }
 
+    public void startPassThroughTimer(float duration) {
+        this.passThroughTimer = duration;
+    }
+    public void forceStartDropDownTimer(float duration) {
+        this.dropDownTimer = duration;
+    }
     public boolean isReadyToDropDown() {
         return wantsToGoDown && dropDownTimer <= 0;
     }
