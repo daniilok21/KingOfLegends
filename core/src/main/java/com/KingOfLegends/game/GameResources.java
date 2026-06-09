@@ -20,6 +20,7 @@ public class GameResources {
     public static final String BACKGROUND_JOIN = "textures/background_join.jpg";
     public static final String BACKGROUND_PROFILE = "textures/background_profile.png";
     public static final String BACKGROUND_GAME = "textures/background_game.jpg";
+    public static final String BACKGROUND_GAME2 = "textures/background_game2.png";
     public static final String KNIFE_LEFT = "textures/knife_left.png";
     public static final String KNIFE_RIGHT = "textures/knife_right.png";
     public static final String BOARD = "textures/board.png";
@@ -69,6 +70,7 @@ public class GameResources {
     public static final String MENU_BACKGROUND_WAITING_MUSIC_PATH = "audio/waiting_background_music.mp3";
     public static final String GAME_BACKGROUND_1_MUSIC_PATH = "audio/game_background_1_music.mp3";
     public static final String GAME_BACKGROUND_2_MUSIC_PATH = "audio/game_background_2_music.mp3";
+    public static final String GAME_BACKGROUND_2_1_MUSIC_PATH = "audio/game_background_2_1.mp3";
     public static final String GAME_VICRORY_MUSIC_PATH = "audio/victory.mp3";
 
     // СаундТреки

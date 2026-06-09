@@ -74,6 +74,7 @@ public class GameScreen extends ScreenAdapter {
     private Rectangle scissorRect = new Rectangle();
     private float serverRespawnIgnoreTimer = 0;
     private float clientRespawnIgnoreTimer = 0;
+    private int idLocation;
 
     public GameScreen(MyGdxGame game) {
         this.myGdxGame = game;
@@ -84,7 +85,6 @@ public class GameScreen extends ScreenAdapter {
         ipAddressText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f - 100, SCREEN_HEIGHT / 4f * 3f + 20f, "");
         countdownText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT / 4f * 3f - 30f, "");
         resultText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f + 100, "");
-        backgroundView = new MovingBackgroundView(GameResources.BACKGROUND_GAME);
         skillMessageManager = new SkillMessageManager(myGdxGame.defaultFontWithBorder);
         random = new Random();
     }
@@ -138,10 +138,22 @@ public class GameScreen extends ScreenAdapter {
 
     private void setupWorld() {
         int offset_buttons = 50;
-        platforms.add(new PlatformObject(398, 200, SCREEN_WIDTH - 788, 180, GameResources.PLATFORM, myGdxGame.world));
-        oneWayPlatforms.add(new OneWayPlatformObject(90, 275, 250, 30, GameResources.PLATFORM, myGdxGame.world));
-        oneWayPlatforms.add(new OneWayPlatformObject(503, 506, 288, 19, GameResources.PLATFORM, myGdxGame.world));
-        oneWayPlatforms.add(new OneWayPlatformObject(945, 198, 250, 19, GameResources.PLATFORM, myGdxGame.world));
+        idLocation = random.nextInt(2);
+        if (idLocation == 0) {
+            backgroundView = new MovingBackgroundView(GameResources.BACKGROUND_GAME);
+            platforms.add(new PlatformObject(398, 200, SCREEN_WIDTH - 788, 180, GameResources.PLATFORM, myGdxGame.world));
+            oneWayPlatforms.add(new OneWayPlatformObject(90, 275, 250, 30, GameResources.PLATFORM, myGdxGame.world));
+            oneWayPlatforms.add(new OneWayPlatformObject(503, 506, 288, 19, GameResources.PLATFORM, myGdxGame.world));
+            oneWayPlatforms.add(new OneWayPlatformObject(945, 198, 250, 19, GameResources.PLATFORM, myGdxGame.world));
+        }
+        else {
+            backgroundView = new MovingBackgroundView(GameResources.BACKGROUND_GAME2);
+            platforms.add(new PlatformObject(268, 83, 288, 226, GameResources.PLATFORM, myGdxGame.world));
+            platforms.add(new PlatformObject(728, 83, 288, 226, GameResources.PLATFORM, myGdxGame.world));
+            oneWayPlatforms.add(new OneWayPlatformObject(213, 367, 169, 15, GameResources.PLATFORM, myGdxGame.world));
+            oneWayPlatforms.add(new OneWayPlatformObject(897, 367, 171, 15, GameResources.PLATFORM, myGdxGame.world));
+            oneWayPlatforms.add(new OneWayPlatformObject(445, 448, 393, 17, GameResources.PLATFORM, myGdxGame.world));
+        }
         serverPlayer = new PlayerObject(START_PLAYER_SERVER_X, START_PLAYER_SERVER_Y, PLAYER_WIDTH, PLAYER_HEIGHT,
             new String[]{
                 GameResources.BLUE_PLAYER_IDLE_SHEET,
@@ -729,7 +741,7 @@ public class GameScreen extends ScreenAdapter {
             serverPlayer.startInvocation(3.0f);
             clientPlayer.startInvocation(3.0f);
             musicStarted = false;
-            selectedMusicIndex = myGdxGame.audioManager.getRandomMusicIndex();
+            selectedMusicIndex = myGdxGame.audioManager.getRandomMusicIndex(idLocation);
         } else if (gameStatus == GameState.GameStatus.COUNTDOWN) {
             countdown -= delta;
             musicStarted = false;
@@ -794,6 +806,18 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
 
         batch.begin();
+        if (Gdx.input.isKeyPressed(Input.Keys.ENTER)) {
+            for (PlatformObject i : platforms) {
+                i.draw(batch);
+            }
+            for (OneWayPlatformObject i : oneWayPlatforms) {
+                i.draw(batch);
+            }
+        }
+        if (Gdx.input.isTouched()) {
+            Vector3 touch = myGdxGame.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+            System.out.println(touch.x + "    " + touch.y);
+        }
         topPanel.draw(batch);
         joystick.draw(batch);
         jumpButton.draw(batch);

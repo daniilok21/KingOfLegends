@@ -515,7 +515,7 @@ public class PlayerObject extends GameObject {
     }
     public void setWantsToGoDown(boolean wantsToGoDown) {
         if (wantsToGoDown && !this.wantsToGoDown && isOnGround) {
-            dropDownTimer = 0.3f;
+            dropDownTimer = 0.15f;
         }
         this.wantsToGoDown = wantsToGoDown;
     }

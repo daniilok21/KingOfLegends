@@ -13,6 +13,7 @@ public class AudioManager {
     private Music menuWaiting;
     private Music gameMusic1;
     private Music gameMusic2;
+    private Music gameMusic2_1;
     private Music currentGameMusic;
     private Sound victoryMusic;
     private Sound hitSound;
@@ -25,6 +26,7 @@ public class AudioManager {
         menuWaiting = Gdx.audio.newMusic(Gdx.files.internal(GameResources.MENU_BACKGROUND_WAITING_MUSIC_PATH));
         gameMusic1 = Gdx.audio.newMusic(Gdx.files.internal(GameResources.GAME_BACKGROUND_1_MUSIC_PATH));
         gameMusic2 = Gdx.audio.newMusic(Gdx.files.internal(GameResources.GAME_BACKGROUND_2_MUSIC_PATH));
+        gameMusic2_1 = Gdx.audio.newMusic(Gdx.files.internal(GameResources.GAME_BACKGROUND_2_1_MUSIC_PATH));
         hitSound = Gdx.audio.newSound(Gdx.files.internal(GameResources.HIT_SOUND_PATH));
         clickSound = Gdx.audio.newSound(Gdx.files.internal(GameResources.CLICK_SOUND_PATH));
         victoryMusic = Gdx.audio.newSound(Gdx.files.internal(GameResources.GAME_VICRORY_MUSIC_PATH));
@@ -37,6 +39,8 @@ public class AudioManager {
         gameMusic1.setVolume(0.2f);
         gameMusic2.setLooping(true);
         gameMusic2.setVolume(0.2f);
+        gameMusic2_1.setLooping(true);
+        gameMusic2_1.setVolume(0.2f);
     }
 
     public void playMenuMusic() {
@@ -72,14 +76,20 @@ public class AudioManager {
 
         if (musicIndex == 0) {
             currentGameMusic = gameMusic1;
-        } else {
+        } else if (musicIndex == 1){
             currentGameMusic = gameMusic2;
+        }
+        else {
+            currentGameMusic = gameMusic2_1;
         }
         currentGameMusic.play();
     }
 
-    public int getRandomMusicIndex() {
-        return random.nextInt(2);
+    public int getRandomMusicIndex(int idLocation) {
+        if (idLocation == 0) {
+            return random.nextInt(2);
+        }
+        return 2;
     }
 
     public void stopGameMusic() {
@@ -101,6 +111,7 @@ public class AudioManager {
         menuWaiting.setVolume(GameSettings.MUSIC_VOLUME);
         gameMusic1.setVolume(GameSettings.MUSIC_VOLUME);
         gameMusic2.setVolume(GameSettings.MUSIC_VOLUME);
+        gameMusic2_1.setVolume(GameSettings.MUSIC_VOLUME);
     }
 
     public void playVictorySound() {
@@ -117,6 +128,7 @@ public class AudioManager {
         menuWaiting.dispose();
         gameMusic1.dispose();
         gameMusic2.dispose();
+        gameMusic2_1.dispose();
         hitSound.dispose();
         clickSound.dispose();
         victoryMusic.dispose();
