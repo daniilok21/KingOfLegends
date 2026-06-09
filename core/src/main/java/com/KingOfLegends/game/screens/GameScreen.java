@@ -82,7 +82,7 @@ public class GameScreen extends ScreenAdapter {
         bloodParticles = new BloodParticle();
         waitingText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f - 100, SCREEN_HEIGHT / 4f * 3f - 30f, "WAITING...");
         ipAddressText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f - 100, SCREEN_HEIGHT / 4f * 3f + 20f, "");
-        countdownText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT, "");
+        countdownText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT / 4f * 3f - 30f, "");
         resultText = new TextView(game.titleFontWithBorder, SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f + 100, "");
         backgroundView = new MovingBackgroundView(GameResources.BACKGROUND_GAME);
         skillMessageManager = new SkillMessageManager(myGdxGame.defaultFontWithBorder);

@@ -37,6 +37,7 @@ public class PlayerObject extends GameObject {
     private boolean isDodging = false;
     private float dodgeTimer = 0f;
     private float dodgeCooldown = 0f;
+    private float dropDownTimer = 0f;
     private float hitStunTimer = 0f;
     private float hitImmunityTimer = 0f;
     private boolean isInHitStun = false;
@@ -163,6 +164,12 @@ public class PlayerObject extends GameObject {
         hitImmunityTimer -= delta;
         attackCooldown -= delta;
         headHitCooldown -= delta;
+        if (dropDownTimer > 0) {
+            dropDownTimer -= delta;
+            if (dropDownTimer <= 0 && wantsToGoDown && body != null) {
+                body.setAwake(true);
+            }
+        }
         if (hitImmunityTimer < 0) hitImmunityTimer = 0;
         if (dodgeCooldown < 0) dodgeCooldown = 0;
         if (attackCooldown < 0) attackCooldown = 0;
@@ -507,7 +514,14 @@ public class PlayerObject extends GameObject {
         return canControl;
     }
     public void setWantsToGoDown(boolean wantsToGoDown) {
+        if (wantsToGoDown && !this.wantsToGoDown && isOnGround) {
+            dropDownTimer = 0.3f;
+        }
         this.wantsToGoDown = wantsToGoDown;
+    }
+
+    public boolean isReadyToDropDown() {
+        return wantsToGoDown && dropDownTimer <= 0;
     }
 
     public boolean wantsToGoDown() {

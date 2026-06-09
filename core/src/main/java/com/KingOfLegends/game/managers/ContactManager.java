@@ -112,7 +112,7 @@ public class ContactManager {
             float platformBottom = platform.getY();
             float playerVelocityY = player.getBody().getLinearVelocity().y;
 
-            if (player.wantsToGoDown() && playerBottom >= platformTop - 5) {
+            if (player.isReadyToDropDown() && playerBottom >= platformTop - 5) {
                 contact.setEnabled(false);
                 return;
             }
