@@ -124,7 +124,12 @@ public class GameScreen extends ScreenAdapter {
         myGdxGame.contactManager = new ContactManager(myGdxGame.world);
 
         localSkills = MemoryManager.loadAllSkills();
-
+        if (myGdxGame.isHost) {
+            idLocation = random.nextInt(2);
+        }
+        else {
+            idLocation = 0;
+        }
         setupWorld();
 
         ipAddressText.setText("YOUR IP: " + getIP());
@@ -138,7 +143,7 @@ public class GameScreen extends ScreenAdapter {
 
     private void setupWorld() {
         int offset_buttons = 50;
-        idLocation = random.nextInt(2);
+
         if (idLocation == 0) {
             backgroundView = new MovingBackgroundView(GameResources.BACKGROUND_GAME);
             platforms.add(new PlatformObject(398, 200, SCREEN_WIDTH - 788, 180, GameResources.PLATFORM, myGdxGame.world));
@@ -460,6 +465,7 @@ public class GameScreen extends ScreenAdapter {
             packet.musicIndex = selectedMusicIndex;
             packet.sName = topPanel.getPlayer1Name();
             packet.cName = topPanel.getPlayer2Name();
+            packet.idLocation = idLocation;
 
             packet.sX = serverPlayer.getBody().getPosition().x;
             packet.sY = serverPlayer.getBody().getPosition().y;
@@ -508,6 +514,21 @@ public class GameScreen extends ScreenAdapter {
             NetworkPacket packet = (client != null) ? client.latestPacket : null;
 
             if (packet != null) {
+                if (idLocation != packet.idLocation) {
+                    idLocation = packet.idLocation;
+
+                    for (PlatformObject platform : platforms) {
+                        platform.dispose();
+                    }
+                    for (OneWayPlatformObject owPlatform : oneWayPlatforms) {
+                        owPlatform.dispose();
+                    }
+
+                    platforms.clear();
+                    oneWayPlatforms.clear();
+                    setupWorld();
+                }
+
                 gameStatus = packet.status;
                 countdown = packet.countdown;
                 topPanel.setMatchTimer(packet.matchTimer);

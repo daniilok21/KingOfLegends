@@ -9,6 +9,7 @@ public class NetworkPacket implements Serializable {
 
     public GameState.GameStatus status;
     public float countdown;
+    public int idLocation;
 
     public String sName;
     public float sX, sY;

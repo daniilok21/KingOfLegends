@@ -28,4 +28,10 @@ public class OneWayPlatformObject extends GameObject {
             fixture.setFilterData(filter);
         }
     }
+
+    public void dispose() {
+        if (body != null && body.getWorld() != null) {
+            body.getWorld().destroyBody(body);
+        }
+    }
 }
