@@ -15,6 +15,7 @@ import com.KingOfLegends.game.components.SliderView;
 import com.KingOfLegends.game.components.TextView;
 import com.KingOfLegends.game.components.ToggleView;
 import com.KingOfLegends.game.managers.MemoryManager;
+import com.badlogic.gdx.utils.ScreenUtils;
 
 import static com.KingOfLegends.game.GameSettings.SCREEN_HEIGHT;
 import static com.KingOfLegends.game.GameSettings.SCREEN_WIDTH;
@@ -92,6 +93,7 @@ public class SettingsScreen extends ScreenAdapter {
 
         game.camera.update();
         game.batch.setProjectionMatrix(game.camera.combined);
+        ScreenUtils.clear(new Color(0, 0, 0, 1));
 
         game.batch.begin();
         game.defaultMenuFont.setColor(Color.BROWN);

@@ -19,6 +19,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.ScreenUtils;
+
 import java.security.Key;
 
 public class UpgradeScreen extends ScreenAdapter {
@@ -201,6 +203,7 @@ public class UpgradeScreen extends ScreenAdapter {
         handleInput();
         game.camera.update();
         game.batch.setProjectionMatrix(game.camera.combined);
+        ScreenUtils.clear(new Color(0, 0, 0, 1));
 
         game.batch.begin();
 

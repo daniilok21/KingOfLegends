@@ -806,13 +806,14 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.setProjectionMatrix(myGdxGame.camera.combined);
 
+        batch.begin();
+        backgroundView.draw(batch);
+        batch.end();
+
         HdpiUtils.glScissor((int)scissorRect.x, (int)scissorRect.y, (int)scissorRect.width, (int)scissorRect.height);
         Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
 
         batch.begin();
-
-        backgroundView.draw(batch);
-
         if (myGdxGame.isHost) {
             clientPlayer.draw(batch);
             serverPlayer.draw(batch);
