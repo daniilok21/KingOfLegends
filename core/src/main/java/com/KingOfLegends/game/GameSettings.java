@@ -42,8 +42,8 @@ public class GameSettings {
     public static final float SCALE = 0.05f;
 
     // UI
-    public static final int BUTTON_WIDTH = 120;
-    public static final int BUTTON_HEIGHT = 120;
+    public static final int BUTTON_WIDTH = 140;
+    public static final int BUTTON_HEIGHT = 140;
     public static final float BUTTON_ALPHA = 0.7f;
     public static final float JOYSTICK_BG_RADIUS = 100f;
     public static final float JOYSTICK_HANDLE_RADIUS = 40f;
