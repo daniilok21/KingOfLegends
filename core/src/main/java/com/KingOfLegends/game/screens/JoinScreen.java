@@ -143,16 +143,21 @@ public class JoinScreen extends ScreenAdapter {
         board.draw(game.batch);
 
         if (isConnecting) {
+            game.batch.setColor(0.85f, 0.85f, 0.85f, 1.0f);
+            connectButton.draw(game.batch);
+            // 2. Обязательно возвращаем стандартный белый цвет, чтобы остальные элементы не затемнялись
+            game.batch.setColor(Color.WHITE);
 
             statusTimer += delta;
             int dotsCount = (int)(statusTimer * 2) % 4;
             String dots = "";
             for (int i = 0; i < dotsCount; i++) dots += ".";
 
-            statusMessage = "Connecting to " + game.hostIp + dots;
+            statusMessage = "Connecting to "+ System.lineSeparator() + game.hostIp + dots;
         } else {
             ipEnterPlace.draw(game.batch);
             connectButton.draw(game.batch);
+
         }
         backButton.draw(game.batch);
 
@@ -205,11 +210,11 @@ public class JoinScreen extends ScreenAdapter {
             if (isConnecting) {
                 if (backButton.isHit(touch.x, touch.y)) {
                     game.audioManager.playClickSound();
-                    if (!isConnecting) {
-                        game.setScreen(game.menuScreen);
-                    } else {
-                        game.setScreen(game.joinScreen);
-                    }
+                    game.setScreen(game.joinScreen);
+                    isConnecting = false;
+                    statusMessage = "";
+
+
                 }
                 return;
             }
@@ -279,6 +284,10 @@ public class JoinScreen extends ScreenAdapter {
 
                 } catch (Exception e) {
                     Gdx.app.postRunnable(() -> {
+                        // Если во время ожидания сокета isConnecting стал false (нажали Back),
+                        // значит, это старый поток, и его результат нам больше не нужен.
+                        if (!isConnecting) return;
+
                         isConnecting = false;
                         statusMessage = "Host not found!";
                     });
