@@ -36,7 +36,9 @@ public class JoinScreen extends ScreenAdapter {
     private TextField ipField;
     private ImageView board;
     private ImageView ipEnterPlace;
-    private String errorMessage = "";
+    private String statusMessage = "";
+    private boolean isConnecting = false;
+    private float statusTimer = 0;
 
     public JoinScreen(MyGdxGame game) {
         this.game = game;
@@ -61,13 +63,12 @@ public class JoinScreen extends ScreenAdapter {
             game.defaultMenuFont, GameResources.BUTTON_MENU, "Back"
         );
 
-        board = new ImageView(SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 650f, 600, 500, GameResources.BOARD);
+        board = new ImageView(SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 650f, 770, 500, GameResources.BOARD);
         board.setCenterX(SCREEN_WIDTH / 2f);
 
         ipEnterPlace = new ImageView(0, 0, 440, 80, GameResources.BUTTON_MENU);
         ipEnterPlace.setCenterX(SCREEN_WIDTH / 2f);
         ipEnterPlace.setY(SCREEN_HEIGHT / 2f + 15);
-
 
         inputStage = new Stage(new ExtendViewport(SCREEN_WIDTH, SCREEN_HEIGHT, game.camera));
 
@@ -94,8 +95,8 @@ public class JoinScreen extends ScreenAdapter {
 
         ipField = new TextField("", skin);
         ipField.setSize(400, 50);
-        ipField.setMaxLength(15);;
-        if (MemoryManager.getLastIP() == "") {
+        ipField.setMaxLength(15);
+        if (MemoryManager.getLastIP().isEmpty()) {
             ipField.setMessageText("Enter IP...");
         } else {
             ipField.setText(MemoryManager.getLastIP());
@@ -104,8 +105,10 @@ public class JoinScreen extends ScreenAdapter {
         ipField.setTextFieldListener(new TextField.TextFieldListener() {
             @Override
             public void keyTyped(TextField textField, char c) {
-                errorMessage = "";
-                if (c == '\n' || c == '\r') {
+                if (!isConnecting) {
+                    statusMessage = "";
+                }
+                if ((c == '\n' || c == '\r') && !isConnecting) {
                     submitIp(textField.getText().trim());
                 }
             }
@@ -113,6 +116,9 @@ public class JoinScreen extends ScreenAdapter {
 
         inputStage.addActor(ipField);
         Gdx.input.setInputProcessor(inputStage);
+
+        isConnecting = false;
+        statusMessage = "";
     }
 
     @Override
@@ -136,23 +142,44 @@ public class JoinScreen extends ScreenAdapter {
         titleView.draw(game.batch);
         board.draw(game.batch);
 
-        ipEnterPlace.draw(game.batch);
+        if (isConnecting) {
 
-        connectButton.draw(game.batch);
+            statusTimer += delta;
+            int dotsCount = (int)(statusTimer * 2) % 4;
+            String dots = "";
+            for (int i = 0; i < dotsCount; i++) dots += ".";
+
+            statusMessage = "Connecting to " + game.hostIp + dots;
+        } else {
+            ipEnterPlace.draw(game.batch);
+            connectButton.draw(game.batch);
+        }
         backButton.draw(game.batch);
 
-        if (!errorMessage.isEmpty()) {
-            game.defaultMenuFont.draw(game.batch, errorMessage, SCREEN_WIDTH / 2f - 80, SCREEN_HEIGHT / 2f - 80);
+        if (!statusMessage.isEmpty()) {
+            game.defaultMenuFont.draw(
+                game.batch,
+                statusMessage,
+                SCREEN_WIDTH / 2f,
+                SCREEN_HEIGHT / 2f + 120,
+                0,
+                com.badlogic.gdx.utils.Align.center,
+                false);
         }
+
 
         game.batch.end();
 
         updateIpFieldPosition();
 
+        if (ipField != null) {
+            ipField.setVisible(!isConnecting);
+        }
+
         inputStage.act(delta);
         inputStage.draw();
 
-        if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
+        if (Gdx.app.getType() == Application.ApplicationType.Desktop && !isConnecting) {
             if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
                 submitIp(ipField.getText().trim());
             }
@@ -173,6 +200,19 @@ public class JoinScreen extends ScreenAdapter {
     private void handleInput() {
         if (Gdx.input.justTouched()) {
             Vector3 touch = game.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+
+
+            if (isConnecting) {
+                if (backButton.isHit(touch.x, touch.y)) {
+                    game.audioManager.playClickSound();
+                    if (!isConnecting) {
+                        game.setScreen(game.menuScreen);
+                    } else {
+                        game.setScreen(game.joinScreen);
+                    }
+                }
+                return;
+            }
 
             if (touch.x >= ipEnterPlace.getX() && touch.x <= ipEnterPlace.getX() + ipEnterPlace.getWidth() &&
                 touch.y >= ipEnterPlace.getY() && touch.y <= ipEnterPlace.getY() + ipEnterPlace.getHeight()) {
@@ -204,7 +244,7 @@ public class JoinScreen extends ScreenAdapter {
                 Gdx.app.postRunnable(() -> {
                     String trimmedText = text.trim();
                     ipField.setText(trimmedText);
-                    errorMessage = "";
+                    statusMessage = "";
                     if (isValidIP(trimmedText)) {
                         submitIp(trimmedText);
                     }
@@ -219,10 +259,34 @@ public class JoinScreen extends ScreenAdapter {
         if (isValidIP(ip)) {
             MemoryManager.setLastIP(ip);
             game.hostIp = ip;
-            game.showGameScreen(false, game.hostIp);
-            errorMessage = "";
+
+            isConnecting = true;
+            statusMessage = "Connecting to " + ip + "...";
+
+
+            new Thread(() -> {
+                try {
+                    java.net.Socket socket = new java.net.Socket();
+                    socket.connect(new java.net.InetSocketAddress(ip, 54555), 4000);
+                    socket.close();
+
+
+                    Gdx.app.postRunnable(() -> {
+                        isConnecting = false;
+                        statusMessage = "";
+                        game.showGameScreen(false, game.hostIp);
+                    });
+
+                } catch (Exception e) {
+                    Gdx.app.postRunnable(() -> {
+                        isConnecting = false;
+                        statusMessage = "Host not found!";
+                    });
+                }
+            }).start();
+
         } else {
-            errorMessage = ""; // а по хорошему сообщать...
+            statusMessage = "Invalid IP Address!";
         }
     }
 
