@@ -1,5 +1,6 @@
 package com.KingOfLegends.game;
 
+import com.KingOfLegends.game.net.Client;
 import com.KingOfLegends.game.screens.UpgradeScreen;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -44,6 +45,7 @@ public class MyGdxGame extends Game {
     public boolean isHost = false;
     public String hostIp = "";
     public String playerName;
+    public Client preConnectedClient = null;
 
     float accumulator = 0;
 

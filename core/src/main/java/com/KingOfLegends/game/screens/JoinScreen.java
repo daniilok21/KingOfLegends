@@ -1,6 +1,8 @@
 package com.KingOfLegends.game.screens;
 
+import com.KingOfLegends.game.GameSettings;
 import com.KingOfLegends.game.managers.MemoryManager;
+import com.KingOfLegends.game.net.Client;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
@@ -39,6 +41,8 @@ public class JoinScreen extends ScreenAdapter {
     private String statusMessage = "";
     private boolean isConnecting = false;
     private float statusTimer = 0;
+
+    private volatile int connectAttemptId = 0;
 
     public JoinScreen(MyGdxGame game) {
         this.game = game;
@@ -145,7 +149,6 @@ public class JoinScreen extends ScreenAdapter {
         if (isConnecting) {
             game.batch.setColor(0.85f, 0.85f, 0.85f, 1.0f);
             connectButton.draw(game.batch);
-            // 2. Обязательно возвращаем стандартный белый цвет, чтобы остальные элементы не затемнялись
             game.batch.setColor(Color.WHITE);
 
             statusTimer += delta;
@@ -153,11 +156,10 @@ public class JoinScreen extends ScreenAdapter {
             String dots = "";
             for (int i = 0; i < dotsCount; i++) dots += ".";
 
-            statusMessage = "Connecting to "+ System.lineSeparator() + game.hostIp + dots;
+            statusMessage = "Connecting to " + System.lineSeparator() + game.hostIp + dots;
         } else {
             ipEnterPlace.draw(game.batch);
             connectButton.draw(game.batch);
-
         }
         backButton.draw(game.batch);
 
@@ -171,7 +173,6 @@ public class JoinScreen extends ScreenAdapter {
                 com.badlogic.gdx.utils.Align.center,
                 false);
         }
-
 
         game.batch.end();
 
@@ -206,15 +207,10 @@ public class JoinScreen extends ScreenAdapter {
         if (Gdx.input.justTouched()) {
             Vector3 touch = game.camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
 
-
             if (isConnecting) {
                 if (backButton.isHit(touch.x, touch.y)) {
                     game.audioManager.playClickSound();
-                    game.setScreen(game.joinScreen);
-                    isConnecting = false;
-                    statusMessage = "";
-
-
+                    cancelConnecting();
                 }
                 return;
             }
@@ -242,6 +238,12 @@ public class JoinScreen extends ScreenAdapter {
         }
     }
 
+    private void cancelConnecting() {
+        connectAttemptId++;
+        isConnecting = false;
+        statusMessage = "";
+    }
+
     private void showNativeIpInput() {
         Gdx.input.getTextInput(new Input.TextInputListener() {
             @Override
@@ -261,42 +263,40 @@ public class JoinScreen extends ScreenAdapter {
     }
 
     private void submitIp(String ip) {
-        if (isValidIP(ip)) {
-            MemoryManager.setLastIP(ip);
-            game.hostIp = ip;
-
-            isConnecting = true;
-            statusMessage = "Connecting to " + ip + "...";
-
-
-            new Thread(() -> {
-                try {
-                    java.net.Socket socket = new java.net.Socket();
-                    socket.connect(new java.net.InetSocketAddress(ip, 54555), 4000);
-                    socket.close();
-
-
-                    Gdx.app.postRunnable(() -> {
-                        isConnecting = false;
-                        statusMessage = "";
-                        game.showGameScreen(false, game.hostIp);
-                    });
-
-                } catch (Exception e) {
-                    Gdx.app.postRunnable(() -> {
-                        // Если во время ожидания сокета isConnecting стал false (нажали Back),
-                        // значит, это старый поток, и его результат нам больше не нужен.
-                        if (!isConnecting) return;
-
-                        isConnecting = false;
-                        statusMessage = "Host not found!";
-                    });
-                }
-            }).start();
-
-        } else {
+        if (!isValidIP(ip)) {
             statusMessage = "Invalid IP Address!";
+            return;
         }
+
+        MemoryManager.setLastIP(ip);
+        game.hostIp = ip;
+
+        isConnecting = true;
+        statusMessage = "Connecting to " + ip + "...";
+
+        final int myAttemptId = ++connectAttemptId;
+
+        new Thread(() -> {
+            Client realClient = new Client();
+            boolean ok = realClient.connectWithTimeout(ip, GameSettings.PORT, 4000);
+
+            Gdx.app.postRunnable(() -> {
+                if (myAttemptId != connectAttemptId) {
+                    realClient.disconnect();
+                    return;
+                }
+
+                isConnecting = false;
+
+                if (ok) {
+                    statusMessage = "";
+                    game.preConnectedClient = realClient;
+                    game.showGameScreen(false, ip);
+                } else {
+                    statusMessage = "Host not found!";
+                }
+            });
+        }, "join-connect").start();
     }
 
     private boolean isValidIP(String ip) {

@@ -206,8 +206,16 @@ public class GameScreen extends ScreenAdapter {
             connected = true;
             topPanel.setPlayer1Name(myGdxGame.playerName);
         } else {
-            client = new Client();
-            connected = client.connect(myGdxGame.hostIp, PORT);
+            if (myGdxGame.preConnectedClient != null) {
+                client = myGdxGame.preConnectedClient;
+                myGdxGame.preConnectedClient = null;
+                client.startReading();
+                connected = client.isConnected();
+            } else {
+                client = new Client();
+                connected = client.connect(myGdxGame.hostIp, PORT);
+                if (connected) client.startReading();
+            }
             topPanel.setPlayer2Name(myGdxGame.playerName);
         }
     }
