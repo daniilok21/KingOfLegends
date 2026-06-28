@@ -67,7 +67,7 @@ public class JoinScreen extends ScreenAdapter {
             game.defaultMenuFont, GameResources.BUTTON_MENU, "Back"
         );
 
-        board = new ImageView(SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 650f, 770, 500, GameResources.BOARD);
+        board = new ImageView(SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 650f, 600, 500, GameResources.BOARD);
         board.setCenterX(SCREEN_WIDTH / 2f);
 
         ipEnterPlace = new ImageView(0, 0, 440, 80, GameResources.BUTTON_MENU);
