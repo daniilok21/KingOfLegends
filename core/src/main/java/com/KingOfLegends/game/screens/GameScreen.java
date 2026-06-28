@@ -227,7 +227,6 @@ public class GameScreen extends ScreenAdapter {
             myGdxGame.camera.viewportWidth = SCREEN_HEIGHT * screenRatio;
             myGdxGame.camera.viewportHeight = SCREEN_HEIGHT;
         } else {
-
             myGdxGame.camera.viewportWidth = SCREEN_WIDTH;
             myGdxGame.camera.viewportHeight = SCREEN_WIDTH / screenRatio;
         }
@@ -236,8 +235,10 @@ public class GameScreen extends ScreenAdapter {
         myGdxGame.camera.update();
         batch.setProjectionMatrix(myGdxGame.camera.combined);
 
-        Vector3 min = myGdxGame.camera.project(new Vector3(0, 0, 0));
-        Vector3 max = myGdxGame.camera.project(new Vector3(SCREEN_WIDTH, SCREEN_HEIGHT, 0));
+        float worldMargin = 1000f;
+
+        Vector3 min = myGdxGame.camera.project(new Vector3(-worldMargin, -worldMargin, 0));
+        Vector3 max = myGdxGame.camera.project(new Vector3(SCREEN_WIDTH + worldMargin, SCREEN_HEIGHT + worldMargin, 0));
         scissorRect.set(min.x, min.y, max.x - min.x, max.y - min.y);
     }
 
