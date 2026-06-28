@@ -2,13 +2,9 @@ package com.KingOfLegends.game;
 
 public class GameResources {
     public static final String PLATFORM = "textures/platform.png";
-
-    public static final String BUTTON_LEFT = "textures/left_button.png";
-    public static final String BUTTON_RIGHT = "textures/right_button.png";
     public static final String BUTTON_JUMP = "textures/jump_button.png";
     public static final String BUTTON_DODGE = "textures/dodge_button.png";
     public static final String BUTTON_ATTACK = "textures/attack_button.png";
-    public static final String BUTTON_LONG_MENU = "textures/button_background_long.png";
     public static final String BUTTON_MENU = "textures/button_menu.png";
     public static final String BUTTON_HOME = "textures/back_btn.png";
     public static final String BUTTON_PROFILE = "textures/profile_btn.png";
@@ -16,13 +12,12 @@ public class GameResources {
     public static final String SLIDER_FILL = "textures/slider_fill.png";
     public static final String SLIDER_EMPTY = "textures/slider_empty.png";
     public static final String CIRCLE_BUTTON = "textures/circle_btn.png";
+    public static final String TITLE_MENU = "textures/king_of_legends_swords_closer.png";
     public static final String BACKGROUND_MENU = "textures/background_menu.jpg";
     public static final String BACKGROUND_JOIN = "textures/background_join.jpg";
     public static final String BACKGROUND_PROFILE = "textures/background_profile.png";
     public static final String BACKGROUND_GAME = "textures/background_game.jpg";
     public static final String BACKGROUND_GAME2 = "textures/background_game2.png";
-    public static final String KNIFE_LEFT = "textures/knife_left.png";
-    public static final String KNIFE_RIGHT = "textures/knife_right.png";
     public static final String BOARD = "textures/board.png";
     public static final String SWITCH_ONN = "textures/switch_onn.png";
     public static final String SWITCH_OFF = "textures/switch_off.png";
@@ -33,9 +28,6 @@ public class GameResources {
     public static final String DRAK_FONT_PATH = "fonts/Silkscreen-Bold.ttf";
     public static final String MENU_FONT_PATH = "fonts/dark-whisper.ttf";
     public static final String DESCRIBE_UPGRADE_FONT_PATH = "fonts/ofont.ru_Nexa Script.ttf";
-
-    public static final String RED_PLAYER_SPRITE_SHEET = "textures/red_player.png";
-    public static final String BLUE_PLAYER_SPRITE_SHEET = "textures/blue_player.png";
 
     public static final String BLUE_PLAYER_IDLE_SHEET = "textures/players/blue/Idle.png";
     public static final String BLUE_PLAYER_RUN_SHEET = "textures/players/blue/Run.png";

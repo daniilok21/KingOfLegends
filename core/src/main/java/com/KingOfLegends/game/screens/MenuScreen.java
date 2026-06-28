@@ -1,6 +1,5 @@
 package com.KingOfLegends.game.screens;
 
-import com.KingOfLegends.game.managers.AudioManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
@@ -21,14 +20,12 @@ public class MenuScreen extends ScreenAdapter {
 
     private final MyGdxGame game;
     private MovingBackgroundView backgroundView;
-    private TextView titleView;
     private ButtonView hostButton;
     private ButtonView joinButton;
     private ButtonView skillsButton;
     private ButtonView settingsButton;
     private ButtonView profileButton;
-    private ImageView knifeLeft;
-    private ImageView knifeRight;
+    private ImageView titleView;
     private ButtonView exitButton;
     float buttonY = SCREEN_HEIGHT / 2f + 80;
 
@@ -44,8 +41,8 @@ public class MenuScreen extends ScreenAdapter {
 
         game.defaultMenuFont.setColor(Color.BROWN);
 
-        titleView = new TextView(game.titleMenuFont, SCREEN_WIDTH / 2f, SCREEN_HEIGHT - 120, "KING OF LEGENDS");
-        titleView.setCenterX(SCREEN_WIDTH / 2f);
+        titleView = new ImageView(SCREEN_WIDTH / 2f - 500, SCREEN_HEIGHT - 193,1000,220,GameResources.TITLE_MENU);
+
         backgroundView = new MovingBackgroundView(GameResources.BACKGROUND_MENU);
 
         hostButton = new ButtonView(
@@ -71,8 +68,6 @@ public class MenuScreen extends ScreenAdapter {
             SCREEN_WIDTH / 2f - 162.5f, buttonY - 365, 325, 100,
             game.defaultMenuFont, GameResources.BUTTON_MENU, "Exit"
         );
-        knifeLeft = new ImageView(SCREEN_WIDTH / 2f - 320f - 100f, SCREEN_HEIGHT - 130,100,100,GameResources.KNIFE_LEFT);
-        knifeRight = new ImageView(SCREEN_WIDTH / 2f + 320f, SCREEN_HEIGHT - 130,100,100,GameResources.KNIFE_RIGHT);
     }
 
     @Override
@@ -88,8 +83,6 @@ public class MenuScreen extends ScreenAdapter {
         game.defaultMenuFont.setColor(Color.BROWN);
 
         backgroundView.draw(game.batch);
-        knifeLeft.draw(game.batch);
-        knifeRight.draw(game.batch);
         titleView.draw(game.batch);
         hostButton.draw(game.batch);
         joinButton.draw(game.batch);
